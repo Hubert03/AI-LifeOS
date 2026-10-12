@@ -1,0 +1,304 @@
+<div class="app-shell dashboard-shell" [class.theme-light]="!isDarkTheme()">
+  @if (mobileNavOpen()) {
+    <button class="mobile-backdrop" type="button" aria-label="Close navigation" (click)="mobileNavOpen.set(false)"></button>
+  }
+
+  <aside class="sidebar" [class.sidebar-open]="mobileNavOpen()">
+    <a class="brand" routerLink="/" aria-label="AI LifeOS home" (click)="mobileNavOpen.set(false)">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M5 16.5 10.2 6l3.6 7.1 2-4.1L20 16.5" /><path d="M4 19h16" /></svg>
+      </span>
+      <span>AI <strong>LifeOS</strong></span>
+    </a>
+    <p class="nav-label">WORKSPACE</p>
+    <nav aria-label="Main navigation">
+      <a class="nav-item active" routerLink="/" aria-current="page" (click)="mobileNavOpen.set(false)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1.5" /><rect x="14" y="4" width="6" height="6" rx="1.5" /><rect x="4" y="14" width="6" height="6" rx="1.5" /><rect x="14" y="14" width="6" height="6" rx="1.5" /></svg>
+        <span>Overview</span>
+      </a>
+      <a class="nav-item" routerLink="/tasks" (click)="mobileNavOpen.set(false)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h12M8 12h12M8 19h12" /><path d="m3 5 1 1 2-2M3 12l1 1 2-2M3 19l1 1 2-2" /></svg>
+        <span>Tasks</span>
+      </a>
+      <a class="nav-item" routerLink="/goals" (click)="mobileNavOpen.set(false)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9" /><circle cx="12" cy="12" r="9" /></svg>
+        <span>Goals</span>
+      </a>
+      <a class="nav-item" routerLink="/notes" (click)="mobileNavOpen.set(false)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" /><path d="M14 3v6h5M9 13h6M9 17h6" /></svg>
+        <span>Notes</span>
+      </a>
+      <button class="nav-item planned" type="button" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg>
+        <span>Projects</span><span class="coming-soon">Soon</span>
+      </button>
+      <button class="nav-item planned" type="button" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
+        <span>Reminders</span><span class="coming-soon">Soon</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <a class="nav-item" routerLink="/settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.5.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.5-.9l-1.7.6-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.8l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.5-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.5.9l1.7-.6 1.4 2.4-1.4 1.1a7 7 0 0 1 0 1.7Z" /></svg>
+        <span>Settings</span>
+      </a>
+      <div class="connection-status"><span class="status-dot" aria-hidden="true"></span><span>Local workspace</span><span class="status-caption">DEV</span></div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar overview-topbar">
+      <div class="page-heading">
+        <button class="icon-button menu-button" type="button" aria-label="Open navigation" [attr.aria-expanded]="mobileNavOpen()" (click)="mobileNavOpen.set(!mobileNavOpen())">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+        <div>
+          <h1>Hello, {{ displayName() }} <span class="wave" aria-hidden="true">👋</span></h1>
+          <p class="overview-date">{{ today | date: 'EEEE, MMMM d, y' }}</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <label class="search-box">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+          <input type="search" aria-label="Search tasks" placeholder="Search tasks" [value]="searchTerm()" (input)="setSearchTerm($event)" />
+        </label>
+        <div class="popover-anchor">
+          <button class="icon-button notification-button" type="button" aria-label="Notifications" [attr.aria-expanded]="notificationsOpen()" (click)="notificationsOpen.set(!notificationsOpen()); profileMenuOpen.set(false)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
+          </button>
+          @if (notificationsOpen()) {
+            <section class="popover notification-popover" aria-label="Notifications">
+              <div class="popover-heading"><strong>Notifications</strong><span class="unread-count">0 new</span></div>
+              <p class="popover-empty">You’re all caught up. Reminders will show up here.</p>
+            </section>
+          }
+        </div>
+        <button class="icon-button theme-button" type="button" [attr.aria-label]="isDarkTheme() ? 'Switch to light theme' : 'Switch to dark theme'" [title]="isDarkTheme() ? 'Switch to light theme' : 'Switch to dark theme'" (click)="toggleTheme()">
+          @if (isDarkTheme()) {
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+          } @else {
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.5A8.5 8.5 0 0 1 8.5 3.5 8.5 8.5 0 1 0 20.5 15.5Z" /></svg>
+          }
+        </button>
+        <div class="popover-anchor profile-anchor">
+          <button class="profile-button" type="button" [attr.aria-expanded]="profileMenuOpen()" (click)="profileMenuOpen.set(!profileMenuOpen()); notificationsOpen.set(false)">
+            <span class="avatar" aria-hidden="true">{{ displayName().charAt(0).toUpperCase() }}</span>
+            <span class="profile-name">{{ currentUser()?.displayName || 'My space' }}</span>
+            <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>
+          </button>
+          @if (profileMenuOpen()) {
+            <section class="popover profile-popover" aria-label="Profile menu">
+              <div class="profile-details"><strong>{{ currentUser()?.displayName || 'My space' }}</strong><span>{{ currentUser()?.email }}</span></div>
+              <button class="signout-button" type="button" (click)="logout()">Sign out</button>
+            </section>
+          }
+        </div>
+      </div>
+    </header>
+
+    @if (logoutError()) { <p class="logout-error" role="alert">{{ logoutError() }}</p> }
+
+    <div class="dashboard-content overview-content">
+      <div class="overview-action-row">
+        <span class="overview-kicker">YOUR PERSONAL COMMAND CENTER</span>
+        <button class="overview-refresh" type="button" (click)="loadTasks(); loadForecast()" [disabled]="tasksLoading() || isLoading()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5" /><path d="M5.5 9a7 7 0 0 1 11.7-2L20 12M4 12l2.8 5a7 7 0 0 0 11.7-2" /></svg>
+          {{ tasksLoading() || isLoading() ? 'Refreshing…' : 'Refresh' }}
+        </button>
+      </div>
+
+      <section class="overview-metrics" aria-label="Task summary">
+        <a class="total-card" routerLink="/tasks" aria-label="View all tasks">
+          <span class="total-card-label">Total tasks</span>
+          <strong>{{ tasksLoading() ? '—' : tasks().length }}</strong>
+          <span class="total-card-note">{{ dueTodayCount() }} due today</span>
+          <span class="gold-orbit orbit-one"></span><span class="gold-orbit orbit-two"></span>
+        </a>
+
+        <div class="status-summary-card">
+          <a class="summary-stat" routerLink="/tasks" [queryParams]="{ status: 'Pending' }"><span>To do</span><strong>{{ tasksLoading() ? '—' : pendingCount() }}</strong><small>Tasks to start</small></a>
+          <a class="summary-stat" routerLink="/tasks" [queryParams]="{ status: 'InProgress' }"><span>In progress</span><strong>{{ tasksLoading() ? '—' : inProgressCount() }}</strong><small>On your plate</small></a>
+          <a class="summary-stat" routerLink="/tasks" [queryParams]="{ status: 'Completed' }"><span>Completed</span><strong>{{ tasksLoading() ? '—' : completedCount() }}</strong><small>Well done</small></a>
+          <a class="summary-stat" routerLink="/tasks" [queryParams]="{ status: 'Cancelled' }"><span>Cancelled</span><strong>{{ tasksLoading() ? '—' : cancelledCount() }}</strong><small>Not active</small></a>
+        </div>
+
+        <a class="create-task-card" routerLink="/tasks">
+          <span>Create a task</span>
+          <strong aria-hidden="true">+</strong>
+          <small>Plan your next step</small>
+        </a>
+      </section>
+
+      <app-ai-planner context="overview"></app-ai-planner>
+
+      @if (tasksErrorMessage()) {
+        <div class="overview-error" role="alert">
+          <span>{{ tasksErrorMessage() }}</span>
+          <button class="text-button" type="button" (click)="loadTasks()">Try again</button>
+        </div>
+      }
+
+      <section class="overview-grid">
+        <div class="overview-main-column">
+          <article class="overview-panel activity-panel">
+            <header class="overview-panel-heading">
+              <div><h2>Task overview</h2><p>Where your tasks stand right now</p></div>
+              <span class="chart-legend"><i></i> Task count</span>
+            </header>
+            @if (tasksLoading()) {
+              <div class="chart-empty" role="status">Loading task activity…</div>
+            } @else if (tasks().length === 0) {
+              <div class="chart-empty">
+                <span>No task activity yet</span>
+                <a routerLink="/tasks">Create your first task <span aria-hidden="true">→</span></a>
+              </div>
+            } @else {
+              <div class="status-chart" role="img" aria-label="Task count by status">
+                @for (status of taskStatusSummary(); track status.label) {
+                  <div class="chart-column">
+                    <span class="chart-count">{{ status.count }}</span>
+                    <div class="chart-track"><span [class]="status.color" [style.height.%]="status.percentage"></span></div>
+                    <span class="chart-label">{{ status.label }}</span>
+                  </div>
+                }
+              </div>
+              <div class="chart-footer"><span>{{ tasks().length }} total tasks</span><a routerLink="/tasks">Manage tasks <span aria-hidden="true">→</span></a></div>
+            }
+          </article>
+
+          <article class="overview-panel history-panel">
+            <header class="overview-panel-heading">
+              <div><h2>Recent tasks</h2><p>Your latest updates</p></div>
+              <a routerLink="/tasks" class="panel-link">View all <span aria-hidden="true">→</span></a>
+            </header>
+            @if (tasksLoading()) {
+              <div class="history-empty" role="status">Loading recent tasks…</div>
+            } @else if (visibleTasks().length === 0) {
+              <div class="history-empty">
+                @if (searchTerm()) { <span>No tasks match “{{ searchTerm() }}”.</span> }
+                @else { <span>Your recent tasks will appear here.</span> }
+              </div>
+            } @else {
+              <div class="history-table">
+                <div class="history-table-head"><span>Task</span><span>Due date</span><span>Status</span></div>
+                @for (task of visibleTasks(); track task.taskId) {
+                  <a class="history-row" routerLink="/tasks" [queryParams]="{ status: task.status }" [attr.aria-label]="'Show ' + statusLabel(task.status) + ' tasks in Tasks'">
+                    <span class="history-task">{{ task.title }}</span>
+                    <span class="history-date">{{ task.dueAtUtc ? (task.dueAtUtc | date: 'MMM d, y' : 'UTC') : 'No date' }}</span>
+                    <span class="history-status" [class]="'history-status status-' + task.status.toLowerCase()">{{ statusLabel(task.status) }}</span>
+                  </a>
+                }
+              </div>
+            }
+          </article>
+        </div>
+
+        <aside class="overview-side-column">
+          <a class="overview-panel month-goal-panel" routerLink="/goals">
+            <div>
+              <h2>This month’s goals</h2>
+              <p>{{ goalsError() || (currentGoals().length ? currentGoals().length + ' active goals are moving forward.' : 'Set a meaningful goal and give it a first step.') }}</p>
+              <span class="goal-caption">GOALS · VIEW ALL</span>
+            </div>
+            <div class="goal-ring" [attr.aria-label]="currentGoals().length ? goalAverage() + '% average goal progress' : 'No active goals'"><span>{{ currentGoals().length ? goalAverage() + '%' : '—' }}</span></div>
+          </a>
+
+          <article class="overview-panel goal-progress-panel">
+            <header class="overview-panel-heading"><div><h2>Goal progress</h2><p>Small steps make a difference</p></div><a routerLink="/goals" class="panel-link">Open Goals <span aria-hidden="true">→</span></a></header>
+            @if (goalsError()) {
+              <div class="goal-empty"><strong>Goals could not be loaded</strong><p>{{ goalsError() }}</p></div>
+            } @else if (currentGoals().length === 0) {
+              <div class="goal-empty"><strong>No active goals yet</strong><p>Create a goal and track it here.</p></div>
+            } @else {
+              <div class="overview-goal-list">
+                @for (goal of currentGoals(); track goal.goalId) {
+                  <a class="overview-goal-row" routerLink="/goals"><span>{{ goal.title }}</span><strong>{{ goal.progress }}%</strong><i><span [style.width.%]="goal.progress"></span></i></a>
+                }
+              </div>
+            }
+          </article>
+
+          <article class="overview-panel forecast-panel">
+            <header class="overview-panel-heading">
+              <div><h2>Local forecast</h2><p>Connected API preview</p></div>
+              <button class="forecast-refresh" type="button" aria-label="Refresh forecast" (click)="loadForecast()" [disabled]="isLoading()">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5" /><path d="M5.5 9a7 7 0 0 1 11.7-2L20 12M4 12l2.8 5a7 7 0 0 0 11.7-2" /></svg>
+              </button>
+            </header>
+            @if (isLoading()) {
+              <p class="forecast-state" role="status">Connecting to the API…</p>
+            } @else if (errorMessage()) {
+              <div class="forecast-state forecast-error" role="alert"><span>{{ errorMessage() }}</span><button class="text-button" type="button" (click)="loadForecast()">Retry</button></div>
+            } @else if (forecasts().length === 0) {
+              <p class="forecast-state">The API returned no forecast data.</p>
+            } @else {
+              <div class="forecast-mini-list">
+                @for (forecast of forecasts().slice(0, 3); track forecast.date) {
+                  <div class="forecast-mini-row"><span>{{ forecast.date | date: 'EEE, MMM d' }}</span><strong>{{ forecast.temperatureC }}°</strong><small>{{ forecast.summary || '—' }}</small></div>
+                }
+              </div>
+            }
+          </article>
+        </aside>
+      </section>
+
+      <section class="overview-extras" aria-label="Workspace notes and history">
+        <div class="overview-extra-column">
+          <article class="overview-panel pinned-notes-panel">
+            <header class="overview-panel-heading">
+              <div><h2>Pinned notes</h2><p>Quick thoughts, close at hand</p></div>
+              <a routerLink="/notes" class="panel-link">All notes <span aria-hidden="true">→</span></a>
+            </header>
+            @if (notesError()) {
+              <p class="overview-extra-error" role="alert">{{ notesError() }}</p>
+            } @else if (pinnedNotes().length === 0) {
+              <div class="overview-extra-empty">Pin a note to keep it handy here.<a routerLink="/notes">Open Notes →</a></div>
+            } @else {
+              <div class="pinned-notes-list">
+                @for (note of pinnedNotes(); track note.noteId) {
+                  <a class="pinned-note" routerLink="/notes" [style.--note-accent]="note.color">
+                    <strong>{{ note.title }}</strong><p>{{ note.content }}</p>
+                    <span class="pinned-note-link">Open note <span aria-hidden="true">→</span></span>
+                  </a>
+                }
+              </div>
+            }
+          </article>
+
+          <article class="overview-panel recent-activity-panel">
+            <header class="overview-panel-heading"><div><h2>Recent activity</h2><p>A record of changes in your workspace</p></div></header>
+            @if (historyError()) {
+              <p class="overview-extra-error" role="alert">{{ historyError() }}</p>
+            } @else if (activity().length === 0) {
+              <div class="overview-extra-empty">Your recent task and goal activity will appear here.</div>
+            } @else {
+              <div class="activity-feed">
+                @for (entry of activity(); track entry.activityId) {
+                  <div class="activity-entry"><span class="activity-marker" aria-hidden="true"></span><div><strong>{{ activityLabel(entry) }}</strong><span>{{ entry.title }}</span></div><time>{{ entry.createdAtUtc | date: 'MMM d, h:mm a' }}</time></div>
+                }
+              </div>
+            }
+          </article>
+        </div>
+
+        <article class="overview-panel trash-panel">
+          <header class="overview-panel-heading"><div><h2>Recently deleted</h2><p>Restore tasks and goals moved to Trash</p></div><span class="trash-count">{{ trash().length }}</span></header>
+          @if (restoreMessage()) { <p class="overview-restore-message" role="status">{{ restoreMessage() }}</p> }
+          @if (historyError()) {
+            <p class="overview-extra-error" role="alert">{{ historyError() }}</p>
+          } @else if (trash().length === 0) {
+            <div class="overview-extra-empty">Deleted tasks and goals will be kept here so you can restore them.</div>
+          } @else {
+            <div class="trash-list">
+              @for (item of trash(); track trackTrashItem(item)) {
+                <div class="trash-entry"><div><strong>{{ item.title }}</strong><span>{{ item.entityType }} · deleted {{ item.deletedAtUtc | date: 'MMM d' }}</span></div><button type="button" [disabled]="restoringId() === item.entityId" (click)="restore(item)">{{ restoringId() === item.entityId ? 'Restoring…' : 'Restore' }}</button></div>
+              }
+            </div>
+          }
+        </article>
+      </section>
+      <footer class="dashboard-footer"><span>AI LifeOS</span><span>One intentional day at a time.</span></footer>
+    </div>
+  </main>
+</div>

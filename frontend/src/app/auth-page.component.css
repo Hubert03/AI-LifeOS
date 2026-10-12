@@ -1,0 +1,163 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.auth-layout {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 28px 18px;
+  background:
+    radial-gradient(ellipse at 18% 15%, rgb(224 237 226 / 75%), transparent 38%),
+    #f7f9f6;
+}
+
+.auth-card {
+  width: min(100%, 430px);
+  padding: 38px;
+  border: 1px solid #e5ebe5;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 18px 60px rgb(31 56 43 / 8%);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 40px;
+  color: #18231f;
+  font-size: 17px;
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  place-items: center;
+  border-radius: 10px;
+  background: #244d3f;
+  color: #f7fbf7;
+  font-size: 15px;
+}
+
+.eyebrow {
+  margin: 0 0 11px;
+  color: #78847e;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+h1 {
+  margin: 0;
+  color: #1d3027;
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -0.05em;
+}
+
+.intro {
+  margin: 10px 0 27px;
+  color: #718078;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+form {
+  display: grid;
+}
+
+label {
+  margin: 0 0 7px;
+  color: #45544b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+input {
+  width: 100%;
+  min-height: 43px;
+  margin-bottom: 17px;
+  padding: 0 11px;
+  border: 1px solid #dce4dd;
+  border-radius: 7px;
+  outline: none;
+  background: #fff;
+  color: #24342b;
+  font: inherit;
+  font-size: 13px;
+}
+
+input:focus {
+  border-color: #57836d;
+  box-shadow: 0 0 0 3px rgb(87 131 109 / 13%);
+}
+
+.password-help {
+  margin: -8px 0 16px;
+  color: #7a8780;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.field-error,
+.error-message {
+  color: #963e35;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.field-error {
+  margin: -7px 0 12px;
+}
+
+.error-message {
+  margin-bottom: 17px;
+  padding: 10px 12px;
+  border: 1px solid #f0d8d2;
+  border-radius: 7px;
+  background: #fffafa;
+}
+
+.submit-button {
+  min-height: 44px;
+  margin-top: 3px;
+  border: 0;
+  border-radius: 7px;
+  background: #244d3f;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.submit-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.switch-mode {
+  margin: 22px 0 0;
+  color: #78847d;
+  font-size: 12px;
+  text-align: center;
+}
+
+.switch-mode a {
+  margin-left: 4px;
+  color: #315d49;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 28px 22px;
+  }
+}

@@ -1,0 +1,28 @@
+@import "tailwindcss/theme";
+@import "tailwindcss/utilities";
+@import './app/dashboard.component.css';
+@import './app/tasks.component.css';
+@import './app/goals.component.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: #fff;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}

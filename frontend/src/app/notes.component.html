@@ -1,0 +1,76 @@
+<div class="app-shell dashboard-shell notes-shell" [class.theme-light]="!isDarkTheme()">
+  @if (mobileNavOpen()) { <button class="mobile-backdrop" type="button" aria-label="Close navigation" (click)="mobileNavOpen.set(false)"></button> }
+  <aside class="sidebar" [class.sidebar-open]="mobileNavOpen()">
+    <a class="brand" routerLink="/" aria-label="AI LifeOS home"><span class="brand-mark" aria-hidden="true">⌁</span><span>AI <strong>LifeOS</strong></span></a>
+    <p class="nav-label">WORKSPACE</p>
+    <nav aria-label="Main navigation">
+      <a class="nav-item" routerLink="/"><span aria-hidden="true">▦</span><span>Overview</span></a>
+      <a class="nav-item" routerLink="/tasks"><span aria-hidden="true">☷</span><span>Tasks</span></a>
+      <a class="nav-item" routerLink="/goals"><span aria-hidden="true">◎</span><span>Goals</span></a>
+      <a class="nav-item active" routerLink="/notes" aria-current="page"><span aria-hidden="true">▤</span><span>Notes</span></a>
+      <button class="nav-item planned" type="button" disabled><span aria-hidden="true">▣</span><span>Projects</span><span class="coming-soon">Soon</span></button>
+      <button class="nav-item planned" type="button" disabled><span aria-hidden="true">♧</span><span>Reminders</span><span class="coming-soon">Soon</span></button>
+    </nav>
+    <div class="sidebar-bottom">
+      <a class="nav-item" routerLink="/settings"><span aria-hidden="true">⚙</span><span>Settings</span></a>
+      <div class="connection-status"><span class="status-dot" aria-hidden="true"></span><span>Local workspace</span><span class="status-caption">DEV</span></div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar notes-topbar">
+      <div class="page-heading">
+        <button class="icon-button menu-button" type="button" aria-label="Open navigation" [attr.aria-expanded]="mobileNavOpen()" (click)="mobileNavOpen.set(!mobileNavOpen())"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg></button>
+        <div><p class="breadcrumb">Workspace <span>/</span> Notes</p><h1>Notes</h1></div>
+      </div>
+      <div class="topbar-actions">
+        <label class="search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg><input type="search" aria-label="Search notes" placeholder="Search notes" [value]="searchTerm()" (input)="setSearchTerm($event)" /></label>
+        <button class="icon-button theme-button" type="button" [attr.aria-label]="isDarkTheme() ? 'Switch to light theme' : 'Switch to dark theme'" (click)="toggleTheme()">◐</button>
+        <button class="profile-button" type="button" [attr.aria-expanded]="profileMenuOpen()" (click)="profileMenuOpen.set(!profileMenuOpen())"><span class="avatar" aria-hidden="true">{{ currentUser()?.displayName?.charAt(0)?.toUpperCase() || 'U' }}</span><span class="profile-name">{{ currentUser()?.displayName || 'My space' }}</span></button>
+        @if (profileMenuOpen()) { <button type="button" class="signout-button" (click)="logout()">Sign out</button> }
+      </div>
+    </header>
+
+    <div class="notes-content">
+      <section class="notes-heading">
+        <div><p class="notes-eyebrow">YOUR THOUGHTS, IN ONE PLACE</p><h2>A little space to think.</h2><p>Capture ideas, keep important notes close, and pin quick reminders to Overview.</p></div>
+        <button class="notes-create" type="button" (click)="openCreate()">+ New note</button>
+      </section>
+      <app-ai-planner context="notes"></app-ai-planner>
+      @if (success()) { <p class="notes-success" role="status">{{ success() }}</p> }
+      @if (error() && !dialogOpen()) { <p class="notes-error" role="alert">{{ error() }} <button type="button" (click)="loadNotes()">Retry</button></p> }
+
+      @if (isLoading()) { <div class="notes-state" role="status">Loading your notes…</div> }
+      @else if (visibleNotes().length === 0) {
+        <div class="notes-state"><strong>{{ searchTerm() ? 'No notes match your search' : 'Start with a thought' }}</strong><p>{{ searchTerm() ? 'Try a different search.' : 'Create a note, then pin the ones you want to see on Overview.' }}</p>@if (!searchTerm()) { <button type="button" (click)="openCreate()">Create your first note</button> }</div>
+      } @else {
+        <section class="notes-grid" aria-label="Your notes">
+          @for (note of visibleNotes(); track note.noteId) {
+            <article class="note-card" [style.border-top-color]="note.color">
+              <header><span>{{ note.isPinned ? 'PINNED' : 'NOTE' }}</span><div><button type="button" [attr.aria-label]="note.isPinned ? 'Unpin note' : 'Pin note to Overview'" (click)="togglePinned(note)">{{ note.isPinned ? '★' : '☆' }}</button><button type="button" aria-label="Edit note" (click)="openEdit(note)">Edit</button><button type="button" aria-label="Delete note" (click)="deleteNote(note)">×</button></div></header>
+              <button class="note-body" type="button" (click)="openEdit(note)"><strong>{{ note.title }}</strong><span>{{ note.content }}</span></button>
+              <footer>Updated {{ (note.updatedAtUtc || note.createdAtUtc) | date: 'MMM d, y' }}</footer>
+            </article>
+          }
+        </section>
+      }
+    </div>
+  </main>
+
+  @if (dialogOpen()) {
+    <div class="note-dialog-layer" role="presentation">
+      <button class="note-dialog-backdrop" type="button" aria-label="Close note editor" (click)="dialogOpen.set(false)"></button>
+      <section class="note-dialog" role="dialog" aria-modal="true" aria-labelledby="note-dialog-title">
+        <header><div><p class="notes-eyebrow">{{ editingNote() ? 'REFINE YOUR THOUGHT' : 'QUICK CAPTURE' }}</p><h2 id="note-dialog-title">{{ editingNote() ? 'Edit note' : 'Create a note' }}</h2></div><button type="button" aria-label="Close" (click)="dialogOpen.set(false)">×</button></header>
+        @if (error()) { <p class="notes-error" role="alert">{{ error() }}</p> }
+        <form (ngSubmit)="saveNote()">
+          <label>Title<input name="title" maxlength="120" required [ngModel]="form().title" (ngModelChange)="updateForm('title', $event)" /></label>
+          <label>Note<textarea name="content" maxlength="5000" rows="7" required [ngModel]="form().content" (ngModelChange)="updateForm('content', $event)"></textarea></label>
+          <label class="pin-choice"><input type="checkbox" name="isPinned" [ngModel]="form().isPinned" (ngModelChange)="updateForm('isPinned', $event)" /> Pin this note to Overview</label>
+          <label>Color<select name="color" [ngModel]="form().color" (ngModelChange)="updateForm('color', $event)"><option value="#DCCB9A">Warm sand</option><option value="#9FD6CE">Soft teal</option><option value="#C8B8F1">Muted violet</option></select></label>
+          <footer><button type="button" (click)="dialogOpen.set(false)">Cancel</button><button type="submit" [disabled]="saving() || !form().title.trim() || !form().content.trim()">{{ saving() ? 'Saving…' : 'Save note' }}</button></footer>
+        </form>
+      </section>
+    </div>
+  }
+</div>

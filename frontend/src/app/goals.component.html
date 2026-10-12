@@ -1,0 +1,361 @@
+<div class="app-shell dashboard-shell goals-shell" [class.theme-light]="!isDarkTheme()">
+  @if (mobileNavOpen()) {
+    <button class="mobile-backdrop" type="button" aria-label="Close navigation" (click)="mobileNavOpen.set(false)"></button>
+  }
+
+  <aside class="sidebar" [class.sidebar-open]="mobileNavOpen()">
+    <a class="brand" routerLink="/" aria-label="AI LifeOS home" (click)="mobileNavOpen.set(false)">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M5 16.5 10.2 6l3.6 7.1 2-4.1L20 16.5" /><path d="M4 19h16" /></svg>
+      </span>
+      <span>AI <strong>LifeOS</strong></span>
+    </a>
+    <p class="nav-label">WORKSPACE</p>
+    <nav aria-label="Main navigation">
+      <a class="nav-item" routerLink="/" (click)="mobileNavOpen.set(false)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1.5" /><rect x="14" y="4" width="6" height="6" rx="1.5" /><rect x="4" y="14" width="6" height="6" rx="1.5" /><rect x="14" y="14" width="6" height="6" rx="1.5" /></svg>
+        <span>Overview</span>
+      </a>
+      <a class="nav-item" routerLink="/tasks" (click)="mobileNavOpen.set(false)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h12M8 12h12M8 19h12" /><path d="m3 5 1 1 2-2M3 12l1 1 2-2M3 19l1 1 2-2" /></svg>
+        <span>Tasks</span>
+      </a>
+      <a class="nav-item active" routerLink="/goals" aria-current="page" (click)="mobileNavOpen.set(false)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9" /><circle cx="12" cy="12" r="9" /></svg>
+        <span>Goals</span>
+      </a>
+      <a class="nav-item" routerLink="/notes" (click)="mobileNavOpen.set(false)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" /><path d="M14 3v6h5M9 13h6M9 17h6" /></svg>
+        <span>Notes</span>
+      </a>
+      <button class="nav-item planned" type="button" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg>
+        <span>Projects</span><span class="coming-soon">Soon</span>
+      </button>
+      <button class="nav-item planned" type="button" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
+        <span>Reminders</span><span class="coming-soon">Soon</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <a class="nav-item" routerLink="/settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.5.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.5-.9l-1.7.6-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.8l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.5-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.5.9l1.7-.6 1.4 2.4-1.4 1.1a7 7 0 0 1 0 1.7Z" /></svg>
+        <span>Settings</span>
+      </a>
+      <div class="connection-status"><span class="status-dot" aria-hidden="true"></span><span>Local workspace</span><span class="status-caption">DEV</span></div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar goals-topbar">
+      <div class="page-heading">
+        <button class="icon-button menu-button" type="button" aria-label="Open navigation" [attr.aria-expanded]="mobileNavOpen()" (click)="mobileNavOpen.set(!mobileNavOpen())">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+        <div>
+          <p class="breadcrumb">Workspace <span>/</span> Goals</p>
+          <h1>Goals</h1>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <label class="search-box">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+          <input type="search" aria-label="Search goals" placeholder="Search goals" [value]="searchTerm()" (input)="setSearchTerm($event)" />
+        </label>
+        <div class="popover-anchor">
+          <button class="icon-button notification-button" type="button" aria-label="Notifications" [attr.aria-expanded]="notificationsOpen()" (click)="notificationsOpen.set(!notificationsOpen()); profileMenuOpen.set(false)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
+          </button>
+          @if (notificationsOpen()) {
+            <section class="popover notification-popover" aria-label="Notifications">
+              <div class="popover-heading"><strong>Notifications</strong><span class="unread-count">0 new</span></div>
+              <p class="popover-empty">You’re all caught up. Reminders will show up here.</p>
+            </section>
+          }
+        </div>
+        <button class="icon-button theme-button" type="button" [attr.aria-label]="isDarkTheme() ? 'Switch to light theme' : 'Switch to dark theme'" (click)="toggleTheme()">
+          @if (isDarkTheme()) {
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+          } @else {
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.5A8.5 8.5 0 0 1 8.5 3.5 8.5 8.5 0 1 0 20.5 15.5Z" /></svg>
+          }
+        </button>
+        <div class="popover-anchor profile-anchor">
+          <button class="profile-button" type="button" [attr.aria-expanded]="profileMenuOpen()" (click)="profileMenuOpen.set(!profileMenuOpen()); notificationsOpen.set(false)">
+            <span class="avatar" aria-hidden="true">{{ displayName().charAt(0).toUpperCase() }}</span>
+            <span class="profile-name">{{ currentUser()?.displayName || 'My space' }}</span>
+            <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>
+          </button>
+          @if (profileMenuOpen()) {
+            <section class="popover profile-popover" aria-label="Profile menu">
+              <div class="profile-details"><strong>{{ currentUser()?.displayName || 'My space' }}</strong><span>{{ currentUser()?.email }}</span></div>
+              <button class="signout-button" type="button" (click)="logout()">Sign out</button>
+            </section>
+          }
+        </div>
+      </div>
+    </header>
+
+    @if (logoutError()) { <p class="logout-error" role="alert">{{ logoutError() }}</p> }
+
+    <div class="goals-content mx-auto max-w-[1440px] px-5 pb-8 pt-6 sm:px-7 xl:px-9">
+      <app-ai-planner context="goals"></app-ai-planner>
+      <section class="goals-hero mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p class="goals-eyebrow">{{ today | date: 'MMMM y' }} <span>·</span> YOUR NEXT CHAPTER</p>
+          <h2 class="mt-2 text-3xl font-semibold tracking-tight text-[var(--ink)]">Make room for what matters.</h2>
+          <p class="mt-2 max-w-xl text-sm leading-6 text-[var(--muted)]">Turn the things you care about into steady, measurable progress.</p>
+        </div>
+        <button class="goals-create-button inline-flex min-h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2" type="button" (click)="openCreateDialog()">
+          <span class="text-lg leading-none" aria-hidden="true">+</span> Create goal
+        </button>
+      </section>
+
+      @if (successMessage()) {
+        <p class="goals-notice goals-success" role="status">{{ successMessage() }}</p>
+      }
+      @if (errorMessage() && !dialogOpen()) {
+        <div class="goals-notice goals-error" role="alert"><span>{{ errorMessage() }}</span><button type="button" (click)="loadGoals()">Try again</button></div>
+      }
+
+      <section class="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Goal summary">
+        <article class="goal-total-card col-span-2 flex min-h-32 items-center justify-between overflow-hidden rounded-xl p-5 sm:p-6 lg:col-span-1">
+          <div class="relative z-10">
+            <p class="text-xs font-medium">Goals in your life</p>
+            <strong class="mt-1 block text-4xl font-bold tracking-tight">{{ isLoading() ? '—' : goals().length }}</strong>
+            <p class="mt-1 text-xs">{{ dueThisMonthCount() }} due this month</p>
+          </div>
+          <span class="goal-total-symbol relative z-10" aria-hidden="true">
+            <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" /><circle cx="24" cy="24" r="10" /><circle cx="24" cy="24" r="2" /><path d="m25 23 13-13" /><path d="M31 10h7v7" /></svg>
+          </span>
+        </article>
+        <article class="goal-stat-card rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5">
+          <p class="text-xs text-[var(--muted)]">Active goals</p>
+          <strong class="mt-2 block text-3xl font-semibold text-[var(--ink)]">{{ isLoading() ? '—' : activeCount() }}</strong>
+          <p class="mt-2 text-xs text-[var(--ink-soft)]">In motion right now</p>
+        </article>
+        <article class="goal-stat-card rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5">
+          <p class="text-xs text-[var(--muted)]">Completed goals</p>
+          <strong class="mt-2 block text-3xl font-semibold text-[var(--ink)]">{{ isLoading() ? '—' : completedCount() }}</strong>
+          <p class="mt-2 text-xs text-[var(--ink-soft)]">Milestones worth celebrating</p>
+        </article>
+        <article class="goal-stat-card rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5">
+          <p class="text-xs text-[var(--muted)]">Milestones reached</p>
+          <strong class="mt-2 block text-3xl font-semibold text-[var(--ink)]">{{ isLoading() ? '—' : completedMilestoneCount() }}<span class="goal-stat-total"> / {{ milestoneCount() }}</span></strong>
+          <p class="mt-2 text-xs text-[var(--ink-soft)]">Across your goals</p>
+        </article>
+      </section>
+
+      <section class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(290px,0.85fr)]">
+        <article class="goals-panel rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5">
+          <header class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p class="goals-eyebrow">THE BIG PICTURE</p>
+              <h3 class="mt-1 text-base font-semibold text-[var(--ink)]">Goal progress</h3>
+            </div>
+            <div class="goal-average">
+              <span class="goal-average-ring" [style.--progress]="overallProgress() + '%'"><span>{{ goals().length ? overallProgress() + '%' : '—' }}</span></span>
+              <span><small>AVERAGE</small><strong>Active goals</strong></span>
+            </div>
+          </header>
+
+          @if (isLoading()) {
+            <div class="goals-empty-state" role="status"><span class="goals-spinner" aria-hidden="true"></span> Loading your goals…</div>
+          } @else if (errorMessage() && goals().length === 0) {
+            <div class="goals-empty-state" role="alert"><span>{{ errorMessage() }}</span><button class="goals-inline-link" type="button" (click)="loadGoals()">Try again</button></div>
+          } @else if (visibleGoals().length === 0) {
+            <div class="goals-empty-state">
+              <span class="goal-empty-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="4" /><path d="m13 11 6-6" /></svg>
+              </span>
+              <strong>{{ searchTerm() || statusFilter() !== 'All' ? 'No goals match this view' : 'Start with something meaningful' }}</strong>
+              <p>{{ searchTerm() || statusFilter() !== 'All' ? 'Try a different search or status filter.' : 'Create your first goal, set a target date, and break it into milestones.' }}</p>
+              @if (!searchTerm() && statusFilter() === 'All') {
+                <button class="goals-inline-link" type="button" (click)="openCreateDialog()">Create your first goal <span aria-hidden="true">→</span></button>
+              }
+            </div>
+          } @else {
+            <div class="goal-progress-list">
+              @for (goal of visibleGoals().slice(0, 6); track goal.goalId) {
+                <div class="goal-progress-item">
+                  <span class="goal-list-marker" [class.marker-completed]="goal.status === 'Completed'" aria-hidden="true"></span>
+                  <span class="goal-list-title">{{ goal.title }}</span>
+                  <span class="goal-list-value">{{ goal.progress }}%</span>
+                  <span class="goal-list-track"><span [style.width.%]="goal.progress"></span></span>
+                </div>
+              }
+            </div>
+            @if (visibleGoals().length > 6) {
+              <p class="goal-chart-caption">Showing 6 of {{ visibleGoals().length }} filtered goals</p>
+            }
+          }
+          <div class="goal-chart-footer"><span>{{ completedMilestoneCount() }} of {{ milestoneCount() }} milestones complete</span><span>{{ pausedCount() }} paused</span></div>
+        </article>
+
+        <aside class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
+          <article class="month-focus-panel flex min-h-40 items-center justify-between gap-4 rounded-xl border border-[var(--line)] p-5">
+            <div>
+              <p class="goals-eyebrow">MONTHLY FOCUS</p>
+              <h3 class="mt-2 text-base font-semibold text-[var(--ink)]">This month’s goals</h3>
+              <p class="mt-2 max-w-52 text-xs leading-5 text-[var(--muted)]">
+                @if (dueThisMonthCount() === 0) { No active goals are due this month. }
+                @else { {{ dueThisMonthCount() }} {{ dueThisMonthCount() === 1 ? 'goal is' : 'goals are' }} due this month. Keep your momentum going. }
+              </p>
+              <span class="month-focus-note">{{ today | date: 'MMMM y' }}</span>
+            </div>
+            <div class="monthly-ring" [style.--progress]="milestoneRate() + '%'"><span>{{ milestoneCount() ? milestoneRate() + '%' : '—' }}</span></div>
+          </article>
+
+          <article class="milestone-panel rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
+            <header class="flex items-center justify-between gap-3">
+              <div><p class="goals-eyebrow">SMALL WINS</p><h3 class="mt-1 text-base font-semibold text-[var(--ink)]">Milestone momentum</h3></div>
+              <span class="milestone-count">{{ completedMilestoneCount() }}<small> / {{ milestoneCount() }}</small></span>
+            </header>
+            <div class="milestone-summary-track mt-4"><span [style.width.%]="milestoneRate()"></span></div>
+            <p class="mt-3 text-xs leading-5 text-[var(--muted)]">Each completed milestone moves a goal forward. Mark milestones complete right on a goal card.</p>
+            <div class="milestone-summary">
+              <span><i class="milestone-dot done"></i> {{ completedMilestoneCount() }} complete</span>
+              <span><i class="milestone-dot todo"></i> {{ milestoneCount() - completedMilestoneCount() }} remaining</span>
+            </div>
+          </article>
+        </aside>
+      </section>
+
+      <section class="mt-7">
+        <header class="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div><p class="goals-eyebrow">YOUR DIRECTION</p><h3 class="mt-1 text-lg font-semibold text-[var(--ink)]">All goals <span class="goal-heading-count">{{ goals().length }}</span></h3></div>
+          <div class="goal-filters" role="tablist" aria-label="Filter goals by status">
+            @for (filter of filters; track filter) {
+              <button type="button" role="tab" [attr.aria-selected]="statusFilter() === filter" [class.goal-filter-active]="statusFilter() === filter" (click)="setStatusFilter(filter)">{{ filter === 'All' ? 'All goals' : filter }}</button>
+            }
+          </div>
+        </header>
+
+        @if (!isLoading() && !errorMessage() && visibleGoals().length > 0) {
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
+            @for (goal of visibleGoals(); track goal.goalId) {
+              <article class="goal-card group rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 transition duration-200 hover:-translate-y-1 hover:border-[color:var(--accent)] hover:shadow-xl sm:p-5">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex min-w-0 items-center gap-3">
+                    <span class="goal-card-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="4" /><path d="m13 11 6-6" /></svg>
+                    </span>
+                    <div class="min-w-0">
+                      <h4 class="truncate text-sm font-semibold text-[var(--ink)]">{{ goal.title }}</h4>
+                      <p class="mt-1 text-xs text-[var(--muted)]">{{ goal.status }} goal</p>
+                    </div>
+                  </div>
+                  <div class="goal-card-menu">
+                    <button type="button" aria-label="Edit goal" title="Edit goal" (click)="openEditDialog(goal)">
+                      <svg viewBox="0 0 24 24"><path d="m14 5 5 5M4 20l4-.8L19 8a2.1 2.1 0 0 0-3-3L5 16l-1 4Z" /></svg>
+                    </button>
+                    <button type="button" aria-label="Delete goal" title="Delete goal" class="goal-delete-button" [disabled]="updatingGoalId() === goal.goalId" (click)="deleteGoal(goal)">
+                      <svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3" /></svg>
+                    </button>
+                  </div>
+                </div>
+
+                @if (goal.description) { <p class="goal-description mt-3 line-clamp-2 text-xs leading-5 text-[var(--muted)]">{{ goal.description }}</p> }
+
+                <div class="mt-5 flex items-center justify-between gap-3">
+                  <span class="text-xs font-medium text-[var(--ink-soft)]">Progress</span>
+                  <button class="goal-progress-edit" type="button" (click)="openEditDialog(goal)">Update progress</button>
+                </div>
+                <div class="goal-card-track mt-2"><span [style.width.%]="goal.progress"></span></div>
+                <div class="mt-2 flex items-center justify-between text-xs">
+                  <span class="font-semibold text-[var(--ink)]">{{ goal.progress }}% complete</span>
+                  @if (goal.targetDate) {
+                    <span class="goal-target" [class.target-overdue]="isPastTarget(goal)">
+                      {{ isPastTarget(goal) ? 'Past target' : 'Target' }} {{ goal.targetDate | date: 'MMM d, y' }}
+                    </span>
+                  } @else { <span class="goal-target">No target date</span> }
+                </div>
+
+                @if (goal.milestones.length > 0) {
+                  <div class="goal-milestone-list mt-4 border-t border-[var(--line)] pt-3">
+                    <div class="mb-2 flex items-center justify-between"><span class="text-xs font-semibold text-[var(--ink-soft)]">Milestones</span><span class="text-[10px] text-[var(--muted)]">{{ completedMilestones(goal) }} / {{ goal.milestones.length }}</span></div>
+                    @for (milestone of goal.milestones.slice(0, 4); track $index; let index = $index) {
+                      <button class="goal-milestone-row" type="button" [disabled]="updatingGoalId() === goal.goalId" (click)="toggleMilestone(goal, index)">
+                        <span class="milestone-check" [class.milestone-checked]="milestone.isCompleted" aria-hidden="true">
+                          @if (milestone.isCompleted) { <svg viewBox="0 0 20 20"><path d="m4 10 4 4 8-8" /></svg> }
+                        </span>
+                        <span [class.milestone-title-done]="milestone.isCompleted">{{ milestone.title }}</span>
+                      </button>
+                    }
+                    @if (goal.milestones.length > 4) { <p class="goal-more-milestones">+ {{ goal.milestones.length - 4 }} more milestones</p> }
+                  </div>
+                } @else {
+                  <div class="goal-no-milestones mt-4 border-t border-[var(--line)] pt-3">
+                    <span>No milestones yet</span><button type="button" (click)="openEditDialog(goal)">Add milestones <span aria-hidden="true">→</span></button>
+                  </div>
+                }
+
+                <div class="goal-card-footer">
+                  <span class="goal-due-state" [class.target-overdue]="isPastTarget(goal)">
+                    @if (goal.targetDate) { {{ isPastTarget(goal) ? 'Target date passed' : 'Target date set' }} }
+                    @else { Choose a target date }
+                  </span>
+                  <select aria-label="Goal status" [value]="goal.status" [disabled]="updatingGoalId() === goal.goalId" (change)="setGoalStatusFromEvent(goal, $event)">
+                    <option value="Active">Active</option><option value="Paused">Paused</option><option value="Completed">Completed</option>
+                  </select>
+                </div>
+              </article>
+            }
+          </div>
+        } @else if (!isLoading() && !errorMessage() && visibleGoals().length === 0 && goals().length > 0) {
+          <div class="goal-filter-empty rounded-xl border border-[var(--line)] bg-[var(--surface)] p-8 text-center text-sm text-[var(--muted)]">No goals match the selected status or search.</div>
+        }
+      </section>
+
+      <footer class="dashboard-footer"><span>AI LifeOS</span><span>Small steps. Meaningful progress.</span></footer>
+    </div>
+  </main>
+
+  @if (dialogOpen()) {
+    <div class="goal-dialog-layer">
+      <button class="goal-dialog-backdrop" type="button" aria-label="Close goal form" (click)="closeDialog()"></button>
+      <section class="goal-dialog" role="dialog" aria-modal="true" aria-labelledby="goal-dialog-title">
+        <header class="goal-dialog-header">
+          <div><p class="goals-eyebrow">{{ editingGoal ? 'REFINE YOUR DIRECTION' : 'A NEW INTENTION' }}</p><h2 id="goal-dialog-title">{{ editingGoal ? 'Edit goal' : 'Create a goal' }}</h2></div>
+          <button class="goal-dialog-close" type="button" aria-label="Close goal form" (click)="closeDialog()">×</button>
+        </header>
+        @if (errorMessage()) { <p class="goal-form-error" role="alert">{{ errorMessage() }}</p> }
+        <form class="goal-form" (ngSubmit)="saveGoal()" #goalEditor="ngForm">
+          <label class="goal-field">
+            <span>Goal title <i aria-hidden="true">*</i></span>
+            <input type="text" name="title" required maxlength="200" placeholder="What would you like to achieve?" [(ngModel)]="goalForm.title" />
+          </label>
+          <label class="goal-field">
+            <span>Description <small>Optional</small></span>
+            <textarea name="description" rows="3" maxlength="2000" placeholder="Why does this goal matter to you?" [(ngModel)]="goalForm.description"></textarea>
+          </label>
+          <div class="goal-form-pair">
+            <label class="goal-field"><span>Target date <small>Optional</small></span><input type="date" name="targetDate" [(ngModel)]="goalForm.targetDate" /></label>
+            <label class="goal-field"><span>Status</span><select name="status" [(ngModel)]="goalForm.status"><option value="Active">Active</option><option value="Paused">Paused</option><option value="Completed">Completed</option></select></label>
+          </div>
+          <div class="goal-progress-field">
+            <div class="flex items-center justify-between"><label for="goal-progress" class="text-xs font-semibold text-[var(--ink-soft)]">Current progress</label><strong>{{ goalForm.progress }}%</strong></div>
+            <input id="goal-progress" type="range" name="progress" min="0" max="100" step="5" [(ngModel)]="goalForm.progress" />
+            <div class="flex justify-between text-[10px] text-[var(--muted)]"><span>Just starting</span><span>Nearly there</span></div>
+          </div>
+          <div class="goal-milestone-editor">
+            <div class="flex items-center justify-between gap-3"><div><span class="text-xs font-semibold text-[var(--ink-soft)]">Milestones</span><p class="mt-1 text-[10px] text-[var(--muted)]">Break this goal into small, clear steps.</p></div><button type="button" class="goal-add-milestone" [disabled]="goalForm.milestones.length >= 30" (click)="addMilestone()">+ Add</button></div>
+            @for (milestone of goalForm.milestones; track $index; let index = $index) {
+              <div class="goal-milestone-input-row">
+                <input type="checkbox" [name]="'milestone-done-' + index" [attr.aria-label]="'Mark milestone ' + (index + 1) + ' complete'" [(ngModel)]="milestone.isCompleted" />
+                <input type="text" [name]="'milestone-title-' + index" maxlength="200" placeholder="A milestone to reach…" [(ngModel)]="milestone.title" />
+                <button type="button" [attr.aria-label]="'Remove milestone ' + (index + 1)" (click)="removeMilestone(index)">×</button>
+              </div>
+            }
+            @if (goalForm.milestones.length === 0) { <p class="goal-no-milestones-form">No milestones added yet.</p> }
+          </div>
+          <footer class="goal-dialog-actions">
+            <button class="goal-cancel-button" type="button" [disabled]="saving()" (click)="closeDialog()">Cancel</button>
+            <button class="goals-create-button" type="submit" [disabled]="saving() || goalEditor.invalid || !goalForm.title.trim()">{{ saving() ? 'Saving…' : editingGoal ? 'Save changes' : 'Create goal' }}</button>
+          </footer>
+        </form>
+      </section>
+    </div>
+  }
+</div>

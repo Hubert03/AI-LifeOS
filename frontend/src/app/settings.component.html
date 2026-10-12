@@ -1,0 +1,152 @@
+<div class="app-shell settings-shell" [class.theme-light]="!isDarkTheme()">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/" aria-label="AI LifeOS home">
+      <span class="brand-mark" aria-hidden="true">⌁</span>
+      <span>AI <strong>LifeOS</strong></span>
+    </a>
+    <p class="nav-label">WORKSPACE</p>
+    <nav aria-label="Main navigation">
+      <a class="nav-item" routerLink="/"><span aria-hidden="true">▦</span><span>Overview</span></a>
+      <a class="nav-item" routerLink="/tasks"><span aria-hidden="true">☷</span><span>Tasks</span></a>
+      <a class="nav-item" routerLink="/goals"><span aria-hidden="true">◎</span><span>Goals</span></a>
+      <a class="nav-item" routerLink="/notes"><span aria-hidden="true">▤</span><span>Notes</span></a>
+      <button class="nav-item planned" type="button" disabled><span aria-hidden="true">▣</span><span>Projects</span><span class="coming-soon">Soon</span></button>
+      <button class="nav-item planned" type="button" disabled><span aria-hidden="true">♧</span><span>Reminders</span><span class="coming-soon">Soon</span></button>
+    </nav>
+    <div class="sidebar-bottom">
+      <a class="nav-item active" routerLink="/settings" aria-current="page"><span aria-hidden="true">⚙</span><span>Settings</span></a>
+      <div class="connection-status"><span class="status-dot" aria-hidden="true"></span><span>Local workspace</span><span class="status-caption">DEV</span></div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div>
+        <p class="breadcrumb">Workspace <span>/</span> Settings</p>
+        <h1>Settings</h1>
+      </div>
+      <span class="profile-chip">{{ currentUser()?.displayName || 'My space' }}</span>
+    </header>
+
+    <div class="settings-content">
+      <section class="settings-intro">
+        <p class="eyebrow">YOUR ACCOUNT, YOUR WORKSPACE</p>
+        <h2>Make LifeOS yours.</h2>
+        <p>Manage your account details, appearance, and the AI provider used across the workspace.</p>
+      </section>
+
+      <section class="settings-card" aria-labelledby="profile-heading">
+        <div class="card-heading">
+          <div><p class="eyebrow">ACCOUNT</p><h2 id="profile-heading">Profile details</h2></div>
+          <span class="card-icon" aria-hidden="true">◎</span>
+        </div>
+        <form (ngSubmit)="saveProfile()">
+          <div class="form-grid">
+            <label>Display name
+              <input name="displayName" type="text" required minlength="2" maxlength="100"
+                [ngModel]="displayName()" (ngModelChange)="displayName.set($event)" />
+            </label>
+            <label>Email address
+              <input name="email" type="email" required maxlength="320"
+                [ngModel]="email()" (ngModelChange)="email.set($event)" />
+            </label>
+          </div>
+          <p class="field-hint">Your email is also used to sign in.</p>
+          @if (profileError()) { <p class="form-error" role="alert">{{ profileError() }}</p> }
+          @if (profileMessage()) { <p class="form-success" role="status">{{ profileMessage() }}</p> }
+          <button class="primary-button" type="submit" [disabled]="profileSaving()">
+            {{ profileSaving() ? 'Saving…' : 'Save profile' }}
+          </button>
+        </form>
+      </section>
+
+      <section class="settings-card" aria-labelledby="appearance-heading">
+        <div class="card-heading">
+          <div><p class="eyebrow">PREFERENCES</p><h2 id="appearance-heading">Appearance</h2></div>
+          <span class="card-icon" aria-hidden="true">◐</span>
+        </div>
+        <p class="section-copy">Choose the theme used throughout this browser.</p>
+        <div class="theme-options" role="group" aria-label="Color theme">
+          <button type="button" [class.selected]="isDarkTheme()" [attr.aria-pressed]="isDarkTheme()" (click)="setTheme('dark')">
+            <span class="theme-preview dark-preview" aria-hidden="true">◐</span><span><strong>Dark</strong><small>Easy on the eyes</small></span>
+          </button>
+          <button type="button" [class.selected]="!isDarkTheme()" [attr.aria-pressed]="!isDarkTheme()" (click)="setTheme('light')">
+            <span class="theme-preview light-preview" aria-hidden="true">☼</span><span><strong>Light</strong><small>Bright and clear</small></span>
+          </button>
+        </div>
+      </section>
+
+      <section class="settings-card" aria-labelledby="password-heading">
+        <div class="card-heading">
+          <div><p class="eyebrow">SECURITY</p><h2 id="password-heading">Change password</h2></div>
+          <span class="card-icon" aria-hidden="true">⌑</span>
+        </div>
+        <form (ngSubmit)="changePassword()">
+          <div class="form-grid">
+            <label>Current password
+              <input name="currentPassword" type="password" autocomplete="current-password" required
+                [ngModel]="currentPassword()" (ngModelChange)="currentPassword.set($event)" />
+            </label>
+            <span></span>
+            <label>New password
+              <input name="newPassword" type="password" autocomplete="new-password" required minlength="12" maxlength="128"
+                [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)" />
+            </label>
+            <label>Confirm new password
+              <input name="confirmPassword" type="password" autocomplete="new-password" required minlength="12" maxlength="128"
+                [ngModel]="confirmPassword()" (ngModelChange)="confirmPassword.set($event)" />
+            </label>
+          </div>
+          <p class="field-hint">Use at least 12 characters, including uppercase, lowercase, a number, and a symbol.</p>
+          @if (passwordError()) { <p class="form-error" role="alert">{{ passwordError() }}</p> }
+          @if (passwordMessage()) { <p class="form-success" role="status">{{ passwordMessage() }}</p> }
+          <button class="primary-button" type="submit" [disabled]="passwordSaving()">
+            {{ passwordSaving() ? 'Updating…' : 'Update password' }}
+          </button>
+        </form>
+      </section>
+
+      <section class="settings-card" aria-labelledby="ai-heading">
+        <div class="card-heading">
+          <div><p class="eyebrow">AI WORKSPACE</p><h2 id="ai-heading">Provider configuration</h2></div>
+          <span class="card-icon ai-icon" aria-hidden="true">✦</span>
+        </div>
+        <p class="section-copy">These shared OpenRouter settings power AI planning across the workspace. The API key is encrypted on this server and is never sent back to the browser.</p>
+        @if (aiSettingsLoading()) {
+          <p class="field-hint" role="status">Loading provider settings…</p>
+        } @else {
+          <form (ngSubmit)="saveAiSettings()">
+            <div class="form-grid">
+              <label>OpenRouter API URL
+                <input name="apiUrl" type="url" required maxlength="500"
+                  [ngModel]="apiUrl()" (ngModelChange)="apiUrl.set($event)" />
+              </label>
+              <label>Model
+                <input name="model" type="text" required maxlength="100" placeholder="openrouter/free"
+                  [ngModel]="model()" (ngModelChange)="model.set($event)" />
+              </label>
+            </div>
+            <label class="api-key-field">OpenRouter API key
+              <input name="apiKey" type="password" autocomplete="new-password" maxlength="500"
+                [disabled]="clearApiKey()" [placeholder]="aiSettings()?.apiKeyConfigured ? 'Saved key is configured; leave blank to keep it' : 'Enter an OpenRouter API key'"
+                [ngModel]="apiKey()" (ngModelChange)="apiKey.set($event)" />
+            </label>
+            <label class="checkbox-row">
+              <input type="checkbox" [checked]="clearApiKey()" (change)="onClearApiKeyChanged($event)" />
+              <span>Remove the saved API key</span>
+            </label>
+            <p class="field-hint">Only the HTTPS OpenRouter chat completions endpoint is accepted. Leave the key blank to retain the current key.</p>
+            @if (aiError()) { <p class="form-error" role="alert">{{ aiError() }}</p> }
+            @if (aiMessage()) { <p class="form-success" role="status">{{ aiMessage() }}</p> }
+            <button class="primary-button" type="submit" [disabled]="aiSaving()">
+              {{ aiSaving() ? 'Saving…' : 'Save AI settings' }}
+            </button>
+            <span class="provider-status" [class.configured]="aiSettings()?.apiKeyConfigured">
+              {{ aiSettings()?.apiKeyConfigured ? 'API key configured' : 'API key not configured' }}
+            </span>
+          </form>
+        }
+      </section>
+    </div>
+  </main>
+</div>

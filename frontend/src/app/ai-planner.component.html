@@ -1,0 +1,76 @@
+<section class="ai-planner">
+  <button class="ai-planner-trigger" type="button" [attr.aria-expanded]="open()" (click)="toggle()">
+    <span class="ai-spark" aria-hidden="true">✦</span>
+    <span><strong>{{ contextTitle }}</strong><small>Drafted for your {{ context() === 'overview' ? 'workspace' : context() }} section</small></span>
+    <span class="ai-trigger-chevron" aria-hidden="true">{{ open() ? '−' : '+' }}</span>
+  </button>
+
+  @if (open()) {
+    <div class="ai-planner-body">
+      <p class="ai-disclosure">Your prompt is sent to the configured AI provider. AI creates a draft only—review it and choose what to save. Don’t include sensitive information.</p>
+      <form class="ai-prompt-form" (ngSubmit)="generatePlan()">
+        <label for="ai-planning-prompt">{{ promptLabel }}</label>
+        <textarea
+          id="ai-planning-prompt"
+          name="prompt"
+          rows="3"
+          maxlength="2000"
+          [value]="prompt()"
+          (input)="setPrompt($event)"
+          [placeholder]="context() === 'notes' ? 'For example: Capture the key ideas from my project meeting.' : context() === 'goals' ? 'For example: Build a consistent exercise habit this year.' : context() === 'tasks' ? 'For example: Break down preparing for my biology exam into tasks.' : 'For example: Help me prepare for my biology exam next Friday.'"
+          required
+        ></textarea>
+        <button type="submit" [disabled]="generating() || !prompt().trim()">
+          {{ generating() ? 'Creating your plan…' : 'Create a plan' }}
+        </button>
+      </form>
+
+      @if (error()) { <p class="ai-error" role="alert">{{ error() }}</p> }
+      @if (message()) { <p class="ai-success" role="status">{{ message() }}</p> }
+
+      @if (plan(); as draft) {
+        <div class="ai-draft" aria-label="AI plan preview">
+          <h3>{{ context() === 'notes' ? 'Review your note' : context() === 'goals' ? 'Review your goal' : context() === 'tasks' ? 'Review your tasks' : 'Review your plan' }}</h3>
+          <p class="ai-summary">{{ draft.summary }}</p>
+          @if (context() === 'notes' && draft.note) {
+            <label class="ai-proposal">
+              <input type="checkbox" [checked]="includeNote()" (change)="setIncludeNote($event)" />
+              <span><strong>{{ draft.note.title }}</strong><small class="ai-note-content">{{ draft.note.content }}</small></span>
+            </label>
+          }
+          @if ((context() === 'goals' || context() === 'overview') && draft.goal) {
+            <label class="ai-proposal">
+              <input type="checkbox" [checked]="includeGoal()" (change)="setIncludeGoal($event)" />
+              <span><strong>Goal: {{ draft.goal.title }}</strong><small>{{ draft.goal.description }}</small></span>
+            </label>
+            @if (includeGoal() && draft.goal.milestones.length) {
+              <ul class="ai-milestones">
+                @for (milestone of draft.goal.milestones; track $index) { <li>{{ milestone.title }}</li> }
+              </ul>
+            }
+          }
+          @if ((context() === 'tasks' || context() === 'overview') && draft.tasks.length) {
+            <p class="ai-list-label">Suggested tasks</p>
+            <div class="ai-proposed-tasks">
+              @for (task of draft.tasks; track $index) {
+                <label class="ai-proposal">
+                  <input type="checkbox" [checked]="selectedTasks().includes($index)" (change)="setTaskSelected($index, $event)" />
+                  <span>
+                    <strong>{{ task.title }}</strong>
+                    <small>
+                      {{ task.description }}
+                      @if (task.dueAtUtc) { <span>· Due {{ task.dueAtUtc | date: 'MMM d' }}</span> }
+                    </small>
+                  </span>
+                </label>
+              }
+            </div>
+          }
+          <button class="ai-save-plan" type="button" [disabled]="saving()" (click)="savePlan()">
+            {{ saving() ? 'Adding to ' + (context() === 'notes' ? 'Notes' : context() === 'goals' ? 'Goals' : 'Tasks') + '…' : saveButtonLabel }}
+          </button>
+        </div>
+      }
+    </div>
+  }
+</section>

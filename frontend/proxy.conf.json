@@ -1,0 +1,10 @@
+{
+  "/WeatherForecast": {
+    "target": "http://localhost:5090",
+    "secure": false
+  },
+  "/api": {
+    "target": "http://localhost:5090",
+    "secure": false
+  }
+}
