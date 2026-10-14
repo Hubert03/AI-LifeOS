@@ -1,0 +1,40 @@
+@if (confirmation.request(); as request) {
+  <div
+    class="confirmation-layer"
+    [class.theme-light]="request.isLightTheme"
+    [class.alert-minimal]="request.alertStyle === 'minimal'"
+    [class.alert-glass]="request.alertStyle === 'glass'"
+  >
+    <button
+      class="confirmation-backdrop"
+      type="button"
+      aria-label="Cancel confirmation"
+      (click)="confirmation.dismiss(false)"
+    ></button>
+    <section
+      class="confirmation-dialog"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="confirmation-title"
+      aria-describedby="confirmation-message"
+    >
+      <div class="confirmation-icon" aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <path d="M24 5.5 43 39H5L24 5.5Z" />
+          <path d="M24 17v10m0 6h.02" />
+        </svg>
+      </div>
+      <p class="confirmation-eyebrow">PLEASE CONFIRM</p>
+      <h2 id="confirmation-title">{{ request.title }}</h2>
+      <p id="confirmation-message">{{ request.message }}</p>
+      <footer>
+        <button class="confirmation-cancel" type="button" (click)="confirmation.dismiss(false)">
+          Keep it
+        </button>
+        <button class="confirmation-accept" type="button" (click)="confirmation.dismiss(true)">
+          {{ request.confirmLabel }}
+        </button>
+      </footer>
+    </section>
+  </div>
+}

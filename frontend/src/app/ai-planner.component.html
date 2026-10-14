@@ -1,12 +1,12 @@
 <section class="ai-planner">
   <button class="ai-planner-trigger" type="button" [attr.aria-expanded]="open()" (click)="toggle()">
     <span class="ai-spark" aria-hidden="true">✦</span>
-    <span><strong>{{ contextTitle }}</strong><small>Drafted for your {{ context() === 'overview' ? 'workspace' : context() }} section</small></span>
+    <span><strong>{{ contextTitle }}</strong><small>Drafted for your {{ activeContext === 'overview' ? 'workspace' : activeContext }} section</small></span>
     <span class="ai-trigger-chevron" aria-hidden="true">{{ open() ? '−' : '+' }}</span>
   </button>
 
   @if (open()) {
-    <div class="ai-planner-body">
+    <div class="ai-planner-body" [attr.aria-busy]="generating()">
       <p class="ai-disclosure">Your prompt is sent to the configured AI provider. AI creates a draft only—review it and choose what to save. Don’t include sensitive information.</p>
       <form class="ai-prompt-form" (ngSubmit)="generatePlan()">
         <label for="ai-planning-prompt">{{ promptLabel }}</label>
@@ -17,7 +17,7 @@
           maxlength="2000"
           [value]="prompt()"
           (input)="setPrompt($event)"
-          [placeholder]="context() === 'notes' ? 'For example: Capture the key ideas from my project meeting.' : context() === 'goals' ? 'For example: Build a consistent exercise habit this year.' : context() === 'tasks' ? 'For example: Break down preparing for my biology exam into tasks.' : 'For example: Help me prepare for my biology exam next Friday.'"
+          [placeholder]="activeContext === 'notes' ? 'For example: Capture the key ideas from my project meeting.' : activeContext === 'goals' ? 'For example: Build a consistent exercise habit this year.' : activeContext === 'tasks' ? 'For example: Break down preparing for my biology exam into tasks.' : 'For example: Help me prepare for my biology exam next Friday.'"
           required
         ></textarea>
         <button type="submit" [disabled]="generating() || !prompt().trim()">
@@ -25,20 +25,50 @@
         </button>
       </form>
 
+      @if (generating()) {
+        <div class="ai-generation-layer" role="status" aria-live="polite">
+          <div class="ai-loader-preview" [class.loader-pulse]="uiPreferences.loaderStyle() === 'pulse'"
+            [class.loader-orbit]="uiPreferences.loaderStyle() === 'orbit'" aria-hidden="true">
+            @if (uiPreferences.loaderStyle() === 'gear') {
+              <div class="ai-gear-loader">
+                <span class="ai-gear-orbit"></span>
+                <svg class="ai-gear ai-gear-main" viewBox="0 0 48 48">
+                  <path d="M20.1 4h7.8l1.2 5.1a15 15 0 0 1 3.4 1.4l4.6-2.5 5.5 5.5-2.5 4.6a15 15 0 0 1 1.4 3.4l5.1 1.2v7.8l-5.1 1.2a15 15 0 0 1-1.4 3.4l2.5 4.6-5.5 5.5-4.6-2.5a15 15 0 0 1-3.4 1.4L27.9 49h-7.8l-1.2-5.1a15 15 0 0 1-3.4-1.4l-4.6 2.5-5.5-5.5 2.5-4.6a15 15 0 0 1-1.4-3.4L1.4 30.3v-7.8l5.1-1.2a15 15 0 0 1 1.4-3.4l-2.5-4.6 5.5-5.5 4.6 2.5a15 15 0 0 1 3.4-1.4L20.1 4Z" transform="translate(1.5 -2.5) scale(.94)" />
+                  <circle cx="24" cy="24" r="6.5" />
+                </svg>
+                <svg class="ai-gear ai-gear-small" viewBox="0 0 32 32">
+                  <path d="M13 2h6l1 4a11 11 0 0 1 2.4 1l3.6-2 4 4-2 3.6a11 11 0 0 1 1 2.4l4 1v6l-4 1a11 11 0 0 1-1 2.4l2 3.6-4 4-3.6-2a11 11 0 0 1-2.4 1l-1 4h-6l-1-4a11 11 0 0 1-2.4-1l-3.6 2-4-4 2-3.6a11 11 0 0 1-1-2.4l-4-1v-6l4-1a11 11 0 0 1 1-2.4l-2-3.6 4-4 3.6 2a11 11 0 0 1 2.4-1l1-4Z" transform="translate(1 1) scale(.88)" />
+                  <circle cx="16" cy="16" r="4" />
+                </svg>
+              </div>
+            } @else if (uiPreferences.loaderStyle() === 'pulse') {
+              <span class="pulse-dot"></span><span class="pulse-dot"></span><span class="pulse-dot"></span>
+            } @else {
+              <span class="orbit-dot orbit-dot-one"></span>
+              <span class="orbit-dot orbit-dot-two"></span>
+              <span class="orbit-dot orbit-dot-three"></span>
+            }
+          </div>
+          <strong>Shaping your {{ activeContext === 'overview' ? 'plan' : activeContext + ' draft' }}</strong>
+          <span>Matching your request to the right workspace</span>
+        </div>
+      }
+
       @if (error()) { <p class="ai-error" role="alert">{{ error() }}</p> }
       @if (message()) { <p class="ai-success" role="status">{{ message() }}</p> }
 
       @if (plan(); as draft) {
         <div class="ai-draft" aria-label="AI plan preview">
-          <h3>{{ context() === 'notes' ? 'Review your note' : context() === 'goals' ? 'Review your goal' : context() === 'tasks' ? 'Review your tasks' : 'Review your plan' }}</h3>
+          <h3>{{ activeContext === 'notes' ? 'Review your note' : activeContext === 'goals' ? 'Review your goal' : activeContext === 'tasks' ? 'Review your tasks' : 'Review your plan' }}</h3>
+          <p class="ai-request-bubble"><span>Your request</span>{{ submittedPrompt() }}</p>
           <p class="ai-summary">{{ draft.summary }}</p>
-          @if (context() === 'notes' && draft.note) {
+          @if (activeContext === 'notes' && draft.note) {
             <label class="ai-proposal">
               <input type="checkbox" [checked]="includeNote()" (change)="setIncludeNote($event)" />
               <span><strong>{{ draft.note.title }}</strong><small class="ai-note-content">{{ draft.note.content }}</small></span>
             </label>
           }
-          @if ((context() === 'goals' || context() === 'overview') && draft.goal) {
+          @if ((activeContext === 'goals' || activeContext === 'overview') && draft.goal) {
             <label class="ai-proposal">
               <input type="checkbox" [checked]="includeGoal()" (change)="setIncludeGoal($event)" />
               <span><strong>Goal: {{ draft.goal.title }}</strong><small>{{ draft.goal.description }}</small></span>
@@ -49,7 +79,7 @@
               </ul>
             }
           }
-          @if ((context() === 'tasks' || context() === 'overview') && draft.tasks.length) {
+          @if ((activeContext === 'tasks' || activeContext === 'overview') && draft.tasks.length) {
             <p class="ai-list-label">Suggested tasks</p>
             <div class="ai-proposed-tasks">
               @for (task of draft.tasks; track $index) {
@@ -67,7 +97,7 @@
             </div>
           }
           <button class="ai-save-plan" type="button" [disabled]="saving()" (click)="savePlan()">
-            {{ saving() ? 'Adding to ' + (context() === 'notes' ? 'Notes' : context() === 'goals' ? 'Goals' : 'Tasks') + '…' : saveButtonLabel }}
+            {{ saving() ? 'Adding to ' + (activeContext === 'notes' ? 'Notes' : activeContext === 'goals' ? 'Goals' : 'Tasks') + '…' : saveButtonLabel }}
           </button>
         </div>
       }

@@ -9,10 +9,30 @@ import { LifeGoal, GoalsService } from './goals.service';
 import { LifeTask, TasksService } from './tasks.service';
 import { LifeNote, NotesService } from './notes.service';
 import { WeatherForecast, WeatherForecastService } from './weather-forecast';
+import {
+  AdminDashboard,
+  AdminGoal,
+  AdminNote,
+  AdminPage,
+  AdminTask,
+  AdminWorkspaceSummary,
+  TeamService,
+} from './team.service';
+import { ThemePickerComponent } from './theme-picker.component';
+import { ThemeService } from './theme.service';
+import { forkJoin } from 'rxjs';
+
+interface AdminWorkspace {
+  tasks: AdminPage<AdminTask>;
+  goals: AdminPage<AdminGoal>;
+  notes: AdminPage<AdminNote>;
+}
+
+type AdminWorkspaceCollection = keyof AdminWorkspace;
 
 @Component({
   selector: 'app-dashboard',
-  imports: [AiPlannerComponent, DatePipe, RouterLink],
+  imports: [AiPlannerComponent, DatePipe, RouterLink, ThemePickerComponent],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent {
@@ -22,7 +42,9 @@ export class DashboardComponent {
   private readonly goalsService = inject(GoalsService);
   private readonly notesService = inject(NotesService);
   private readonly activityService = inject(ActivityService);
+  private readonly teamService = inject(TeamService);
   private readonly router = inject(Router);
+  protected readonly themeService = inject(ThemeService);
 
   protected readonly currentUser = this.authService.currentUser;
   protected readonly forecasts = signal<WeatherForecast[]>([]);
@@ -45,7 +67,15 @@ export class DashboardComponent {
   protected readonly notificationsOpen = signal(false);
   protected readonly profileMenuOpen = signal(false);
   protected readonly mobileNavOpen = signal(false);
-  protected readonly isDarkTheme = signal(true);
+  protected readonly adminDashboard = signal<AdminDashboard | null>(null);
+  protected readonly adminDashboardLoading = signal(false);
+  protected readonly adminDashboardError = signal<string | null>(null);
+  protected readonly selectedAdminUser = signal<AdminWorkspaceSummary | null>(null);
+  protected readonly adminWorkspace = signal<AdminWorkspace | null>(null);
+  protected readonly adminWorkspaceLoading = signal(false);
+  protected readonly adminWorkspaceError = signal<string | null>(null);
+  protected readonly loadingAdminCollection = signal<AdminWorkspaceCollection | null>(null);
+  protected readonly isDarkTheme = this.themeService.isDarkTheme;
   protected readonly today = new Date();
   protected readonly greeting = this.getGreeting();
   protected readonly displayName = computed(
@@ -85,6 +115,67 @@ export class DashboardComponent {
       percentage: total === 0 ? 0 : Math.max(6, (status.count / total) * 100),
     }));
   });
+  protected readonly adminTaskStatuses = computed(() => {
+    const statuses = this.adminDashboard()?.taskStatuses ?? [];
+    const largest = Math.max(1, ...statuses.map((status) => status.total));
+    return statuses.map((status) => ({
+      ...status,
+      label:
+        status.status === 'Pending'
+          ? 'To do'
+          : status.status === 'InProgress'
+            ? 'In progress'
+            : status.status,
+      color: `chart-fill-${status.status.toLowerCase()}`,
+      percentage: status.total === 0 ? 0 : Math.max(6, (status.total / largest) * 100),
+    }));
+  });
+  protected readonly adminActivityDays = computed(() => {
+    const days = this.adminDashboard()?.activityByDay ?? [];
+    const peak = Math.max(1, ...days.map((day) => day.total));
+    return days.map((day) => ({
+      ...day,
+      label: new Intl.DateTimeFormat(undefined, { timeZone: 'UTC', weekday: 'short' }).format(
+        new Date(day.dateUtc),
+      ),
+      percentage: day.total === 0 ? 0 : Math.max(8, (day.total / peak) * 100),
+    }));
+  });
+  protected readonly adminVisibleUsers = computed(() => {
+    const query = this.searchTerm().trim().toLocaleLowerCase();
+    return (this.adminDashboard()?.users ?? []).filter(
+      (user) =>
+        !query ||
+        `${user.displayName} ${user.email} ${user.isAdmin ? 'admin' : 'member'} ${user.isActive ? 'active' : 'inactive'}`
+          .toLocaleLowerCase()
+          .includes(query),
+    );
+  });
+  protected readonly weeklyTaskActivity = computed(() => {
+    const now = new Date();
+    const todayUtc = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+    );
+    const days = Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(todayUtc);
+      date.setUTCDate(date.getUTCDate() - (6 - index));
+      const dateKey = date.toISOString().slice(0, 10);
+      return {
+        dateKey,
+        label: new Intl.DateTimeFormat(undefined, {
+          timeZone: 'UTC',
+          weekday: 'short',
+        }).format(date),
+        count: this.tasks().filter((task) => task.createdAtUtc.slice(0, 10) === dateKey).length,
+      };
+    });
+    const peak = Math.max(1, ...days.map((day) => day.count));
+
+    return days.map((day) => ({
+      ...day,
+      percentage: day.count === 0 ? 0 : Math.max(8, (day.count / peak) * 100),
+    }));
+  });
   protected readonly recentTasks = computed(() =>
     [...this.tasks()]
       .sort((left, right) => right.createdAtUtc.localeCompare(left.createdAtUtc))
@@ -113,10 +204,113 @@ export class DashboardComponent {
       .slice(0, 4);
   });
   constructor() {
-    this.isDarkTheme.set(localStorage.getItem('ai-lifeos-theme') !== 'light');
-    this.loadForecast();
-    this.loadTasks();
-    this.loadOverviewExtras();
+    if (this.currentUser()?.isAdmin) {
+      this.loadAdminDashboard();
+    } else {
+      this.loadForecast();
+      this.loadTasks();
+      this.loadOverviewExtras();
+    }
+  }
+
+  protected loadAdminDashboard(): void {
+    this.adminDashboardLoading.set(true);
+    this.adminDashboardError.set(null);
+    this.teamService.getDashboard().subscribe({
+      next: (dashboard) => {
+        this.adminDashboard.set(dashboard);
+        this.adminDashboardLoading.set(false);
+      },
+      error: (error: unknown) => {
+        this.adminDashboardError.set(
+          this.getAdminLoadError(error, 'The organization dashboard could not be loaded.'),
+        );
+        this.adminDashboardLoading.set(false);
+      },
+    });
+  }
+
+  protected viewAdminWorkspace(user: AdminWorkspaceSummary): void {
+    this.selectedAdminUser.set(user);
+    this.adminWorkspace.set(null);
+    this.adminWorkspaceError.set(null);
+    this.loadingAdminCollection.set(null);
+    this.adminWorkspaceLoading.set(true);
+    forkJoin({
+      tasks: this.teamService.getUserTasks(user.userId, 0, 25),
+      goals: this.teamService.getUserGoals(user.userId, 0, 25),
+      notes: this.teamService.getUserNotes(user.userId, 0, 25),
+    }).subscribe({
+      next: (workspace) => {
+        if (this.selectedAdminUser()?.userId === user.userId) {
+          this.adminWorkspace.set(workspace);
+          this.adminWorkspaceLoading.set(false);
+        }
+      },
+      error: (error: unknown) => {
+        if (this.selectedAdminUser()?.userId === user.userId) {
+          this.adminWorkspaceError.set(
+            this.getAdminLoadError(error, 'This user workspace could not be loaded.'),
+          );
+          this.adminWorkspaceLoading.set(false);
+        }
+      },
+    });
+  }
+
+  protected loadMoreAdminWorkspace(collection: AdminWorkspaceCollection): void {
+    const user = this.selectedAdminUser();
+    const workspace = this.adminWorkspace();
+    const currentPage = workspace?.[collection];
+    if (
+      !user ||
+      !workspace ||
+      !currentPage ||
+      currentPage.items.length >= currentPage.totalCount ||
+      this.loadingAdminCollection()
+    ) {
+      return;
+    }
+
+    this.loadingAdminCollection.set(collection);
+    const nextPage = (result: AdminPage<AdminTask | AdminGoal | AdminNote>) => {
+      if (this.selectedAdminUser()?.userId === user.userId) {
+        this.adminWorkspace.update((current) =>
+          current
+            ? {
+                ...current,
+                [collection]: {
+                  ...result,
+                  items: [...current[collection].items, ...result.items],
+                },
+              }
+            : current,
+        );
+        this.loadingAdminCollection.set(null);
+      }
+    };
+    const onError = (error: unknown) => {
+      if (this.selectedAdminUser()?.userId === user.userId) {
+        this.adminWorkspaceError.set(
+          this.getAdminLoadError(error, 'More workspace data could not be loaded.'),
+        );
+        this.loadingAdminCollection.set(null);
+      }
+    };
+
+    if (collection === 'tasks') {
+      this.teamService
+        .getUserTasks(user.userId, currentPage.items.length, currentPage.take)
+        .subscribe({ next: nextPage, error: onError });
+    } else if (collection === 'goals') {
+      this.teamService
+        .getUserGoals(user.userId, currentPage.items.length, currentPage.take)
+        .subscribe({ next: nextPage, error: onError });
+    } else {
+      this.teamService
+        .getUserNotes(user.userId, currentPage.items.length, currentPage.take)
+        .subscribe({ next: nextPage, error: onError });
+    }
   }
 
   protected loadForecast(): void {
@@ -165,6 +359,22 @@ export class DashboardComponent {
       return `The API could not load your tasks (HTTP ${error.status}). Please try again later.`;
     }
     return 'Could not load your tasks. Please try again.';
+  }
+
+  private getAdminLoadError(error: unknown, fallback: string): string {
+    if (!(error instanceof HttpErrorResponse)) {
+      return fallback;
+    }
+    if (error.status === 0) {
+      return 'Cannot reach the API. Make sure the .NET API is running.';
+    }
+    if (error.status === 401) {
+      return 'Your session has expired. Sign in again to continue.';
+    }
+    if (error.status === 403) {
+      return 'Administrator access is required to view organization data.';
+    }
+    return fallback;
   }
 
   protected loadOverviewExtras(): void {
@@ -226,9 +436,7 @@ export class DashboardComponent {
   }
 
   protected toggleTheme(): void {
-    const nextTheme = !this.isDarkTheme();
-    this.isDarkTheme.set(nextTheme);
-    localStorage.setItem('ai-lifeos-theme', nextTheme ? 'dark' : 'light');
+    this.themeService.toggleTheme();
   }
 
   protected statusLabel(status: LifeTask['status']): string {

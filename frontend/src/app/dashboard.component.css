@@ -19,7 +19,7 @@
   min-height: 100vh;
   background: var(--canvas);
   color: var(--ink);
-  font-size: 13px;
+  font-size: 15px;
   transition: background-color 160ms ease, color 160ms ease;
 }
 
@@ -2050,5 +2050,282 @@ input:focus-visible {
 
 
 
+.dashboard-shell .admin-overview-content {
+  padding-top: 0;
+}
 
+.dashboard-shell .admin-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 13px;
+}
 
+.dashboard-shell .admin-summary-card {
+  display: grid;
+  min-height: 105px;
+  align-content: space-between;
+  gap: 9px;
+}
+
+.dashboard-shell .admin-summary-card > span,
+.dashboard-shell .admin-summary-card > small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.dashboard-shell .admin-summary-card > strong {
+  color: var(--ink);
+  font-size: clamp(23px, 2.3vw, 31px);
+  font-weight: 650;
+}
+
+.dashboard-shell .admin-analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+  margin-bottom: 13px;
+}
+
+.dashboard-shell .admin-chart-panel {
+  min-height: 245px;
+}
+
+.dashboard-shell .admin-users-panel,
+.dashboard-shell .admin-workspace-panel {
+  margin-bottom: 13px;
+}
+
+.dashboard-shell .admin-user-table {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.dashboard-shell .admin-user-table-header,
+.dashboard-shell .admin-user-row {
+  display: grid;
+  min-width: 850px;
+  grid-template-columns: minmax(145px, 1.4fr) minmax(105px, 1fr) minmax(84px, .8fr) minmax(84px, .8fr) 52px minmax(140px, 1fr) 88px;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-shell .admin-user-table-header {
+  padding: 0 10px 8px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.dashboard-shell .admin-user-row {
+  min-height: 63px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
+.dashboard-shell .admin-user-row.selected {
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+.dashboard-shell .admin-user-identity,
+.dashboard-shell .admin-user-access {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.dashboard-shell .admin-user-identity strong {
+  overflow: hidden;
+  color: var(--ink);
+  text-overflow: ellipsis;
+}
+
+.dashboard-shell .admin-user-identity small,
+.dashboard-shell .admin-user-access small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 8px;
+  text-overflow: ellipsis;
+}
+
+.dashboard-shell .admin-user-access .account-inactive {
+  color: #e99c94;
+}
+
+.dashboard-shell .admin-access-badge {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.dashboard-shell .admin-view-user,
+.dashboard-shell .admin-load-more {
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-subtle);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 9px;
+}
+
+.dashboard-shell .admin-view-user:hover,
+.dashboard-shell .admin-load-more:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.dashboard-shell .admin-workspace-panel > .overview-panel-heading {
+  margin-bottom: 14px;
+}
+
+.dashboard-shell .admin-workspace-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.dashboard-shell .admin-data-section {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.dashboard-shell .admin-data-section > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--line);
+}
+
+.dashboard-shell .admin-data-section > header h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 11px;
+}
+
+.dashboard-shell .admin-data-section > header h3 span {
+  margin-left: 4px;
+  color: var(--accent);
+}
+
+.dashboard-shell .admin-data-section > header p,
+.dashboard-shell .admin-data-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.dashboard-shell .admin-record-card,
+.dashboard-shell .admin-note-card {
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-subtle);
+  color: var(--ink-soft);
+  font-size: 9px;
+}
+
+.dashboard-shell .admin-record-card > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 5px;
+}
+
+.dashboard-shell .admin-record-card strong,
+.dashboard-shell .admin-note-card summary strong {
+  color: var(--ink);
+  font-size: 9px;
+}
+
+.dashboard-shell .admin-record-card > div > span,
+.dashboard-shell .admin-note-card summary > span {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.dashboard-shell .admin-record-card p,
+.dashboard-shell .admin-note-card > p {
+  margin: 7px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--ink-soft);
+  font-size: 9px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.dashboard-shell .admin-record-card ul {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding-left: 15px;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.dashboard-shell .admin-record-deleted {
+  opacity: .62;
+}
+
+.dashboard-shell .admin-notes-section {
+  grid-column: 1 / -1;
+}
+
+.dashboard-shell .admin-note-card summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.dashboard-shell .admin-load-more {
+  justify-self: start;
+}
+
+.dashboard-shell .admin-load-more:disabled {
+  cursor: wait;
+  opacity: .6;
+}
+
+@media (max-width: 900px) {
+  .dashboard-shell .admin-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-shell .admin-overview-content {
+    padding: 4px 17px 20px;
+  }
+
+  .dashboard-shell .admin-analytics-grid,
+  .dashboard-shell .admin-workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell .admin-notes-section {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 470px) {
+  .dashboard-shell .admin-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .dashboard-shell .admin-summary-card {
+    min-height: 90px;
+    padding: 11px;
+  }
+}

@@ -5,18 +5,23 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AiPlannerComponent } from './ai-planner.component';
 import { AuthService } from './auth.service';
+import { ConfirmationService } from './confirmation.service';
 import { LifeNote, NotesService, SaveNote } from './notes.service';
+import { ThemePickerComponent } from './theme-picker.component';
+import { ThemeService } from './theme.service';
 
 @Component({
   selector: 'app-notes',
-  imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink],
+  imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink, ThemePickerComponent],
   templateUrl: './notes.component.html',
   styleUrl: './notes.component.css',
 })
 export class NotesComponent {
   private readonly notesService = inject(NotesService);
   private readonly authService = inject(AuthService);
+  private readonly confirmation = inject(ConfirmationService);
   private readonly router = inject(Router);
+  protected readonly themeService = inject(ThemeService);
 
   protected readonly currentUser = this.authService.currentUser;
   protected readonly notes = signal<LifeNote[]>([]);
@@ -26,7 +31,7 @@ export class NotesComponent {
   protected readonly error = signal<string | null>(null);
   protected readonly success = signal<string | null>(null);
   protected readonly dialogOpen = signal(false);
-  protected readonly isDarkTheme = signal(true);
+  protected readonly isDarkTheme = this.themeService.isDarkTheme;
   protected readonly profileMenuOpen = signal(false);
   protected readonly mobileNavOpen = signal(false);
   protected readonly editingNote = signal<LifeNote | null>(null);
@@ -42,7 +47,6 @@ export class NotesComponent {
   });
 
   constructor() {
-    this.isDarkTheme.set(localStorage.getItem('ai-lifeos-theme') !== 'light');
     this.loadNotes();
   }
 
@@ -127,8 +131,13 @@ export class NotesComponent {
     });
   }
 
-  protected deleteNote(note: LifeNote): void {
-    if (!confirm(`Delete “${note.title}”? This cannot be undone.`)) {
+  protected async deleteNote(note: LifeNote): Promise<void> {
+    const confirmed = await this.confirmation.confirm({
+      title: 'Delete this note?',
+      message: `“${note.title}” will be permanently removed from Notes.`,
+      confirmLabel: 'Delete note',
+    });
+    if (!confirmed) {
       return;
     }
     this.notesService.deleteNote(note.noteId).subscribe({
@@ -145,9 +154,7 @@ export class NotesComponent {
   }
 
   protected toggleTheme(): void {
-    const dark = !this.isDarkTheme();
-    this.isDarkTheme.set(dark);
-    localStorage.setItem('ai-lifeos-theme', dark ? 'dark' : 'light');
+    this.themeService.toggleTheme();
   }
 
   protected logout(): void {

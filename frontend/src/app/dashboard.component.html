@@ -1,4 +1,4 @@
-<div class="app-shell dashboard-shell" [class.theme-light]="!isDarkTheme()">
+<div class="app-shell dashboard-shell" [class.theme-light]="!isDarkTheme()" [attr.data-theme]="themeService.theme()">
   @if (mobileNavOpen()) {
     <button class="mobile-backdrop" type="button" aria-label="Close navigation" (click)="mobileNavOpen.set(false)"></button>
   }
@@ -28,6 +28,8 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" /><path d="M14 3v6h5M9 13h6M9 17h6" /></svg>
         <span>Notes</span>
       </a>
+      <a class="nav-item" routerLink="/team-chat" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">◉</span><span>Team chat</span></a>
+      @if (currentUser()?.isAdmin) { <a class="nav-item" routerLink="/admin" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">⚙</span><span>Team admin</span></a> }
       <button class="nav-item planned" type="button" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg>
         <span>Projects</span><span class="coming-soon">Soon</span>
@@ -54,14 +56,19 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
         </button>
         <div>
-          <h1>Hello, {{ displayName() }} <span class="wave" aria-hidden="true">👋</span></h1>
-          <p class="overview-date">{{ today | date: 'EEEE, MMMM d, y' }}</p>
+          @if (currentUser()?.isAdmin) {
+            <h1>Organization dashboard</h1>
+            <p class="overview-date">Team workspace activity</p>
+          } @else {
+            <h1>Hello, {{ displayName() }} <span class="wave" aria-hidden="true">👋</span></h1>
+            <p class="overview-date">{{ today | date: 'EEEE, MMMM d, y' }}</p>
+          }
         </div>
       </div>
       <div class="topbar-actions">
         <label class="search-box">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
-          <input type="search" aria-label="Search tasks" placeholder="Search tasks" [value]="searchTerm()" (input)="setSearchTerm($event)" />
+          <input type="search" [attr.aria-label]="currentUser()?.isAdmin ? 'Search user accounts' : 'Search tasks'" [placeholder]="currentUser()?.isAdmin ? 'Search accounts' : 'Search tasks'" [value]="searchTerm()" (input)="setSearchTerm($event)" />
         </label>
         <div class="popover-anchor">
           <button class="icon-button notification-button" type="button" aria-label="Notifications" [attr.aria-expanded]="notificationsOpen()" (click)="notificationsOpen.set(!notificationsOpen()); profileMenuOpen.set(false)">
@@ -74,13 +81,7 @@
             </section>
           }
         </div>
-        <button class="icon-button theme-button" type="button" [attr.aria-label]="isDarkTheme() ? 'Switch to light theme' : 'Switch to dark theme'" [title]="isDarkTheme() ? 'Switch to light theme' : 'Switch to dark theme'" (click)="toggleTheme()">
-          @if (isDarkTheme()) {
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
-          } @else {
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.5A8.5 8.5 0 0 1 8.5 3.5 8.5 8.5 0 1 0 20.5 15.5Z" /></svg>
-          }
-        </button>
+        <app-theme-picker />
         <div class="popover-anchor profile-anchor">
           <button class="profile-button" type="button" [attr.aria-expanded]="profileMenuOpen()" (click)="profileMenuOpen.set(!profileMenuOpen()); notificationsOpen.set(false)">
             <span class="avatar" aria-hidden="true">{{ displayName().charAt(0).toUpperCase() }}</span>
@@ -99,6 +100,124 @@
 
     @if (logoutError()) { <p class="logout-error" role="alert">{{ logoutError() }}</p> }
 
+    @if (currentUser()?.isAdmin) {
+      <section class="dashboard-content overview-content admin-overview-content">
+        <div class="overview-action-row">
+          <span class="overview-kicker">ORGANIZATION OVERVIEW · ADMIN ONLY</span>
+          <button class="overview-refresh" type="button" (click)="loadAdminDashboard()" [disabled]="adminDashboardLoading()">
+            {{ adminDashboardLoading() ? 'Refreshing…' : 'Refresh report' }}
+          </button>
+        </div>
+
+        @if (adminDashboardError()) {
+          <div class="overview-error" role="alert">
+            <span>{{ adminDashboardError() }}</span>
+            <button class="text-button" type="button" (click)="loadAdminDashboard()">Try again</button>
+          </div>
+        } @else if (adminDashboardLoading() && !adminDashboard()) {
+          <div class="chart-empty" role="status">Loading organization report…</div>
+        } @else if (adminDashboard(); as report) {
+          <section class="admin-summary-grid" aria-label="Organization summary">
+            <article class="overview-panel admin-summary-card"><span>Team members</span><strong>{{ report.totalUsers }}</strong><small>{{ report.inactiveUsers }} inactive</small></article>
+            <article class="overview-panel admin-summary-card"><span>Active accounts</span><strong>{{ report.activeUsers }}</strong><small>{{ report.activeAdmins }} administrators</small></article>
+            <article class="overview-panel admin-summary-card"><span>Open tasks</span><strong>{{ report.openTasks }}</strong><small>{{ report.overdueTasks }} overdue</small></article>
+            <article class="overview-panel admin-summary-card"><span>Active goals</span><strong>{{ report.activeGoals }}</strong><small>{{ report.completedGoals }} completed</small></article>
+            <article class="overview-panel admin-summary-card"><span>Notes</span><strong>{{ report.totalNotes }}</strong><small>{{ report.usersNeedingPasswordChange }} accounts need password setup</small></article>
+          </section>
+
+          <section class="admin-analytics-grid" aria-label="Organization charts">
+            <article class="overview-panel admin-chart-panel">
+              <header class="overview-panel-heading"><div><h2>Task status</h2><p>{{ report.totalTasks }} tasks across active and inactive accounts</p></div><span class="chart-legend"><i></i> Tasks</span></header>
+              @if (report.totalTasks === 0) {
+                <div class="chart-empty">Task activity will appear when users create tasks.</div>
+              } @else {
+                <div class="status-chart" role="img" aria-label="Organization tasks by status">
+                  @for (status of adminTaskStatuses(); track status.status) {
+                    <div class="chart-column"><span class="chart-count">{{ status.total }}</span><div class="chart-track"><span [class]="status.color" [style.height.%]="status.percentage"></span></div><span class="chart-label">{{ status.label }}</span></div>
+                  }
+                </div>
+              }
+            </article>
+            <article class="overview-panel admin-chart-panel">
+              <header class="overview-panel-heading"><div><h2>Team activity</h2><p>Workspace changes over the last seven days</p></div><span class="chart-legend"><i></i> Events</span></header>
+              <div class="weekly-chart-grid" role="img" aria-label="Workspace activity events over the last seven days">
+                @for (day of adminActivityDays(); track day.dateUtc) {
+                  <div class="weekly-chart-day"><span class="weekly-chart-count">{{ day.total }}</span><div class="weekly-chart-track"><span [style.height.%]="day.percentage"></span></div><span class="weekly-chart-label">{{ day.label }}</span></div>
+                }
+              </div>
+            </article>
+          </section>
+
+          <section class="overview-panel admin-users-panel">
+            <header class="overview-panel-heading"><div><h2>Account workspaces</h2><p>Review account status and work totals. Select an account to inspect its tasks, goals, and notes.</p></div><span class="trash-count">{{ adminVisibleUsers().length }} / {{ report.users.length }}</span></header>
+            @if (adminVisibleUsers().length === 0) {
+              <div class="chart-empty">{{ report.users.length ? 'No accounts match your search.' : 'No user accounts are available.' }}</div>
+            } @else {
+              <div class="admin-user-table">
+                <div class="admin-user-table-header"><span>Account</span><span>Access</span><span>Tasks</span><span>Goals</span><span>Notes</span><span>Last activity</span><span></span></div>
+                @for (user of adminVisibleUsers(); track user.userId) {
+                  <div class="admin-user-row" [class.selected]="selectedAdminUser()?.userId === user.userId">
+                    <div class="admin-user-identity"><strong>{{ user.displayName }}</strong><small>{{ user.email }}</small></div>
+                    <div class="admin-user-access"><span [class.admin-access-badge]="user.isAdmin">{{ user.isAdmin ? 'Admin' : 'Member' }}</span><small [class.account-inactive]="!user.isActive">{{ user.isActive ? 'Active' : 'Inactive' }}</small>@if (user.mustChangePassword) { <small>Password setup needed</small> }</div>
+                    <span>{{ user.openTasks }} open / {{ user.totalTasks }}</span>
+                    <span>{{ user.activeGoals }} active / {{ user.totalGoals }}</span>
+                    <span>{{ user.totalNotes }}</span>
+                    <span>{{ user.lastActivityAtUtc ? (user.lastActivityAtUtc | date: 'MMM d, y · h:mm a') : 'No activity' }}</span>
+                    <button class="admin-view-user" type="button" (click)="viewAdminWorkspace(user)">{{ selectedAdminUser()?.userId === user.userId ? 'Selected' : 'View data' }}</button>
+                  </div>
+                }
+              </div>
+            }
+          </section>
+
+          @if (selectedAdminUser(); as user) {
+            <section class="overview-panel admin-workspace-panel" aria-live="polite">
+              <header class="overview-panel-heading">
+                <div><h2>{{ user.displayName }}’s workspace</h2><p>{{ user.email }} · {{ user.isAdmin ? 'Administrator' : 'Member' }} · Account created {{ user.createdAtUtc | date: 'MMM d, y' }}</p></div>
+                <span class="chart-legend"><i></i> Admin-only access</span>
+              </header>
+              @if (adminWorkspaceError()) { <p class="overview-error" role="alert">{{ adminWorkspaceError() }}</p> }
+              @if (adminWorkspaceLoading()) { <div class="chart-empty" role="status">Loading account data…</div> }
+              @if (adminWorkspace(); as workspace) {
+                <div class="admin-workspace-grid">
+                  <section class="admin-data-section">
+                    <header><h3>Tasks <span>{{ workspace.tasks.totalCount }}</span></h3><p>Includes deleted items</p></header>
+                    @if (!workspace.tasks.items.length) { <p class="admin-data-empty">No tasks.</p> }
+                    @for (task of workspace.tasks.items; track task.taskId) {
+                      <article class="admin-record-card" [class.admin-record-deleted]="task.isDeleted">
+                        <div><strong>{{ task.title }}</strong><span>{{ task.status }} · priority {{ task.priority }}@if (task.isDeleted) { · Deleted }</span></div>
+                        @if (task.description) { <p>{{ task.description }}</p> }
+                      </article>
+                    }
+                    @if (workspace.tasks.items.length < workspace.tasks.totalCount) { <button class="admin-load-more" type="button" [disabled]="loadingAdminCollection() !== null" (click)="loadMoreAdminWorkspace('tasks')">{{ loadingAdminCollection() === 'tasks' ? 'Loading…' : 'Load more tasks' }}</button> }
+                  </section>
+                  <section class="admin-data-section">
+                    <header><h3>Goals <span>{{ workspace.goals.totalCount }}</span></h3><p>Includes deleted items</p></header>
+                    @if (!workspace.goals.items.length) { <p class="admin-data-empty">No goals.</p> }
+                    @for (goal of workspace.goals.items; track goal.goalId) {
+                      <article class="admin-record-card" [class.admin-record-deleted]="goal.isDeleted">
+                        <div><strong>{{ goal.title }}</strong><span>{{ goal.status }} · {{ goal.progress }}%@if (goal.isDeleted) { · Deleted }</span></div>
+                        @if (goal.description) { <p>{{ goal.description }}</p> }
+                        @if (goal.milestones.length) { <ul>@for (milestone of goal.milestones; track milestone.sortOrder) { <li>{{ milestone.isCompleted ? '✓' : '○' }} {{ milestone.title }}</li> }</ul> }
+                      </article>
+                    }
+                    @if (workspace.goals.items.length < workspace.goals.totalCount) { <button class="admin-load-more" type="button" [disabled]="loadingAdminCollection() !== null" (click)="loadMoreAdminWorkspace('goals')">{{ loadingAdminCollection() === 'goals' ? 'Loading…' : 'Load more goals' }}</button> }
+                  </section>
+                  <section class="admin-data-section admin-notes-section">
+                    <header><h3>Notes <span>{{ workspace.notes.totalCount }}</span></h3><p>Note contents are visible to administrators</p></header>
+                    @if (!workspace.notes.items.length) { <p class="admin-data-empty">No notes.</p> }
+                    @for (note of workspace.notes.items; track note.noteId) {
+                      <details class="admin-note-card"><summary><strong>{{ note.title }}</strong><span>{{ note.isPinned ? 'Pinned' : 'Note' }} · {{ note.updatedAtUtc ? (note.updatedAtUtc | date: 'MMM d, y') : (note.createdAtUtc | date: 'MMM d, y') }}</span></summary><p>{{ note.content }}</p></details>
+                    }
+                    @if (workspace.notes.items.length < workspace.notes.totalCount) { <button class="admin-load-more" type="button" [disabled]="loadingAdminCollection() !== null" (click)="loadMoreAdminWorkspace('notes')">{{ loadingAdminCollection() === 'notes' ? 'Loading…' : 'Load more notes' }}</button> }
+                  </section>
+                </div>
+              }
+            </section>
+          }
+        }
+      </section>
+    } @else {
     <div class="dashboard-content overview-content">
       <div class="overview-action-row">
         <span class="overview-kicker">YOUR PERSONAL COMMAND CENTER</span>
@@ -164,6 +283,26 @@
                 }
               </div>
               <div class="chart-footer"><span>{{ tasks().length }} total tasks</span><a routerLink="/tasks">Manage tasks <span aria-hidden="true">→</span></a></div>
+            }
+          </article>
+
+          <article class="overview-panel weekly-activity-panel">
+            <header class="overview-panel-heading">
+              <div><h2>Weekly activity</h2><p>Tasks created over the last seven days</p></div>
+              <span class="chart-legend"><i></i> Created</span>
+            </header>
+            @if (tasksLoading()) {
+              <div class="chart-empty" role="status">Loading weekly activity…</div>
+            } @else {
+              <div class="weekly-chart-grid" role="img" aria-label="Tasks created each day during the last seven days">
+                @for (day of weeklyTaskActivity(); track day.dateKey) {
+                  <div class="weekly-chart-day">
+                    <span class="weekly-chart-count">{{ day.count }}</span>
+                    <div class="weekly-chart-track"><span [style.height.%]="day.percentage"></span></div>
+                    <span class="weekly-chart-label">{{ day.label }}</span>
+                  </div>
+                }
+              </div>
             }
           </article>
 
@@ -300,5 +439,6 @@
       </section>
       <footer class="dashboard-footer"><span>AI LifeOS</span><span>One intentional day at a time.</span></footer>
     </div>
+    }
   </main>
 </div>

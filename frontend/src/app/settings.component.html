@@ -1,4 +1,4 @@
-<div class="app-shell settings-shell" [class.theme-light]="!isDarkTheme()">
+<div class="app-shell settings-shell" [class.theme-light]="!isDarkTheme()" [attr.data-theme]="themeService.theme()">
   <aside class="sidebar">
     <a class="brand" routerLink="/" aria-label="AI LifeOS home">
       <span class="brand-mark" aria-hidden="true">⌁</span>
@@ -10,6 +10,8 @@
       <a class="nav-item" routerLink="/tasks"><span aria-hidden="true">☷</span><span>Tasks</span></a>
       <a class="nav-item" routerLink="/goals"><span aria-hidden="true">◎</span><span>Goals</span></a>
       <a class="nav-item" routerLink="/notes"><span aria-hidden="true">▤</span><span>Notes</span></a>
+      <a class="nav-item" routerLink="/team-chat"><span aria-hidden="true">◉</span><span>Team chat</span></a>
+      @if (currentUser()?.isAdmin) { <a class="nav-item" routerLink="/admin"><span aria-hidden="true">⚙</span><span>Team admin</span></a> }
       <button class="nav-item planned" type="button" disabled><span aria-hidden="true">▣</span><span>Projects</span><span class="coming-soon">Soon</span></button>
       <button class="nav-item planned" type="button" disabled><span aria-hidden="true">♧</span><span>Reminders</span><span class="coming-soon">Soon</span></button>
     </nav>
@@ -25,7 +27,7 @@
         <p class="breadcrumb">Workspace <span>/</span> Settings</p>
         <h1>Settings</h1>
       </div>
-      <span class="profile-chip">{{ currentUser()?.displayName || 'My space' }}</span>
+      <div class="topbar-actions"><app-theme-picker /><span class="profile-chip">{{ currentUser()?.displayName || 'My space' }}</span></div>
     </header>
 
     <div class="settings-content">
@@ -47,7 +49,7 @@
                 [ngModel]="displayName()" (ngModelChange)="displayName.set($event)" />
             </label>
             <label>Email address
-              <input name="email" type="email" required maxlength="320"
+              <input name="email" type="email" required maxlength="256"
                 [ngModel]="email()" (ngModelChange)="email.set($event)" />
             </label>
           </div>
@@ -65,14 +67,61 @@
           <div><p class="eyebrow">PREFERENCES</p><h2 id="appearance-heading">Appearance</h2></div>
           <span class="card-icon" aria-hidden="true">◐</span>
         </div>
-        <p class="section-copy">Choose the theme used throughout this browser.</p>
+        <p class="section-copy">Choose a workspace palette. Your choice applies across every page and is remembered on this browser.</p>
         <div class="theme-options" role="group" aria-label="Color theme">
-          <button type="button" [class.selected]="isDarkTheme()" [attr.aria-pressed]="isDarkTheme()" (click)="setTheme('dark')">
-            <span class="theme-preview dark-preview" aria-hidden="true">◐</span><span><strong>Dark</strong><small>Easy on the eyes</small></span>
-          </button>
-          <button type="button" [class.selected]="!isDarkTheme()" [attr.aria-pressed]="!isDarkTheme()" (click)="setTheme('light')">
-            <span class="theme-preview light-preview" aria-hidden="true">☼</span><span><strong>Light</strong><small>Bright and clear</small></span>
-          </button>
+          @for (option of themeOptions; track option.value) {
+            <button type="button" [class.selected]="themeService.theme() === option.value"
+              [attr.aria-pressed]="themeService.theme() === option.value" (click)="setTheme(option.value)">
+              <span [class]="'theme-preview ' + option.preview" aria-hidden="true">
+                <i></i><b></b><em></em><strong></strong>
+              </span>
+              <span><strong>{{ option.name }}</strong><small>{{ option.description }}</small></span>
+            </button>
+          }
+        </div>
+      </section>
+
+      <section class="settings-card" aria-labelledby="loader-style-heading">
+        <div class="card-heading">
+          <div><p class="eyebrow">MOTION</p><h2 id="loader-style-heading">Loading animation</h2></div>
+          <span class="card-icon" aria-hidden="true">✧</span>
+        </div>
+        <p class="section-copy">Choose the animation shown while AI is preparing a draft.</p>
+        <div class="preference-options" role="group" aria-label="Loading animation">
+          @for (option of loaderOptions; track option.value) {
+            <button class="style-option" type="button"
+              [class.selected]="uiPreferences.loaderStyle() === option.value"
+              [attr.aria-pressed]="uiPreferences.loaderStyle() === option.value"
+              (click)="setLoaderStyle(option.value)">
+              <span [class]="'loader-mockup ' + option.value" aria-hidden="true">
+                <i></i><i></i><i></i>
+              </span>
+              <strong>{{ option.name }}</strong>
+              <small>{{ option.description }}</small>
+            </button>
+          }
+        </div>
+      </section>
+
+      <section class="settings-card" aria-labelledby="alert-style-heading">
+        <div class="card-heading">
+          <div><p class="eyebrow">FEEDBACK</p><h2 id="alert-style-heading">Confirmation style</h2></div>
+          <span class="card-icon" aria-hidden="true">◇</span>
+        </div>
+        <p class="section-copy">Preview how confirmation prompts appear before choosing a destructive action.</p>
+        <div class="preference-options" role="group" aria-label="Confirmation style">
+          @for (option of alertOptions; track option.value) {
+            <button class="style-option" type="button"
+              [class.selected]="uiPreferences.alertStyle() === option.value"
+              [attr.aria-pressed]="uiPreferences.alertStyle() === option.value"
+              (click)="setAlertStyle(option.value)">
+              <span [class]="'alert-mockup ' + option.value" aria-hidden="true">
+                <i></i><b></b><em></em><span></span><span></span>
+              </span>
+              <strong>{{ option.name }}</strong>
+              <small>{{ option.description }}</small>
+            </button>
+          }
         </div>
       </section>
 

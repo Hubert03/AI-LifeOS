@@ -1,4 +1,4 @@
-<main class="auth-layout">
+<main class="auth-layout" [class.theme-light]="!isDarkTheme()" [attr.data-theme]="themeService.theme()">
   <section class="auth-card" aria-labelledby="auth-heading">
     <a class="brand" routerLink="/" aria-label="AI LifeOS home">
       <span class="brand-mark" aria-hidden="true">L</span>
@@ -6,9 +6,9 @@
     </a>
 
     <p class="eyebrow">YOUR PERSONAL WORKSPACE</p>
-    <h1 id="auth-heading">{{ isRegister() ? 'Create your account' : 'Welcome back' }}</h1>
+    <h1 id="auth-heading">Welcome back</h1>
     <p class="intro">
-      {{ isRegister() ? 'Start building a little more clarity into every day.' : 'Sign in to continue to your LifeOS.' }}
+      Sign in to continue to your LifeOS.
     </p>
 
     @if (errorMessage()) {
@@ -16,20 +16,6 @@
     }
 
     <form (ngSubmit)="submit()" #authForm="ngForm">
-      @if (isRegister()) {
-        <label for="displayName">Your name</label>
-        <input
-          id="displayName"
-          name="displayName"
-          type="text"
-          autocomplete="name"
-          [(ngModel)]="displayName"
-          required
-          minlength="2"
-          maxlength="100"
-        />
-      }
-
       <label for="email">Email address</label>
       <input
         id="email"
@@ -38,7 +24,7 @@
         autocomplete="email"
         [(ngModel)]="email"
         required
-        maxlength="320"
+        maxlength="256"
       />
 
       <label for="password">Password</label>
@@ -46,56 +32,22 @@
         id="password"
         name="password"
         type="password"
-        [autocomplete]="isRegister() ? 'new-password' : 'current-password'"
+        autocomplete="current-password"
         [(ngModel)]="password"
         required
-        [minlength]="isRegister() ? 12 : 1"
+        minlength="1"
         maxlength="128"
       />
-
-      @if (isRegister()) {
-        <label for="confirmPassword">Confirm password</label>
-        <input
-          id="confirmPassword"
-          name="confirmPassword"
-          type="password"
-          autocomplete="new-password"
-          [(ngModel)]="confirmPassword"
-          required
-          minlength="12"
-          maxlength="128"
-        />
-        <p class="password-help">
-          Use at least 12 characters, including uppercase, lowercase, a number, and a symbol.
-        </p>
-      }
-
-      @if (isRegister() && confirmPassword && !passwordsMatch()) {
-        <p class="field-error" role="alert">The passwords do not match.</p>
-      }
 
       <button
         class="submit-button"
         type="submit"
-        [disabled]="!csrfReady() || isSubmitting() || !authForm.valid || !passwordsMatch()"
+        [disabled]="!csrfReady() || isSubmitting() || !authForm.valid"
       >
-        {{
-          isSubmitting()
-            ? 'Please wait…'
-            : isRegister()
-              ? 'Create account'
-              : 'Sign in'
-        }}
+        {{ isSubmitting() ? 'Please wait…' : 'Sign in' }}
       </button>
     </form>
 
-    <p class="switch-mode">
-      {{ isRegister() ? 'Already have an account?' : 'New to AI LifeOS?' }}
-      @if (isRegister()) {
-        <a routerLink="/login">Sign in</a>
-      } @else {
-        <a routerLink="/register">Create an account</a>
-      }
-    </p>
+    <p class="switch-mode">Accounts are provisioned by your AI LifeOS administrator.</p>
   </section>
 </main>

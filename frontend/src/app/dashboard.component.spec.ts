@@ -34,6 +34,8 @@ describe('DashboardComponent', () => {
       userId: '95fa6c77-1b2a-48df-aea6-77860d2eb6d3',
       email: 'dilan@example.com',
       displayName: 'Dilan Learner',
+      isAdmin: false,
+      mustChangePassword: false,
     });
     const fixture = TestBed.createComponent(DashboardComponent);
     fixture.detectChanges();
@@ -85,6 +87,7 @@ describe('DashboardComponent', () => {
       [...page.querySelectorAll<HTMLAnchorElement>('.summary-stat')].map((link) => link.getAttribute('href')),
     ).toContain('/tasks?status=InProgress');
     expect(page.querySelector('.month-goal-panel')?.getAttribute('href')).toBe('/goals');
+    expect(page.querySelectorAll('.weekly-chart-day')).toHaveLength(7);
     expect(page.textContent).toContain('Prepare presentation');
     expect(page.textContent).toContain('Set a meaningful goal');
     expect(page.querySelector('app-ai-planner')).toBeTruthy();
@@ -138,10 +141,16 @@ describe('DashboardComponent', () => {
       'You’re all caught up.',
     );
 
-    (page.querySelector('.theme-button') as HTMLButtonElement).click();
+    (page.querySelector('.theme-picker-trigger') as HTMLButtonElement).click();
     fixture.detectChanges();
-    expect(page.querySelector('.app-shell')?.classList.contains('theme-light')).toBe(true);
-    expect(localStorage.getItem('ai-lifeos-theme')).toBe('light');
+    const oceanTheme = Array.from(
+      page.querySelectorAll<HTMLButtonElement>('.theme-choice'),
+    ).find((button) => button.textContent?.includes('Ocean'));
+    expect(oceanTheme).toBeDefined();
+    oceanTheme?.click();
+    fixture.detectChanges();
+    expect(page.querySelector('.app-shell')?.getAttribute('data-theme')).toBe('ocean');
+    expect(localStorage.getItem('ai-lifeos-theme')).toBe('ocean');
   });
 
   it('explains when task loading fails because the session expired', () => {
@@ -159,5 +168,106 @@ describe('DashboardComponent', () => {
     expect(fixture.nativeElement.textContent).toContain(
       'Your session has expired. Please sign in again to load your tasks.',
     );
+  });
+
+  it('shows an admin-only organization dashboard and opens one account workspace on demand', () => {
+    TestBed.inject(AuthService).currentUser.set({
+      userId: 'admin-1',
+      email: 'admin@example.com',
+      displayName: 'Workspace Admin',
+      isAdmin: true,
+      mustChangePassword: false,
+    });
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    const user = {
+      userId: 'member-1',
+      email: 'member@example.com',
+      displayName: 'Member One',
+      isAdmin: false,
+      isActive: true,
+      mustChangePassword: false,
+      createdAtUtc: '2026-10-01T00:00:00Z',
+      totalTasks: 1,
+      openTasks: 1,
+      completedTasks: 0,
+      overdueTasks: 0,
+      totalGoals: 1,
+      activeGoals: 1,
+      completedGoals: 0,
+      totalNotes: 1,
+      lastActivityAtUtc: '2026-10-12T12:00:00Z',
+    };
+    httpTesting.expectOne('/api/admin/dashboard').flush({
+      totalUsers: 2,
+      activeUsers: 2,
+      inactiveUsers: 0,
+      activeAdmins: 1,
+      usersNeedingPasswordChange: 0,
+      totalTasks: 1,
+      openTasks: 1,
+      completedTasks: 0,
+      overdueTasks: 0,
+      activeGoals: 1,
+      completedGoals: 0,
+      totalNotes: 1,
+      taskStatuses: [{ status: 'Pending', total: 1 }],
+      activityByDay: [{ dateUtc: '2026-10-12T00:00:00Z', total: 2 }],
+      users: [user],
+    });
+    fixture.detectChanges();
+
+    const page = fixture.nativeElement as HTMLElement;
+    expect(page.querySelector('h1')?.textContent).toContain('Organization dashboard');
+    expect(page.textContent).toContain('Team members');
+    expect(page.textContent).toContain('Member One');
+    httpTesting.expectNone('/api/tasks');
+    httpTesting.expectNone('/api/goals');
+    httpTesting.expectNone('/api/notes');
+
+    page.querySelector<HTMLButtonElement>('.admin-view-user')!.click();
+    fixture.detectChanges();
+    httpTesting
+      .expectOne('/api/admin/users/member-1/workspace/tasks?skip=0&take=25')
+      .flush({
+        items: [{
+          taskId: 'task-1',
+          title: 'Private member task',
+          description: null,
+          status: 'Pending',
+          priority: 2,
+          dueAtUtc: null,
+          createdAtUtc: '2026-10-12T12:00:00Z',
+          updatedAtUtc: null,
+          isDeleted: false,
+        }],
+        skip: 0,
+        take: 25,
+        totalCount: 1,
+      });
+    httpTesting
+      .expectOne('/api/admin/users/member-1/workspace/goals?skip=0&take=25')
+      .flush({ items: [], skip: 0, take: 25, totalCount: 0 });
+    httpTesting
+      .expectOne('/api/admin/users/member-1/workspace/notes?skip=0&take=25')
+      .flush({
+        items: [{
+          noteId: 'note-1',
+          title: 'Private member note',
+          content: 'Member-owned note contents.',
+          color: '#F3F4F6',
+          isPinned: false,
+          createdAtUtc: '2026-10-12T12:00:00Z',
+          updatedAtUtc: null,
+        }],
+        skip: 0,
+        take: 25,
+        totalCount: 1,
+      });
+    fixture.detectChanges();
+
+    expect(page.textContent).toContain('Private member task');
+    expect(page.textContent).toContain('Member-owned note contents.');
   });
 });

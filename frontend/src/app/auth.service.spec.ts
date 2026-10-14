@@ -11,6 +11,8 @@ describe('AuthService', () => {
     userId: '95fa6c77-1b2a-48df-aea6-77860d2eb6d3',
     email: 'learner@example.com',
     displayName: 'LifeOS Learner',
+    isAdmin: false,
+    mustChangePassword: false,
   };
 
   beforeEach(() => {
@@ -34,6 +36,24 @@ describe('AuthService', () => {
     const request = httpTesting.expectOne('/api/auth/login');
     expect(request.request.method).toBe('POST');
     expect(request.request.headers.get('X-CSRF-TOKEN')).toBe('csrf-token');
+    request.flush(user);
+  });
+
+  it('accepts a single-use invitation and stores the new account session', () => {
+    const token = 'one-time-invitation-token';
+    service.acceptInvitation(token, 'Strong-Password1!').subscribe((result) => {
+      expect(result).toEqual(user);
+      expect(service.currentUser()).toEqual(user);
+    });
+
+    httpTesting.expectOne('/api/auth/csrf').flush({ requestToken: 'invite-csrf' });
+    const request = httpTesting.expectOne('/api/auth/accept-invitation');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get('X-CSRF-TOKEN')).toBe('invite-csrf');
+    expect(request.request.body).toEqual({
+      token,
+      password: 'Strong-Password1!',
+    });
     request.flush(user);
   });
 

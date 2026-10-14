@@ -1,0 +1,65 @@
+<div class="app-shell team-shell chat-shell" [class.theme-light]="themeService.theme() === 'light'" [attr.data-theme]="themeService.theme()">
+  @if (mobileNavOpen()) { <button class="mobile-backdrop" type="button" aria-label="Close navigation" (click)="mobileNavOpen.set(false)"></button> }
+  <aside class="sidebar" [class.sidebar-open]="mobileNavOpen()">
+    <a class="brand" routerLink="/" (click)="mobileNavOpen.set(false)"><span class="brand-mark">L</span><span>AI <strong>LifeOS</strong></span></a>
+    <p class="nav-label">WORKSPACE</p>
+    <nav aria-label="Main navigation">
+      <a class="nav-item" routerLink="/" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1.5" /><rect x="14" y="4" width="6" height="6" rx="1.5" /><rect x="4" y="14" width="6" height="6" rx="1.5" /><rect x="14" y="14" width="6" height="6" rx="1.5" /></svg><span>Overview</span></a>
+      <a class="nav-item" routerLink="/tasks" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h12M8 12h12M8 19h12" /><path d="m3 5 1 1 2-2M3 12l1 1 2-2M3 19l1 1 2-2" /></svg><span>Tasks</span></a>
+      <a class="nav-item" routerLink="/goals" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9" /><circle cx="12" cy="12" r="9" /></svg><span>Goals</span></a>
+      <a class="nav-item" routerLink="/notes" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" /><path d="M14 3v6h5M9 13h6M9 17h6" /></svg><span>Notes</span></a>
+      <a class="nav-item active" routerLink="/team-chat" aria-current="page" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">◉</span><span>Team chat</span></a>
+      @if (currentUser()?.isAdmin) { <a class="nav-item" routerLink="/admin" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">⚙</span><span>Team admin</span></a> }
+      <button class="nav-item planned" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg><span>Projects</span><span class="coming-soon">Soon</span></button>
+      <button class="nav-item planned" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg><span>Reminders</span><span class="coming-soon">Soon</span></button>
+    </nav>
+    <div class="sidebar-bottom">
+      <a class="nav-item" routerLink="/settings" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.5.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.5-.9l-1.7.6-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.8l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.5-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.5.9l1.7-.6 1.4 2.4-1.4 1.1a7 7 0 0 1 0 1.7Z" /></svg><span>Settings</span></a>
+      <div class="connection-status"><span class="status-dot" aria-hidden="true"></span><span>Private team space</span></div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div class="page-heading"><button class="icon-button menu-button" type="button" aria-label="Open navigation" [attr.aria-expanded]="mobileNavOpen()" (click)="mobileNavOpen.set(!mobileNavOpen())"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg></button><div><p class="chat-kicker">TEAM CONVERSATION</p><h1>Team chat</h1><p>Only people assigned to a group can access its messages.</p></div></div>
+      <div class="topbar-actions"><app-theme-picker /><button class="secondary-button" type="button" (click)="loadGroups()">Refresh groups</button><button class="secondary-button" type="button" (click)="logout()">Sign out</button></div>
+    </header>
+    <div class="chat-content">
+      @if (errorMessage()) { <p class="chat-alert" role="alert">{{ errorMessage() }}</p> }
+      <section class="chat-layout">
+        <aside class="chat-groups" aria-label="Your groups">
+          <div class="chat-group-title"><strong>Your groups</strong><span>{{ groups().length }}</span></div>
+          @if (loading()) { <p class="chat-empty">Loading groups…</p> }
+          @else if (!groups().length) { <p class="chat-empty">You have not been added to any chat groups yet. Ask your administrator to assign you to one.</p> }
+          @else {
+            @for (group of groups(); track group.groupId) {
+              <button type="button" class="chat-group-button" [class.selected]="selectedGroupId() === group.groupId" (click)="selectGroup(group)">
+                <span class="group-avatar">{{ group.name.charAt(0).toUpperCase() }}</span><span><strong>{{ group.name }}</strong><small>Private group chat</small></span>
+              </button>
+            }
+          }
+        </aside>
+        <section class="chat-conversation" aria-label="Conversation">
+          @if (selectedGroupId(); as selectedId) {
+            <div class="conversation-heading"><div><span class="conversation-orb"></span><div><h2>{{ groups().find(group => group.groupId === selectedId)?.name }}</h2><p>Messages are visible only to group members</p></div></div><button class="secondary-button" type="button" (click)="refreshMessages()">Refresh</button></div>
+            <div class="message-list" aria-live="polite">
+              @if (!messages().length) { <div class="chat-empty centered">Start the conversation with a thoughtful message.</div> }
+              @for (message of messages(); track message.messageId) {
+                <article class="chat-message" [class.own-message]="message.userId === currentUser()?.userId">
+                  <span class="message-avatar">{{ message.displayName.charAt(0).toUpperCase() }}</span>
+                  <div class="message-body"><div class="message-meta"><strong>{{ message.userId === currentUser()?.userId ? 'You' : message.displayName }}</strong><time>{{ message.createdAtUtc | date:'shortTime' }}</time></div><p>{{ message.content }}</p></div>
+                </article>
+              }
+            </div>
+            <form class="message-composer" #messageForm="ngForm" (ngSubmit)="sendMessage()">
+              <textarea name="message" [(ngModel)]="messageDraft" rows="2" maxlength="2000" required placeholder="Write a message…" aria-label="Message"></textarea>
+              <button type="submit" [disabled]="!messageForm.valid || !messageDraft.trim() || sending()">{{ sending() ? 'Sending…' : 'Send message' }}</button>
+            </form>
+          } @else {
+            <div class="chat-empty centered"><span class="empty-orb">✦</span><h2>Your team space</h2><p>When an administrator adds you to a group, conversations will appear here.</p></div>
+          }
+        </section>
+      </section>
+    </div>
+  </main>
+</div>

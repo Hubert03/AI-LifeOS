@@ -4,19 +4,40 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
 import { AiProviderSettings, SettingsService } from './settings.service';
+import { ThemePickerComponent } from './theme-picker.component';
+import { ThemeMode, ThemeService } from './theme.service';
+import { AlertStyle, LoaderStyle, UiPreferencesService } from './ui-preferences.service';
 
 @Component({
   selector: 'app-settings',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, ThemePickerComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css',
 })
 export class SettingsComponent {
   private readonly authService = inject(AuthService);
   private readonly settingsService = inject(SettingsService);
+  protected readonly themeService = inject(ThemeService);
+  protected readonly uiPreferences = inject(UiPreferencesService);
 
   protected readonly currentUser = this.authService.currentUser;
-  protected readonly isDarkTheme = signal(localStorage.getItem('ai-lifeos-theme') !== 'light');
+  protected readonly isDarkTheme = this.themeService.isDarkTheme;
+  protected readonly themeOptions = [
+    { value: 'dark', name: 'Midnight', description: 'Deep slate with violet glow', preview: 'dark-preview' },
+    { value: 'light', name: 'Light', description: 'Bright, clear surfaces', preview: 'light-preview' },
+    { value: 'ocean', name: 'Ocean', description: 'Cool blue and aqua accents', preview: 'ocean-preview' },
+    { value: 'forest', name: 'Forest', description: 'Calm evergreen tones', preview: 'forest-preview' },
+  ] as const;
+  protected readonly loaderOptions = [
+    { value: 'gear', name: 'Gearworks', description: 'A little machine at work' },
+    { value: 'pulse', name: 'Pulse', description: 'A calm three-beat rhythm' },
+    { value: 'orbit', name: 'Orbit', description: 'Three lights in motion' },
+  ] as const;
+  protected readonly alertOptions = [
+    { value: 'classic', name: 'Studio', description: 'Centered with a clear action' },
+    { value: 'minimal', name: 'Minimal', description: 'Compact and to the point' },
+    { value: 'glass', name: 'Glass', description: 'Soft, layered glass surface' },
+  ] as const;
   protected readonly displayName = signal(this.currentUser()?.displayName ?? '');
   protected readonly email = signal(this.currentUser()?.email ?? '');
   protected readonly currentPassword = signal('');
@@ -42,9 +63,16 @@ export class SettingsComponent {
     this.loadAiSettings();
   }
 
-  protected setTheme(theme: 'dark' | 'light'): void {
-    this.isDarkTheme.set(theme === 'dark');
-    localStorage.setItem('ai-lifeos-theme', theme);
+  protected setTheme(theme: ThemeMode): void {
+    this.themeService.setTheme(theme);
+  }
+
+  protected setLoaderStyle(style: LoaderStyle): void {
+    this.uiPreferences.setLoaderStyle(style);
+  }
+
+  protected setAlertStyle(style: AlertStyle): void {
+    this.uiPreferences.setAlertStyle(style);
   }
 
   protected saveProfile(): void {

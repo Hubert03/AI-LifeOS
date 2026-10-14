@@ -5,21 +5,26 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AiPlannerComponent } from './ai-planner.component';
 import { AuthService } from './auth.service';
+import { ConfirmationService } from './confirmation.service';
 import { LifeTask, SaveTask, TaskStatus, TasksService } from './tasks.service';
+import { ThemePickerComponent } from './theme-picker.component';
+import { ThemeService } from './theme.service';
 
 type TaskFilter = 'All' | TaskStatus;
 type PriorityFilter = 'All' | number;
 
 @Component({
   selector: 'app-tasks',
-  imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink],
+  imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink, ThemePickerComponent],
   templateUrl: './tasks.component.html',
 })
 export class TasksComponent {
   private readonly tasksService = inject(TasksService);
   private readonly authService = inject(AuthService);
+  private readonly confirmation = inject(ConfirmationService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  protected readonly themeService = inject(ThemeService);
 
   protected readonly currentUser = this.authService.currentUser;
   protected readonly tasks = signal<LifeTask[]>([]);
@@ -31,7 +36,7 @@ export class TasksComponent {
   protected readonly statusFilter = signal<TaskFilter>('All');
   protected readonly priorityFilter = signal<PriorityFilter>('All');
   protected readonly sortOrder = signal<'due' | 'priority' | 'newest'>('due');
-  protected readonly isDarkTheme = signal(true);
+  protected readonly isDarkTheme = this.themeService.isDarkTheme;
   protected readonly notificationsOpen = signal(false);
   protected readonly profileMenuOpen = signal(false);
   protected readonly mobileNavOpen = signal(false);
@@ -95,7 +100,6 @@ export class TasksComponent {
   });
 
   constructor() {
-    this.isDarkTheme.set(localStorage.getItem('ai-lifeos-theme') !== 'light');
     this.route.queryParamMap.subscribe((params) => {
       const status = this.statusFilters.find((filter) => filter === params.get('status'));
       if (status) {
@@ -240,8 +244,16 @@ export class TasksComponent {
     });
   }
 
-  protected deleteTask(task: LifeTask): void {
-    if (this.busyTaskId() || !window.confirm(`Delete “${task.title}”? This cannot be undone.`)) {
+  protected async deleteTask(task: LifeTask): Promise<void> {
+    if (this.busyTaskId()) {
+      return;
+    }
+    const confirmed = await this.confirmation.confirm({
+      title: 'Delete this task?',
+      message: `“${task.title}” will be moved to Trash. You can restore it later.`,
+      confirmLabel: 'Move to Trash',
+    });
+    if (!confirmed || this.busyTaskId()) {
       return;
     }
 
@@ -262,9 +274,7 @@ export class TasksComponent {
   }
 
   protected toggleTheme(): void {
-    const nextTheme = !this.isDarkTheme();
-    this.isDarkTheme.set(nextTheme);
-    localStorage.setItem('ai-lifeos-theme', nextTheme ? 'dark' : 'light');
+    this.themeService.toggleTheme();
   }
 
   protected logout(): void {

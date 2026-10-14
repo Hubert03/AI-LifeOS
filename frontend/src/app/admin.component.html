@@ -1,0 +1,113 @@
+<div class="app-shell team-shell" [class.theme-light]="themeService.theme() === 'light'" [attr.data-theme]="themeService.theme()">
+  @if (mobileNavOpen()) { <button class="mobile-backdrop" type="button" aria-label="Close navigation" (click)="mobileNavOpen.set(false)"></button> }
+  <aside class="sidebar" [class.sidebar-open]="mobileNavOpen()">
+    <a class="brand" routerLink="/" (click)="mobileNavOpen.set(false)"><span class="brand-mark">L</span><span>AI <strong>LifeOS</strong></span></a>
+    <p class="nav-label">WORKSPACE</p>
+    <nav aria-label="Main navigation">
+      <a class="nav-item" routerLink="/" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1.5" /><rect x="14" y="4" width="6" height="6" rx="1.5" /><rect x="4" y="14" width="6" height="6" rx="1.5" /><rect x="14" y="14" width="6" height="6" rx="1.5" /></svg><span>Overview</span></a>
+      <a class="nav-item" routerLink="/tasks" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h12M8 12h12M8 19h12" /><path d="m3 5 1 1 2-2M3 12l1 1 2-2M3 19l1 1 2-2" /></svg><span>Tasks</span></a>
+      <a class="nav-item" routerLink="/goals" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9" /><circle cx="12" cy="12" r="9" /></svg><span>Goals</span></a>
+      <a class="nav-item" routerLink="/notes" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" /><path d="M14 3v6h5M9 13h6M9 17h6" /></svg><span>Notes</span></a>
+      <a class="nav-item" routerLink="/team-chat" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">◉</span><span>Team chat</span></a>
+      <a class="nav-item active" routerLink="/admin" aria-current="page" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">⚙</span><span>Team admin</span></a>
+      <button class="nav-item planned" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg><span>Projects</span><span class="coming-soon">Soon</span></button>
+      <button class="nav-item planned" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg><span>Reminders</span><span class="coming-soon">Soon</span></button>
+    </nav>
+    <div class="sidebar-bottom">
+      <a class="nav-item" routerLink="/settings" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.5.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.5-.9l-1.7.6-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.8l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.5-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.5.9l1.7-.6 1.4 2.4-1.4 1.1a7 7 0 0 1 0 1.7Z" /></svg><span>Settings</span></a>
+      <div class="connection-status"><span class="status-dot" aria-hidden="true"></span><span>Admin workspace</span></div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div class="page-heading"><button class="icon-button menu-button" type="button" aria-label="Open navigation" [attr.aria-expanded]="mobileNavOpen()" (click)="mobileNavOpen.set(!mobileNavOpen())"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg></button><div><h1>Team administration</h1><p>Manage accounts and private team chat groups.</p></div></div>
+      <div class="topbar-actions"><app-theme-picker /><span class="admin-user">{{ currentUser()?.displayName }}</span><button class="secondary-button" type="button" (click)="logout()">Sign out</button></div>
+    </header>
+
+    <div class="team-content">
+      @if (errorMessage()) { <p class="team-alert error" role="alert">{{ errorMessage() }}</p> }
+      @if (successMessage()) { <p class="team-alert success" role="status">{{ successMessage() }}</p> }
+      @if (createdUser(); as created) {
+        <section class="team-alert credential" role="status">
+          <div><strong>Account created</strong><p>Share this temporary password with {{ created.displayName }} through a secure channel. It is shown only once.</p></div>
+          <code>{{ created.temporaryPassword }}</code>
+          <button type="button" (click)="createdUser.set(null)">Dismiss</button>
+        </section>
+      }
+
+      <nav class="admin-shortcuts" aria-label="Administrator sections">
+        <button type="button" (click)="scrollToSection('accounts')">Accounts <span>{{ users().length }}</span></button>
+        <button type="button" (click)="scrollToSection('create-user')">Add a teammate</button>
+        <button type="button" (click)="scrollToSection('create-group')">Create a chat group</button>
+        <button type="button" (click)="scrollToSection('manage-groups')">Manage groups <span>{{ groups().length }}</span></button>
+      </nav>
+
+      <section class="team-card" id="create-user">
+        <div class="section-heading"><div><p class="section-kicker">ACCOUNT ACCESS</p><h2>Invite teammates</h2><p>Create a temporary-password account or email a single-use invite.</p></div></div>
+        <div class="account-actions">
+          <form #createForm="ngForm" (ngSubmit)="createUser()">
+            <h3>Create account</h3>
+            <label for="create-name">Name</label>
+            <input id="create-name" name="createName" [(ngModel)]="displayName" required minlength="2" maxlength="100" />
+            <label for="create-email">Email</label>
+            <input id="create-email" name="createEmail" type="email" [(ngModel)]="email" required maxlength="256" />
+            <button type="submit" [disabled]="!createForm.valid || busy()">{{ busy() ? 'Working…' : 'Create with temporary password' }}</button>
+          </form>
+          <form #inviteForm="ngForm" (ngSubmit)="inviteUser()">
+            <h3>Send email invitation</h3>
+            <label for="invite-name">Name</label>
+            <input id="invite-name" name="inviteName" [(ngModel)]="invitationName" required minlength="2" maxlength="100" />
+            <label for="invite-email">Email</label>
+            <input id="invite-email" name="inviteEmail" type="email" [(ngModel)]="invitationEmail" required maxlength="256" />
+            <button type="submit" [disabled]="!inviteForm.valid || busy()">{{ busy() ? 'Working…' : 'Send 48-hour invitation' }}</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="team-card" id="accounts">
+        <div class="section-heading"><div><p class="section-kicker">PRIVATE WORKSPACES</p><h2>Accounts</h2><p>Each account’s tasks, goals, and notes remain private.</p></div><button type="button" class="secondary-button" (click)="reload()">Refresh</button></div>
+        <div class="account-summary"><span><strong>{{ users().length }}</strong> accounts</span><span><strong>{{ activeAdminCount() }}</strong> active administrators</span><small>Admins can manage accounts and team groups. A teammate’s existing session will need to sign in again after their role changes.</small></div>
+        @if (loading()) { <p class="team-muted">Loading accounts…</p> }
+        @else if (users().length === 0) { <p class="team-muted">No accounts found.</p> }
+        @else {
+          <div class="table-scroll"><table><thead><tr><th>Person</th><th>Role</th><th>Access</th><th>Created</th><th>Manage</th></tr></thead><tbody>
+            @for (user of users(); track user.userId) {
+              <tr>
+                <td><strong>{{ user.displayName }}</strong><small>{{ user.email }}</small></td>
+                <td><span class="role-badge" [class.admin-role]="user.isAdmin">{{ user.isAdmin ? 'Administrator' : 'Member' }}</span></td>
+                <td><span class="account-state" [class.disabled]="!user.isActive">{{ user.isActive ? 'Active' : 'Disabled' }}</span>@if (user.mustChangePassword) { <small>Must change password</small> }</td>
+                <td>{{ user.createdAtUtc | date:'mediumDate' }}</td>
+                <td><div class="account-manage-actions">
+                  <button class="secondary-button" type="button" [disabled]="busy() || user.userId === currentUser()?.userId || (user.isAdmin && user.isActive && activeAdminCount() < 2)" (click)="toggleAccess(user, { isAdmin: !user.isAdmin })">{{ user.isAdmin ? 'Remove admin' : 'Make admin' }}</button>
+                  <button class="secondary-button" type="button" [disabled]="busy() || user.userId === currentUser()?.userId || (user.isAdmin && user.isActive && activeAdminCount() < 2)" (click)="toggleAccess(user, { isActive: !user.isActive })">{{ user.isActive ? 'Disable' : 'Enable' }}</button>
+                </div></td>
+              </tr>
+            }
+          </tbody></table></div>
+        }
+      </section>
+
+      <section class="team-card" id="create-group">
+        <div class="section-heading"><div><p class="section-kicker">TEAM CONVERSATION</p><h2>Create a chat group</h2><p>Only assigned members can read or send messages.</p></div></div>
+        <form class="group-create-form" #groupForm="ngForm" (ngSubmit)="createGroup()">
+          <label for="group-name">Group name</label><input id="group-name" name="groupName" [(ngModel)]="groupName" required minlength="2" maxlength="100" />
+          <fieldset><legend>Choose active members</legend><div class="member-options">@for (user of users(); track user.userId) { @if (user.isActive) { <label class="member-option"><input type="checkbox" [checked]="selectedMemberIds.includes(user.userId)" (change)="toggleMember(user.userId, $any($event.target).checked)" /><span>{{ user.displayName }} <small>{{ user.email }}</small></span></label> } }</div></fieldset>
+          <button type="submit" [disabled]="!groupForm.valid || busy()">Create group</button>
+        </form>
+      </section>
+
+      <section class="team-card" id="manage-groups">
+        <div class="section-heading"><div><p class="section-kicker">GROUPS</p><h2>Manage membership</h2></div></div>
+        @if (groups().length === 0) { <p class="team-muted">No chat groups yet.</p> }
+        <div class="group-list">@for (group of groups(); track group.groupId) {
+          <article class="group-admin-card" [class.archived]="group.isArchived">
+            <div class="group-admin-heading"><div><h3>{{ group.name }}</h3><p>{{ group.isArchived ? 'Archived' : 'Created ' + (group.createdAtUtc | date:'mediumDate') }}</p></div>@if (!group.isArchived) { <button class="secondary-button" type="button" [disabled]="busy()" (click)="archiveGroup(group)">Archive</button> }</div>
+            <div class="group-members">@for (userId of group.memberIds; track userId) { <span class="member-chip">{{ memberName(userId) }} @if (!group.isArchived) { <button type="button" [attr.aria-label]="'Remove ' + memberName(userId)" (click)="removeMember(group,userId)">×</button> }</span> }</div>
+            @if (!group.isArchived && eligibleMembers(group).length) { <div class="add-member-row"><select [value]="additionalMemberByGroup()[group.groupId] ?? ''" (change)="setAdditionalMember(group.groupId,$any($event.target).value)"><option value="">Select an active teammate</option>@for (user of eligibleMembers(group); track user.userId) { <option [value]="user.userId">{{ user.displayName }}</option> }</select><button class="secondary-button" type="button" [disabled]="busy() || !additionalMemberByGroup()[group.groupId]" (click)="addMember(group)">Add member</button></div> }
+          </article>
+        }</div>
+      </section>
+    </div>
+  </main>
+</div>

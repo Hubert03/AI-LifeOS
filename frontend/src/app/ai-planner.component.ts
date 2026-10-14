@@ -7,6 +7,7 @@ import { AiPlan, AiPlanningService } from './ai-planning.service';
 import { GoalsService, SaveGoal } from './goals.service';
 import { NotesService, SaveNote } from './notes.service';
 import { SaveTask, TasksService } from './tasks.service';
+import { UiPreferencesService } from './ui-preferences.service';
 
 type PlannerContext = 'overview' | 'tasks' | 'goals' | 'notes';
 
@@ -22,10 +23,13 @@ export class AiPlannerComponent {
   private readonly goalsService = inject(GoalsService);
   private readonly notesService = inject(NotesService);
   private readonly tasksService = inject(TasksService);
+  protected readonly uiPreferences = inject(UiPreferencesService);
 
   protected readonly open = signal(false);
   protected readonly prompt = signal('');
   protected readonly plan = signal<AiPlan | null>(null);
+  protected readonly submittedPrompt = signal('');
+  protected readonly draftTarget = signal<PlannerContext | null>(null);
   protected readonly selectedTasks = signal<number[]>([]);
   protected readonly includeGoal = signal(true);
   protected readonly includeNote = signal(true);
@@ -53,18 +57,22 @@ export class AiPlannerComponent {
     this.error.set(null);
     this.message.set(null);
     this.plan.set(null);
-    this.aiService.createPlan(prompt, this.context()).subscribe({
+    this.submittedPrompt.set(prompt);
+    this.draftTarget.set(null);
+    const target = this.context();
+    this.aiService.createPlan(prompt, target).subscribe({
       next: (plan) => {
         this.plan.set(plan);
+        this.draftTarget.set(target);
         this.selectedTasks.set(
-          this.context() === 'tasks' || this.context() === 'overview'
+          target === 'tasks' || target === 'overview'
             ? plan.tasks.map((_, index) => index)
             : [],
         );
         this.includeGoal.set(
-          (this.context() === 'goals' || this.context() === 'overview') && plan.goal !== null,
+          (target === 'goals' || target === 'overview') && plan.goal !== null,
         );
-        this.includeNote.set(this.context() === 'notes' && plan.note !== null);
+        this.includeNote.set(target === 'notes' && plan.note !== null);
       },
       error: (error: unknown) => {
         this.error.set(this.getErrorMessage(error, 'Could not create a plan. Please try again.'));
@@ -90,7 +98,11 @@ export class AiPlannerComponent {
     if (!plan || this.saving()) {
       return;
     }
-    const target = this.context();
+    const target = this.draftTarget();
+    if (!target) {
+      this.error.set('Create a new draft before saving.');
+      return;
+    }
     const shouldSaveNote = target === 'notes' && this.includeNote() && plan.note !== null;
     const shouldSaveGoal =
       (target === 'goals' || target === 'overview') && this.includeGoal() && plan.goal !== null;
@@ -176,33 +188,37 @@ export class AiPlannerComponent {
   }
 
   protected get contextTitle(): string {
-    return this.context() === 'notes'
+    return this.activeContext === 'notes'
       ? 'Create a note with AI'
-      : this.context() === 'goals'
+      : this.activeContext === 'goals'
         ? 'Create a goal plan with AI'
-        : this.context() === 'tasks'
+        : this.activeContext === 'tasks'
           ? 'Create a task plan with AI'
           : 'Plan with AI';
   }
 
   protected get promptLabel(): string {
-    return this.context() === 'notes'
+    return this.activeContext === 'notes'
       ? 'What would you like to capture in a note?'
-      : this.context() === 'goals'
+      : this.activeContext === 'goals'
         ? 'What goal would you like to work toward?'
-        : this.context() === 'tasks'
+        : this.activeContext === 'tasks'
           ? 'What tasks do you need help planning?'
           : 'What would you like to accomplish?';
   }
 
   protected get saveButtonLabel(): string {
-    return this.context() === 'notes'
+    return this.activeContext === 'notes'
       ? 'Add note to Notes'
-      : this.context() === 'goals'
+      : this.activeContext === 'goals'
         ? 'Add goal to Goals'
-        : this.context() === 'tasks'
+        : this.activeContext === 'tasks'
           ? 'Add tasks to Tasks'
           : 'Add selected items';
+  }
+
+  protected get activeContext(): PlannerContext {
+    return this.draftTarget() ?? this.context();
   }
 
   protected getDestinationLabel(target: PlannerContext): string {

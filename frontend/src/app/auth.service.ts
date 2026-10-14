@@ -6,6 +6,8 @@ export interface CurrentUser {
   userId: string;
   email: string;
   displayName: string;
+  isAdmin: boolean;
+  mustChangePassword: boolean;
 }
 
 interface CsrfResponse {
@@ -31,12 +33,12 @@ export class AuthService {
     );
   }
 
-  register(displayName: string, email: string, password: string): Observable<CurrentUser> {
+  acceptInvitation(token: string, password: string): Observable<CurrentUser> {
     return this.loadCsrfToken().pipe(
       switchMap(() =>
         this.http.post<CurrentUser>(
-          '/api/auth/register',
-          { displayName, email, password },
+          '/api/auth/accept-invitation',
+          { token, password },
           { headers: this.csrfHeaders() },
         ),
       ),
@@ -103,6 +105,11 @@ export class AuthService {
           { headers: this.csrfHeaders() },
         ),
       ),
+      tap(() => {
+        this.currentUser.update((user) =>
+          user ? { ...user, mustChangePassword: false } : null,
+        );
+      }),
     );
   }
 

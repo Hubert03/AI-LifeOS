@@ -82,6 +82,52 @@ Apply the app-data stored procedure update after scripts 001 through 005:
   -i '.\AI-LifeOS\database\006_AppDataStoredProcedures.sql'
 ```
 
+For account administration and team chat, apply the additive update only after
+scripts 001 through 006. It adds administrator/account flags, invitation storage,
+chat tables, and the corresponding write procedures:
+
+```powershell
+& 'C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\SQLCMD.EXE' `
+  -S '(localdb)\MSSQLLocalDB' -E -b `
+  -i '.\AI-LifeOS\database\007_AddTeamAccountsAndChat.sql'
+```
+
+Do not expose the API until the database update has been applied. Public
+self-registration is disabled. Bootstrap the first administrator from the
+workspace folder, using the interactive password prompt (do not put a password
+in command-line arguments):
+
+```powershell
+dotnet run --project '.\backend\AiLifeOS.Api\AiLifeOS.Api.csproj' -- --bootstrap-admin admin@example.com
+```
+
+This command creates the initial account when the email is new, or promotes the
+existing account with that email. It refuses to run once an administrator
+already exists. Administrators can then create accounts with one-time temporary
+passwords or send single-use invitations from Team administration.
+Open Team administration from the signed-in sidebar (or directly at `/admin`).
+That screen contains account creation/invitations, account role and access
+controls, chat-group creation, and group membership management. New accounts
+are regular members by default; an administrator can promote an account in the
+Accounts list. At least one active administrator is always required.
+
+Workspace records are owned by the authenticated account. Task, goal, note,
+activity, and trash API queries scope reads and writes to the signed-in user;
+clients cannot choose another account's owner ID. Administrators see an
+organization dashboard at Overview with account and work totals, task-status
+and weekly-activity charts, and account setup/access indicators. To inspect
+individual work, an administrator selects an account; its tasks, goals, and
+notes are returned by separate administrator-only, paginated endpoints.
+Administrative workspace reads are written to the API logger. Notes and
+deleted tasks/goals are included in the selected account's view.
+
+SMTP delivery is configured outside source control using environment variables:
+`Email__SmtpHost`, `Email__SmtpPort`, `Email__SmtpUser`,
+`Email__SmtpPassword`, `Email__FromAddress`, `Email__EnableSsl`, and
+`Email__PublicBaseUrl`. The public base URL must be an absolute HTTP or HTTPS
+URL, and should use HTTPS when deployed. Invitations expire after 48 hours;
+their tokens are hashed in the database and consumed atomically on acceptance.
+
 Settings can be configured from the signed-in app under Settings. The existing one-time console prompt remains available; stop the API and run it from the workspace folder:
 
 ```powershell

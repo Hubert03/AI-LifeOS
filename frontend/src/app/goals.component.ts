@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AiPlannerComponent } from './ai-planner.component';
 import { AuthService } from './auth.service';
+import { ConfirmationService } from './confirmation.service';
 import {
   GoalStatus,
   GoalsService,
@@ -12,18 +13,22 @@ import {
   SaveGoal,
   SaveGoalMilestone,
 } from './goals.service';
+import { ThemePickerComponent } from './theme-picker.component';
+import { ThemeService } from './theme.service';
 
 type GoalFilter = 'All' | GoalStatus;
 
 @Component({
   selector: 'app-goals',
-  imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink],
+  imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink, ThemePickerComponent],
   templateUrl: './goals.component.html',
 })
 export class GoalsComponent {
   private readonly goalsService = inject(GoalsService);
   private readonly authService = inject(AuthService);
+  private readonly confirmation = inject(ConfirmationService);
   private readonly router = inject(Router);
+  protected readonly themeService = inject(ThemeService);
 
   protected readonly currentUser = this.authService.currentUser;
   protected readonly goals = signal<LifeGoal[]>([]);
@@ -33,7 +38,7 @@ export class GoalsComponent {
   protected readonly logoutError = signal<string | null>(null);
   protected readonly searchTerm = signal('');
   protected readonly statusFilter = signal<GoalFilter>('All');
-  protected readonly isDarkTheme = signal(true);
+  protected readonly isDarkTheme = this.themeService.isDarkTheme;
   protected readonly notificationsOpen = signal(false);
   protected readonly profileMenuOpen = signal(false);
   protected readonly mobileNavOpen = signal(false);
@@ -120,7 +125,6 @@ export class GoalsComponent {
   );
 
   constructor() {
-    this.isDarkTheme.set(localStorage.getItem('ai-lifeos-theme') !== 'light');
     this.loadGoals();
   }
 
@@ -271,11 +275,16 @@ export class GoalsComponent {
     });
   }
 
-  protected deleteGoal(goal: LifeGoal): void {
-    if (
-      this.updatingGoalId() ||
-      !window.confirm(`Delete “${goal.title}” and its milestones? This cannot be undone.`)
-    ) {
+  protected async deleteGoal(goal: LifeGoal): Promise<void> {
+    if (this.updatingGoalId()) {
+      return;
+    }
+    const confirmed = await this.confirmation.confirm({
+      title: 'Delete this goal?',
+      message: `“${goal.title}” and its milestones will be moved to Trash. You can restore the goal later.`,
+      confirmLabel: 'Move to Trash',
+    });
+    if (!confirmed || this.updatingGoalId()) {
       return;
     }
 
@@ -296,9 +305,7 @@ export class GoalsComponent {
   }
 
   protected toggleTheme(): void {
-    const nextTheme = !this.isDarkTheme();
-    this.isDarkTheme.set(nextTheme);
-    localStorage.setItem('ai-lifeos-theme', nextTheme ? 'dark' : 'light');
+    this.themeService.toggleTheme();
   }
 
   protected logout(): void {

@@ -95,14 +95,31 @@ describe('AiPlannerComponent', () => {
       objective: 'Capture the key ideas from my project meeting',
       target: 'notes',
     });
+    fixture.detectChanges();
+    expect(page.querySelector('.ai-generation-layer')?.textContent).toContain('notes draft');
+    expect(page.querySelector('.ai-gear-loader')).toBeTruthy();
+    expect(page.querySelector('.ai-planner-body')?.getAttribute('aria-busy')).toBe('true');
     planRequest.flush({
       summary: 'Keep the key discussion points together.',
       note: { title: 'Project meeting', content: 'Decision: launch the pilot next month.' },
-      goal: null,
-      tasks: [],
+      goal: {
+        title: 'Unexpected goal payload',
+        description: 'Must not be saved from Notes.',
+        targetDate: null,
+        milestones: [],
+      },
+      tasks: [{
+        title: 'Unexpected task payload',
+        description: 'Must not be saved from Notes.',
+        dueAtUtc: null,
+        priority: 2,
+      }],
     });
+    fixture.componentRef.setInput('context', 'goals');
     fixture.detectChanges();
+    expect(page.querySelector('.ai-generation-layer')).toBeNull();
     expect(page.textContent).toContain('Review your note');
+    expect(page.textContent).toContain('Capture the key ideas from my project meeting');
 
     (page.querySelector('.ai-save-plan') as HTMLButtonElement).click();
     fixture.detectChanges();
@@ -126,6 +143,64 @@ describe('AiPlannerComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(page.textContent).toContain('Added note to Notes.');
+  });
+
+  it('saves a Goals-context result only to Goals', async () => {
+    const fixture = TestBed.createComponent(AiPlannerComponent);
+    fixture.componentRef.setInput('context', 'goals');
+    fixture.detectChanges();
+    const page = fixture.nativeElement as HTMLElement;
+    (page.querySelector('.ai-planner-trigger') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const prompt = page.querySelector('textarea') as HTMLTextAreaElement;
+    prompt.value = 'Build a steady reading habit';
+    prompt.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    (page.querySelector('form button[type="submit"]') as HTMLButtonElement).click();
+
+    http.expectOne('/api/auth/csrf').flush({ requestToken: 'goal-plan-token' });
+    const planRequest = http.expectOne('/api/ai/plan');
+    expect(planRequest.request.body).toEqual({
+      objective: 'Build a steady reading habit',
+      target: 'goals',
+    });
+    planRequest.flush({
+      summary: 'Build a consistent reading practice.',
+      note: null,
+      goal: {
+        title: 'Read every day',
+        description: 'Read for at least twenty minutes each day.',
+        targetDate: null,
+        milestones: [{ title: 'Finish one book', isCompleted: false }],
+      },
+      tasks: [{
+        title: 'Unexpected task payload',
+        description: 'Must not be saved from Goals.',
+        dueAtUtc: null,
+        priority: 2,
+      }],
+    });
+    fixture.detectChanges();
+    expect(page.textContent).toContain('Review your goal');
+
+    (page.querySelector('.ai-save-plan') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    http.expectOne('/api/auth/csrf').flush({ requestToken: 'save-goal-token' });
+    const createGoal = http.expectOne('/api/goals');
+    expect(createGoal.request.method).toBe('POST');
+    expect(createGoal.request.body.title).toBe('Read every day');
+    http.expectNone('/api/tasks');
+    http.expectNone('/api/notes');
+    createGoal.flush({
+      goalId: 'goal-1',
+      ...createGoal.request.body,
+      createdAtUtc: '2026-10-12T00:00:00Z',
+      updatedAtUtc: null,
+    });
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(page.textContent).toContain('Added goal to Goals.');
   });
 
   it('shows a safe API error message when plan generation fails', () => {
