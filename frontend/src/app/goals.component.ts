@@ -16,11 +16,14 @@ import {
 import { ThemePickerComponent } from './theme-picker.component';
 import { ThemeService } from './theme.service';
 
+import { StyleCreatorService } from './style-creator.service';
+import { StyleStudioComponent } from './style-studio.component';
+
 type GoalFilter = 'All' | GoalStatus;
 
 @Component({
   selector: 'app-goals',
-  imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink, ThemePickerComponent],
+  imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink, ThemePickerComponent,StyleStudioComponent],
   templateUrl: './goals.component.html',
 })
 export class GoalsComponent {
@@ -49,6 +52,8 @@ export class GoalsComponent {
   protected readonly filters: GoalFilter[] = ['All', 'Active', 'Paused', 'Completed'];
   protected editingGoal: LifeGoal | null = null;
   protected goalForm = this.emptyForm();
+
+  protected readonly styleCreator = inject(StyleCreatorService);
 
   protected readonly displayName = computed(
     () => this.currentUser()?.displayName.trim().split(/\s+/)[0] || 'there',

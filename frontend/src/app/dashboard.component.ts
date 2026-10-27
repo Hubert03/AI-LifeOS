@@ -21,6 +21,11 @@ import {
 import { ThemePickerComponent } from './theme-picker.component';
 import { ThemeService } from './theme.service';
 import { forkJoin } from 'rxjs';
+import { StyleCreatorService } from './style-creator.service';
+import { StyleStudioComponent } from './style-studio.component';
+
+import { DailyBriefingComponent } from './daily-briefing.component';
+
 
 interface AdminWorkspace {
   tasks: AdminPage<AdminTask>;
@@ -28,11 +33,17 @@ interface AdminWorkspace {
   notes: AdminPage<AdminNote>;
 }
 
+
+type AdminFilter =
+  | 'all' | 'active' | 'inactive' | 'admins' | 'openTasks'
+  | 'overdue' | 'activeGoals' | 'completedGoals' | 'withNotes' | 'passwordSetup';
+
+
 type AdminWorkspaceCollection = keyof AdminWorkspace;
 
 @Component({
   selector: 'app-dashboard',
-  imports: [AiPlannerComponent, DatePipe, RouterLink, ThemePickerComponent],
+  imports: [AiPlannerComponent, DatePipe, RouterLink, ThemePickerComponent,StyleStudioComponent,DailyBriefingComponent],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent {
@@ -78,6 +89,27 @@ export class DashboardComponent {
   protected readonly isDarkTheme = this.themeService.isDarkTheme;
   protected readonly today = new Date();
   protected readonly greeting = this.getGreeting();
+
+
+
+protected readonly styleCreator = inject(StyleCreatorService);
+protected readonly styleOpen = signal(false);
+protected readonly accentSwatches = ['#a68aff', '#54c6bb', '#6ea8ff', '#f08fb0', '#edce77', '#ff8a5b'];
+protected readonly cardOptions = ['flat', 'glass', 'outlined'] as const;
+protected readonly bgOptions = ['solid', 'gradient', 'mesh'] as const;
+protected readonly fontOptions = ['system', 'rounded', 'serif', 'mono'] as const;
+
+protected onAccent(e: Event): void {
+  this.styleCreator.update({ accent: (e.target as HTMLInputElement).value });
+}
+protected onRadius(e: Event): void {
+  this.styleCreator.update({ radius: +(e.target as HTMLInputElement).value });
+}
+protected onScale(e: Event): void {
+  this.styleCreator.update({ fontScale: +(e.target as HTMLInputElement).value });
+}
+
+
   protected readonly displayName = computed(
     () => this.currentUser()?.displayName.trim().split(/\s+/)[0] || 'there',
   );
@@ -141,16 +173,44 @@ export class DashboardComponent {
       percentage: day.total === 0 ? 0 : Math.max(8, (day.total / peak) * 100),
     }));
   });
+
+
   protected readonly adminVisibleUsers = computed(() => {
-    const query = this.searchTerm().trim().toLocaleLowerCase();
-    return (this.adminDashboard()?.users ?? []).filter(
-      (user) =>
-        !query ||
+  const query = this.searchTerm().trim().toLocaleLowerCase();
+  const filter = this.adminFilter();
+  const matchesFilter = (u: AdminWorkspaceSummary): boolean => {
+    switch (filter) {
+      case 'active': return u.isActive;
+      case 'inactive': return !u.isActive;
+      case 'admins': return u.isAdmin && u.isActive;
+      case 'openTasks': return u.openTasks > 0;
+      case 'overdue': return u.overdueTasks > 0;
+      case 'activeGoals': return u.activeGoals > 0;
+      case 'completedGoals': return u.completedGoals > 0;
+      case 'withNotes': return u.totalNotes > 0;
+      case 'passwordSetup': return u.mustChangePassword;
+      default: return true;
+    }
+  };
+  return (this.adminDashboard()?.users ?? []).filter(
+    (user) =>
+      matchesFilter(user) &&
+      (!query ||
         `${user.displayName} ${user.email} ${user.isAdmin ? 'admin' : 'member'} ${user.isActive ? 'active' : 'inactive'}`
           .toLocaleLowerCase()
-          .includes(query),
-    );
-  });
+          .includes(query)),
+  );
+});
+  // protected readonly adminVisibleUsers = computed(() => {
+  //   const query = this.searchTerm().trim().toLocaleLowerCase();
+  //   return (this.adminDashboard()?.users ?? []).filter(
+  //     (user) =>
+  //       !query ||
+  //       `${user.displayName} ${user.email} ${user.isAdmin ? 'admin' : 'member'} ${user.isActive ? 'active' : 'inactive'}`
+  //         .toLocaleLowerCase()
+  //         .includes(query),
+  //   );
+  // });
   protected readonly weeklyTaskActivity = computed(() => {
     const now = new Date();
     const todayUtc = new Date(
@@ -230,7 +290,27 @@ export class DashboardComponent {
     });
   }
 
+  protected setAdminFilter(filter: AdminFilter): void {
+  // clicking the active card again clears the filter
+  this.adminFilter.set(this.adminFilter() === filter ? 'all' : filter);
+  this.scrollToAdminSection('admin-users');
+}
+
+protected clearAdminFilter(): void {
+  this.adminFilter.set('all');
+}
+
+protected userInitial(user: AdminWorkspaceSummary): string {
+  return (user.displayName.trim().charAt(0) || '?').toUpperCase();
+}
+
+private scrollToAdminSection(id: string): void {
+  setTimeout(() =>
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+  );
+}
   protected viewAdminWorkspace(user: AdminWorkspaceSummary): void {
+    this.scrollToAdminSection('admin-workspace');
     this.selectedAdminUser.set(user);
     this.adminWorkspace.set(null);
     this.adminWorkspaceError.set(null);
@@ -312,7 +392,20 @@ export class DashboardComponent {
         .subscribe({ next: nextPage, error: onError });
     }
   }
+protected readonly adminFilter = signal<AdminFilter>('all');
 
+protected readonly adminFilterLabels: Record<AdminFilter, string> = {
+  all: 'All accounts',
+  active: 'Active accounts',
+  inactive: 'Inactive accounts',
+  admins: 'Administrators',
+  openTasks: 'Accounts with open tasks',
+  overdue: 'Accounts with overdue tasks',
+  activeGoals: 'Accounts with active goals',
+  completedGoals: 'Accounts with completed goals',
+  withNotes: 'Accounts with notes',
+  passwordSetup: 'Accounts needing password setup',
+};
   protected loadForecast(): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
@@ -462,3 +555,6 @@ export class DashboardComponent {
     return 'Good evening';
   }
 }
+
+
+//Newly Added:

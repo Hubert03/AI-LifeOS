@@ -885,3 +885,39 @@ html:root[data-theme='forest'] .auth-layout[data-theme='forest'] {
     transform: none;
   }
 }
+
+
+
+
+.style-studio { max-height: calc(100vh - 110px); overflow-y: auto; }
+
+.style-studio .studio-actions { display: flex; gap: 8px; }
+.style-studio .studio-actions button { flex: 1; }
+
+.style-studio .preset-save { display: flex; gap: 6px; align-items: center; }
+.style-studio .preset-save input[type='text'] {
+  flex: 1; min-width: 0; min-height: 30px; padding: 0 8px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface-subtle); color: var(--ink); font-size: 11px;
+}
+
+.style-studio .preset-row { display: flex; align-items: center; gap: 4px; }
+.style-studio .preset-apply {
+  display: flex; flex: 1; align-items: center; gap: 8px; min-width: 0;
+  padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface-subtle); color: var(--ink); cursor: pointer;
+  font-size: 11px; text-align: left;
+}
+.style-studio .preset-apply:hover { border-color: var(--accent); }
+.style-studio .preset-dot { width: 10px; height: 10px; flex: 0 0 auto; border-radius: 50%; }
+.style-studio .studio-msg { color: var(--accent); font-size: 11px; }
+
+
+
+html:root[data-theme='ocean'] .app-shell[data-theme='ocean'] {
+  background-color: var(--canvas, #091a27);
+}
+
+html:root[data-theme='forest'] .app-shell[data-theme='forest'] {
+  background-color: var(--canvas, #101b18);
+}

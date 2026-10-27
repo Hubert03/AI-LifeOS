@@ -8,9 +8,12 @@ import { ThemePickerComponent } from './theme-picker.component';
 import { ThemeService } from './theme.service';
 import { AdminChatGroup, AdminUser, CreatedUser, TeamService } from './team.service';
 
+import { StyleCreatorService } from './style-creator.service';
+import { StyleStudioComponent } from './style-studio.component';
+
 @Component({
   selector: 'app-admin',
-  imports: [DatePipe, FormsModule, RouterLink, ThemePickerComponent],
+  imports: [DatePipe, FormsModule, RouterLink, ThemePickerComponent,StyleStudioComponent],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.css',
 })
@@ -39,6 +42,8 @@ export class AdminComponent {
   protected groupName = '';
   protected selectedMemberIds: string[] = [];
   protected readonly additionalMemberByGroup = signal<Record<string, string>>({});
+  protected readonly isDarkTheme = this.themeService.isDarkTheme;
+  protected readonly styleCreator = inject(StyleCreatorService);
 
   constructor() {
     this.reload();

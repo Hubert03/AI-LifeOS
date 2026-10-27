@@ -9,13 +9,13 @@ import { ConfirmationService } from './confirmation.service';
 import { LifeTask, SaveTask, TaskStatus, TasksService } from './tasks.service';
 import { ThemePickerComponent } from './theme-picker.component';
 import { ThemeService } from './theme.service';
-
+import { StyleCreatorService } from './style-creator.service';
 type TaskFilter = 'All' | TaskStatus;
 type PriorityFilter = 'All' | number;
-
+import { StyleStudioComponent } from './style-studio.component';
 @Component({
   selector: 'app-tasks',
-  imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink, ThemePickerComponent],
+  imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink, ThemePickerComponent,StyleStudioComponent],
   templateUrl: './tasks.component.html',
 })
 export class TasksComponent {
@@ -46,6 +46,8 @@ export class TasksComponent {
   protected readonly today = new Date();
   protected editingTask: LifeTask | null = null;
   protected taskForm = this.emptyForm();
+
+protected readonly styleCreator = inject(StyleCreatorService);
 
   protected readonly statusFilters: TaskFilter[] = [
     'All',

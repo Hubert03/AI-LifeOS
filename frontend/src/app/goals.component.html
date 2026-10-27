@@ -1,4 +1,4 @@
-<div class="app-shell dashboard-shell goals-shell" [class.theme-light]="!isDarkTheme()" [attr.data-theme]="themeService.theme()">
+<div class="app-shell dashboard-shell goals-shell" [style]="styleCreator.cssVars()" [class.theme-light]="!isDarkTheme()" [attr.data-theme]="themeService.theme()" [attr.data-card]="styleCreator.style().card" [attr.data-bg]="styleCreator.style().background">
   @if (mobileNavOpen()) {
     <button class="mobile-backdrop" type="button" aria-label="Close navigation" (click)="mobileNavOpen.set(false)"></button>
   }
@@ -84,6 +84,8 @@
           }
         </button>
         <app-theme-picker />
+        <app-style-studio />
+
         <div class="popover-anchor profile-anchor">
           <button class="profile-button" type="button" [attr.aria-expanded]="profileMenuOpen()" (click)="profileMenuOpen.set(!profileMenuOpen()); notificationsOpen.set(false)">
             <span class="avatar" aria-hidden="true">{{ displayName().charAt(0).toUpperCase() }}</span>

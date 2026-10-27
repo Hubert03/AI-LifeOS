@@ -1,5 +1,5 @@
-<div class="app-shell tasks-shell" [class.theme-light]="!isDarkTheme()" [attr.data-theme]="themeService.theme()">
-  @if (mobileNavOpen()) {
+<div class="app-shell tasks-shell" [class.theme-light]="!isDarkTheme()" [attr.data-theme]="themeService.theme()" [attr.data-card]="styleCreator.style().card" [attr.data-bg]="styleCreator.style().background">
+       @if (mobileNavOpen()) {
     <button
       class="mobile-backdrop"
       type="button"
@@ -119,6 +119,7 @@
           }
         </button>
         <app-theme-picker />
+        <app-style-studio />
         <div class="popover-anchor profile-anchor">
           <button
             class="profile-button"

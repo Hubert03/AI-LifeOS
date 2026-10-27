@@ -10,9 +10,12 @@ import { LifeNote, NotesService, SaveNote } from './notes.service';
 import { ThemePickerComponent } from './theme-picker.component';
 import { ThemeService } from './theme.service';
 
+import { StyleCreatorService } from './style-creator.service';
+import { StyleStudioComponent } from './style-studio.component';
+
 @Component({
   selector: 'app-notes',
-  imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink, ThemePickerComponent],
+  imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink, ThemePickerComponent,StyleStudioComponent],
   templateUrl: './notes.component.html',
   styleUrl: './notes.component.css',
 })
@@ -36,6 +39,8 @@ export class NotesComponent {
   protected readonly mobileNavOpen = signal(false);
   protected readonly editingNote = signal<LifeNote | null>(null);
   protected readonly form = signal<SaveNote>(this.emptyForm());
+
+protected readonly styleCreator = inject(StyleCreatorService);
 
   protected readonly visibleNotes = computed(() => {
     const query = this.searchTerm().trim().toLocaleLowerCase();

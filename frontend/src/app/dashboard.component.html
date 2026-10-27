@@ -1,4 +1,12 @@
-<div class="app-shell dashboard-shell" [class.theme-light]="!isDarkTheme()" [attr.data-theme]="themeService.theme()">
+<!-- <div class="app-shell dashboard-shell" [class.theme-light]="!isDarkTheme()" [attr.data-theme]="themeService.theme()"> -->
+
+
+  <div class="app-shell dashboard-shell"
+     [style]="styleCreator.cssVars()"
+     [class.theme-light]="!isDarkTheme()"
+     [attr.data-theme]="themeService.theme()"
+     [attr.data-card]="styleCreator.style().card"
+     [attr.data-bg]="styleCreator.style().background">
   @if (mobileNavOpen()) {
     <button class="mobile-backdrop" type="button" aria-label="Close navigation" (click)="mobileNavOpen.set(false)"></button>
   }
@@ -82,6 +90,8 @@
           }
         </div>
         <app-theme-picker />
+        <button class="icon-button" type="button" aria-label="Customize style" (click)="styleOpen.set(!styleOpen())">🎨</button>
+        
         <div class="popover-anchor profile-anchor">
           <button class="profile-button" type="button" [attr.aria-expanded]="profileMenuOpen()" (click)="profileMenuOpen.set(!profileMenuOpen()); notificationsOpen.set(false)">
             <span class="avatar" aria-hidden="true">{{ displayName().charAt(0).toUpperCase() }}</span>
@@ -97,7 +107,50 @@
         </div>
       </div>
     </header>
+@if (styleOpen()) {
+  <aside class="style-studio" aria-label="Style studio">
+    <header><strong>Style studio</strong><button class="text-button" type="button" (click)="styleOpen.set(false)">Close</button></header>
 
+    <label>Accent color</label>
+    <div class="swatch-row">
+      @for (c of accentSwatches; track c) {
+        <button type="button" class="swatch" [style.background]="c" [class.on]="styleCreator.style().accent === c"
+                (click)="styleCreator.update({ accent: c })" [attr.aria-label]="'Accent ' + c"></button>
+      }
+      <input type="color" [value]="styleCreator.style().accent ?? '#a68aff'" (input)="onAccent($event)" aria-label="Custom accent" />
+      <button type="button" class="text-button" (click)="styleCreator.update({ accent: null })">Theme default</button>
+    </div>
+
+    <label>Corner roundness <span>{{ styleCreator.style().radius }}px</span></label>
+    <input type="range" min="0" max="24" [value]="styleCreator.style().radius" (input)="onRadius($event)" />
+
+    <label>Text size <span>{{ (styleCreator.style().fontScale * 100).toFixed(0) }}%</span></label>
+    <input type="range" min="0.9" max="1.25" step="0.05" [value]="styleCreator.style().fontScale" (input)="onScale($event)" />
+
+    <label>Card style</label>
+    <div class="seg">
+      @for (o of cardOptions; track o) {
+        <button type="button" [class.on]="styleCreator.style().card === o" (click)="styleCreator.update({ card: o })">{{ o }}</button>
+      }
+    </div>
+
+    <label>Background</label>
+    <div class="seg">
+      @for (o of bgOptions; track o) {
+        <button type="button" [class.on]="styleCreator.style().background === o" (click)="styleCreator.update({ background: o })">{{ o }}</button>
+      }
+    </div>
+
+    <label>Font</label>
+    <div class="seg">
+      @for (o of fontOptions; track o) {
+        <button type="button" [class.on]="styleCreator.style().font === o" (click)="styleCreator.update({ font: o })">{{ o }}</button>
+      }
+    </div>
+
+    <button class="admin-load-more" type="button" (click)="styleCreator.reset()">Reset to default</button>
+  </aside>
+}
     @if (logoutError()) { <p class="logout-error" role="alert">{{ logoutError() }}</p> }
 
     @if (currentUser()?.isAdmin) {
@@ -118,12 +171,46 @@
           <div class="chart-empty" role="status">Loading organization report…</div>
         } @else if (adminDashboard(); as report) {
           <section class="admin-summary-grid" aria-label="Organization summary">
-            <article class="overview-panel admin-summary-card"><span>Team members</span><strong>{{ report.totalUsers }}</strong><small>{{ report.inactiveUsers }} inactive</small></article>
-            <article class="overview-panel admin-summary-card"><span>Active accounts</span><strong>{{ report.activeUsers }}</strong><small>{{ report.activeAdmins }} administrators</small></article>
-            <article class="overview-panel admin-summary-card"><span>Open tasks</span><strong>{{ report.openTasks }}</strong><small>{{ report.overdueTasks }} overdue</small></article>
-            <article class="overview-panel admin-summary-card"><span>Active goals</span><strong>{{ report.activeGoals }}</strong><small>{{ report.completedGoals }} completed</small></article>
-            <article class="overview-panel admin-summary-card"><span>Notes</span><strong>{{ report.totalNotes }}</strong><small>{{ report.usersNeedingPasswordChange }} accounts need password setup</small></article>
-          </section>
+  <article class="overview-panel admin-summary-card tone-violet" [class.is-active]="adminFilter() === 'all'">
+    <button class="admin-card-main" type="button" [attr.aria-pressed]="adminFilter() === 'all'" (click)="setAdminFilter('all')">
+      <span class="admin-card-label">Team members</span>
+      <strong>{{ report.totalUsers }}</strong>
+    </button>
+    <button class="admin-card-sub" type="button" (click)="setAdminFilter('inactive')">{{ report.inactiveUsers }} inactive <span aria-hidden="true">→</span></button>
+  </article>
+
+  <article class="overview-panel admin-summary-card tone-mint" [class.is-active]="adminFilter() === 'active'">
+    <button class="admin-card-main" type="button" [attr.aria-pressed]="adminFilter() === 'active'" (click)="setAdminFilter('active')">
+      <span class="admin-card-label">Active accounts</span>
+      <strong>{{ report.activeUsers }}</strong>
+    </button>
+    <button class="admin-card-sub" type="button" (click)="setAdminFilter('admins')">{{ report.activeAdmins }} administrators <span aria-hidden="true">→</span></button>
+  </article>
+
+  <article class="overview-panel admin-summary-card tone-amber" [class.is-active]="adminFilter() === 'openTasks'">
+    <button class="admin-card-main" type="button" [attr.aria-pressed]="adminFilter() === 'openTasks'" (click)="setAdminFilter('openTasks')">
+      <span class="admin-card-label">Open tasks</span>
+      <strong>{{ report.openTasks }}</strong>
+    </button>
+    <button class="admin-card-sub" type="button" (click)="setAdminFilter('overdue')">{{ report.overdueTasks }} overdue <span aria-hidden="true">→</span></button>
+  </article>
+
+  <article class="overview-panel admin-summary-card tone-blue" [class.is-active]="adminFilter() === 'activeGoals'">
+    <button class="admin-card-main" type="button" [attr.aria-pressed]="adminFilter() === 'activeGoals'" (click)="setAdminFilter('activeGoals')">
+      <span class="admin-card-label">Active goals</span>
+      <strong>{{ report.activeGoals }}</strong>
+    </button>
+    <button class="admin-card-sub" type="button" (click)="setAdminFilter('completedGoals')">{{ report.completedGoals }} completed <span aria-hidden="true">→</span></button>
+  </article>
+
+  <article class="overview-panel admin-summary-card tone-rose" [class.is-active]="adminFilter() === 'withNotes'">
+    <button class="admin-card-main" type="button" [attr.aria-pressed]="adminFilter() === 'withNotes'" (click)="setAdminFilter('withNotes')">
+      <span class="admin-card-label">Notes</span>
+      <strong>{{ report.totalNotes }}</strong>
+    </button>
+    <button class="admin-card-sub" type="button" (click)="setAdminFilter('passwordSetup')">{{ report.usersNeedingPasswordChange }} need password setup <span aria-hidden="true">→</span></button>
+  </article>
+</section>
 
           <section class="admin-analytics-grid" aria-label="Organization charts">
             <article class="overview-panel admin-chart-panel">
@@ -148,7 +235,55 @@
             </article>
           </section>
 
-          <section class="overview-panel admin-users-panel">
+
+<section id="admin-users" class="overview-panel admin-users-panel">
+  <header class="overview-panel-heading">
+    <div>
+      <h2>Account workspaces</h2>
+      <p>Click a card above to filter, then select an account to inspect its tasks, goals, and notes.</p>
+    </div>
+    <span class="trash-count">{{ adminVisibleUsers().length }} / {{ report.users.length }}</span>
+  </header>
+
+  @if (adminFilter() !== 'all') {
+  <div class="admin-filter-bar" role="status">
+    <span class="admin-filter-chip">{{ adminFilterLabels[adminFilter()] }}</span>
+    <span class="admin-filter-count">{{ adminVisibleUsers().length }} of {{ report.users.length }} accounts</span>
+    <button class="text-button" type="button" (click)="clearAdminFilter()">Clear filter</button>
+  </div>
+  }
+
+  @if (adminVisibleUsers().length === 0) {
+  <div class="chart-empty">{{ report.users.length ? 'No accounts match your search or filter.' : 'No user accounts are
+    available.' }}</div>
+  } @else {
+  <div class="admin-user-table">
+    <div class="admin-user-table-header">
+      <span>Account</span><span>Access</span><span>Tasks</span><span>Goals</span><span>Notes</span><span>Last
+        activity</span><span></span></div>
+    @for (user of adminVisibleUsers(); track user.userId) {
+    <div class="admin-user-row" [class.selected]="selectedAdminUser()?.userId === user.userId"
+      (click)="viewAdminWorkspace(user)">
+      <div class="admin-user-identity">
+        <span class="admin-user-avatar" aria-hidden="true">{{ userInitial(user) }}</span>
+        <div><strong>{{ user.displayName }}</strong><small>{{ user.email }}</small></div>
+      </div>
+      <div class="admin-user-access"><span [class.admin-access-badge]="user.isAdmin">{{ user.isAdmin ? 'Admin' :
+          'Member' }}</span><small [class.account-inactive]="!user.isActive">{{ user.isActive ? 'Active' : 'Inactive'
+          }}</small>@if (user.mustChangePassword) { <small>Password setup needed</small> }</div>
+      <span>{{ user.openTasks }} open / {{ user.totalTasks }}</span>
+      <span>{{ user.activeGoals }} active / {{ user.totalGoals }}</span>
+      <span>{{ user.totalNotes }}</span>
+      <span>{{ user.lastActivityAtUtc ? (user.lastActivityAtUtc | date: 'MMM d, y · h:mm a') : 'No activity' }}</span>
+      <button class="admin-view-user" type="button" (click)="viewAdminWorkspace(user); $event.stopPropagation()">{{
+        selectedAdminUser()?.userId === user.userId ? 'Selected' : 'View data' }}</button>
+    </div>
+    }
+  </div>
+  }
+</section>
+
+          <!-- <section class="overview-panel admin-users-panel">
             <header class="overview-panel-heading"><div><h2>Account workspaces</h2><p>Review account status and work totals. Select an account to inspect its tasks, goals, and notes.</p></div><span class="trash-count">{{ adminVisibleUsers().length }} / {{ report.users.length }}</span></header>
             @if (adminVisibleUsers().length === 0) {
               <div class="chart-empty">{{ report.users.length ? 'No accounts match your search.' : 'No user accounts are available.' }}</div>
@@ -168,10 +303,11 @@
                 }
               </div>
             }
-          </section>
+          </section> -->
 
           @if (selectedAdminUser(); as user) {
-            <section class="overview-panel admin-workspace-panel" aria-live="polite">
+            <section id="admin-workspace" class="overview-panel admin-workspace-panel" aria-live="polite">
+            <!-- <section class="overview-panel admin-workspace-panel" aria-live="polite"> -->
               <header class="overview-panel-heading">
                 <div><h2>{{ user.displayName }}’s workspace</h2><p>{{ user.email }} · {{ user.isAdmin ? 'Administrator' : 'Member' }} · Account created {{ user.createdAtUtc | date: 'MMM d, y' }}</p></div>
                 <span class="chart-legend"><i></i> Admin-only access</span>
@@ -248,7 +384,9 @@
           <small>Plan your next step</small>
         </a>
       </section>
-
+      
+      <app-daily-briefing />
+     
       <app-ai-planner context="overview"></app-ai-planner>
 
       @if (tasksErrorMessage()) {

@@ -9,9 +9,12 @@ import { ThemePickerComponent } from './theme-picker.component';
 import { ThemeService } from './theme.service';
 import { ChatGroup, ChatMessage, TeamService } from './team.service';
 
+import { StyleCreatorService } from './style-creator.service';
+import { StyleStudioComponent } from './style-studio.component';
+
 @Component({
   selector: 'app-team-chat',
-  imports: [DatePipe, FormsModule, RouterLink, ThemePickerComponent],
+  imports: [DatePipe, FormsModule, RouterLink, ThemePickerComponent, StyleStudioComponent],
   templateUrl: './team-chat.component.html',
   styleUrl: './team-chat.component.css',
 })
@@ -31,6 +34,8 @@ export class TeamChatComponent {
   protected readonly errorMessage = signal<string | null>(null);
   protected messageDraft = '';
   private readonly connection: HubConnection;
+  protected readonly isDarkTheme = this.themeService.isDarkTheme;
+  protected readonly styleCreator = inject(StyleCreatorService);
 
   constructor() {
     this.connection = new HubConnectionBuilder()

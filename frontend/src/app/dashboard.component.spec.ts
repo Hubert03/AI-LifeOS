@@ -93,6 +93,9 @@ describe('DashboardComponent', () => {
     expect(page.querySelector('app-ai-planner')).toBeTruthy();
   });
 
+
+
+  
   it('filters recent tasks and opens notifications and theme controls', () => {
     localStorage.setItem('ai-lifeos-theme', 'dark');
     const fixture = TestBed.createComponent(DashboardComponent);
@@ -270,4 +273,45 @@ describe('DashboardComponent', () => {
     expect(page.textContent).toContain('Private member task');
     expect(page.textContent).toContain('Member-owned note contents.');
   });
+  it('filters the account table when an admin summary card is clicked', () => {
+  TestBed.inject(AuthService).currentUser.set({
+    userId: 'admin-1', email: 'admin@example.com', displayName: 'Workspace Admin',
+    isAdmin: true, mustChangePassword: false,
+  });
+  const fixture = TestBed.createComponent(DashboardComponent);
+  fixture.detectChanges();
+
+  const base = {
+    isAdmin: false, mustChangePassword: false, createdAtUtc: '2026-10-01T00:00:00Z',
+    completedTasks: 0, overdueTasks: 0, totalGoals: 0, activeGoals: 0, completedGoals: 0,
+    totalNotes: 0, lastActivityAtUtc: null,
+  };
+  httpTesting.expectOne('/api/admin/dashboard').flush({
+    totalUsers: 2, activeUsers: 1, inactiveUsers: 1, activeAdmins: 0,
+    usersNeedingPasswordChange: 0, totalTasks: 1, openTasks: 1, completedTasks: 0,
+    overdueTasks: 0, activeGoals: 0, completedGoals: 0, totalNotes: 0,
+    taskStatuses: [], activityByDay: [],
+    users: [
+      { ...base, userId: 'u1', email: 'a@example.com', displayName: 'Active Ann', isActive: true, totalTasks: 1, openTasks: 1 },
+      { ...base, userId: 'u2', email: 'b@example.com', displayName: 'Inactive Bob', isActive: false, totalTasks: 0, openTasks: 0 },
+    ],
+  });
+  fixture.detectChanges();
+
+  const page = fixture.nativeElement as HTMLElement;
+  expect(page.querySelectorAll('.admin-user-row')).toHaveLength(2);
+
+  page.querySelector<HTMLButtonElement>('.admin-card-sub')!.click(); // "inactive"
+  fixture.detectChanges();
+
+  expect(page.querySelectorAll('.admin-user-row')).toHaveLength(1);
+  expect(page.textContent).toContain('Inactive Bob');
+  expect(page.querySelector('.admin-filter-chip')?.textContent).toContain('Inactive accounts');
+
+  page.querySelector<HTMLButtonElement>('.admin-filter-bar .text-button')!.click();
+  fixture.detectChanges();
+  expect(page.querySelectorAll('.admin-user-row')).toHaveLength(2);
 });
+});
+
+

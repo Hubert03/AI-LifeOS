@@ -2329,3 +2329,315 @@ input:focus-visible {
     padding: 11px;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ---------- Admin: modern clickable cards ---------- */
+.dashboard-shell .admin-summary-card {
+  --card-accent: var(--accent);
+  position: relative;
+  display: flex;
+  min-height: 118px;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--card-accent) 14%, transparent), transparent 60%),
+    var(--surface);
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.dashboard-shell .admin-summary-card::before {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--card-accent);
+  content: '';
+  opacity: 0.8;
+}
+
+.dashboard-shell .admin-summary-card:hover {
+  border-color: var(--card-accent);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+.dashboard-shell .admin-summary-card.is-active {
+  border-color: var(--card-accent);
+  box-shadow: 0 0 0 1px var(--card-accent), var(--shadow);
+}
+
+.dashboard-shell .tone-violet { --card-accent: #a68aff; }
+.dashboard-shell .tone-mint   { --card-accent: #54c6bb; }
+.dashboard-shell .tone-amber  { --card-accent: #edce77; }
+.dashboard-shell .tone-blue   { --card-accent: #6ea8ff; }
+.dashboard-shell .tone-rose   { --card-accent: #f08fb0; }
+
+.dashboard-shell .admin-card-main,
+.dashboard-shell .admin-card-sub {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.dashboard-shell .admin-card-main {
+  display: grid;
+  gap: 6px;
+  padding: 16px 16px 0;
+}
+
+.dashboard-shell .admin-card-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+
+.dashboard-shell .admin-card-main strong {
+  color: var(--ink);
+  font-size: clamp(26px, 2.4vw, 34px);
+  font-weight: 650;
+  line-height: 1.1;
+}
+
+.dashboard-shell .admin-card-sub {
+  margin: 0 10px 10px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  color: var(--muted);
+  font-size: 9px;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.dashboard-shell .admin-card-sub:hover {
+  background: color-mix(in srgb, var(--card-accent) 16%, transparent);
+  color: var(--ink);
+}
+
+.dashboard-shell .admin-card-main:focus-visible,
+.dashboard-shell .admin-card-sub:focus-visible {
+  outline: 2px solid var(--card-accent);
+  outline-offset: -2px;
+}
+
+/* Filter bar */
+.dashboard-shell .admin-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 8px 10px;
+  border: 1px dashed var(--line);
+  border-radius: 9px;
+  background: var(--surface-subtle);
+}
+
+.dashboard-shell .admin-filter-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.dashboard-shell .admin-filter-count {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+/* Table polish */
+.dashboard-shell .admin-user-table-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface);
+}
+
+.dashboard-shell .admin-user-row {
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.dashboard-shell .admin-user-row:hover {
+  background: var(--surface-subtle);
+}
+
+.dashboard-shell .admin-user-row.selected {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.dashboard-shell .admin-user-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-shell .admin-user-identity > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.dashboard-shell .admin-user-avatar {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8a66ff, #54c6bb);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dashboard-shell .admin-access-badge {
+  width: fit-content;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+}
+
+.dashboard-shell .admin-view-user {
+  border-radius: 8px;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.dashboard-shell .admin-view-user:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Workspace + records */
+.dashboard-shell .admin-workspace-panel {
+  scroll-margin-top: 90px;
+  border-radius: 14px;
+}
+
+.dashboard-shell .admin-users-panel {
+  scroll-margin-top: 90px;
+  border-radius: 14px;
+}
+
+.dashboard-shell .admin-record-card,
+.dashboard-shell .admin-note-card {
+  border-radius: 10px;
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.dashboard-shell .admin-record-card:hover,
+.dashboard-shell .admin-note-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.dashboard-shell .admin-chart-panel {
+  border-radius: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell .admin-summary-card:hover,
+  .dashboard-shell .admin-record-card:hover,
+  .dashboard-shell .admin-note-card:hover {
+    transform: none;
+  }
+}
+
+
+
+
+
+
+
+/* ---------- Style studio ---------- */
+
+.dashboard-shell .main-content { zoom: var(--font-scale, 1); }
+
+.dashboard-shell .overview-panel,
+.dashboard-shell .metric-card,
+.dashboard-shell .admin-summary-card { border-radius: var(--radius, 12px); }
+
+/* panel */
+.style-studio {
+  position: fixed; z-index: 20; top: 90px; right: 20px; width: 280px;
+  display: grid; gap: 10px; padding: 16px;
+  border: 1px solid var(--line); border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(16px); box-shadow: var(--shadow);
+  color: var(--ink); font-size: 12px;
+}
+.style-studio header { display: flex; justify-content: space-between; align-items: center; }
+.style-studio label { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; font-weight: 650; }
+.style-studio input[type='range'] { width: 100%; accent-color: var(--accent); }
+.style-studio .swatch-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.style-studio .swatch { width: 24px; height: 24px; border: 2px solid transparent; border-radius: 50%; cursor: pointer; }
+.style-studio .swatch.on { border-color: var(--ink); }
+.style-studio input[type='color'] { width: 28px; height: 28px; padding: 0; border: 0; background: none; cursor: pointer; }
+.style-studio .seg { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: var(--surface-subtle); }
+.style-studio .seg button {
+  flex: 1; padding: 6px 4px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--ink-soft); cursor: pointer; font-size: 11px; text-transform: capitalize;
+}
+.style-studio .seg button.on { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+
+
+
+.app-shell { font-family: var(--app-font, inherit); }
+
+.app-shell[data-card='glass'] .overview-panel,
+.app-shell[data-card='glass'] .task-list-panel {
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+}
+.app-shell[data-card='outlined'] .overview-panel,
+.app-shell[data-card='outlined'] .task-list-panel { background: transparent; border-width: 1.5px; }
+.app-shell[data-card='flat'] .overview-panel,
+.app-shell[data-card='flat'] .task-list-panel { border-color: transparent; }
+
+.app-shell[data-bg='solid'] { background: var(--canvas); }
+.app-shell[data-bg='gradient'] {
+  background: linear-gradient(160deg, var(--canvas), color-mix(in srgb, var(--accent) 10%, var(--canvas)));
+}
+.app-shell[data-bg='mesh'] {
+  background:
+    radial-gradient(40rem 28rem at 10% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%),
+    radial-gradient(34rem 26rem at 95% 20%, color-mix(in srgb, #54c6bb 16%, transparent), transparent 60%),
+    var(--canvas);
+}
+
+
+
+
+
+
+
+.dashboard-shell .briefing-panel { margin-bottom: 13px; }
+.dashboard-shell .briefing-summary { margin: 12px 0 0; color: var(--ink); font-size: 14px; line-height: 1.6; }
+.dashboard-shell .briefing-list { display: grid; gap: 8px; margin: 12px 0 0; padding-left: 20px; }
+.dashboard-shell .briefing-list li { color: var(--ink-soft); font-size: 13px; }
+.dashboard-shell .briefing-list strong { display: block; color: var(--ink); }
+.dashboard-shell .briefing-goal,
+.dashboard-shell .briefing-tip { margin: 12px 0 0; color: var(--ink-soft); font-size: 13px; }
+.dashboard-shell .briefing-time { display: block; margin-top: 10px; color: var(--muted); font-size: 11px; }
