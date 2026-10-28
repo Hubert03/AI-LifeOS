@@ -10,6 +10,7 @@ import { GoalsComponent } from './goals.component';
 import { NotesComponent } from './notes.component';
 import { SettingsComponent } from './settings.component';
 import { TasksComponent } from './tasks.component';
+import { CommandPaletteComponent } from './command-palette.component';
 
 export const routes: Routes = [
   { path: 'login', component: AuthPageComponent, data: { mode: 'login' } },
