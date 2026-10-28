@@ -707,3 +707,95 @@
     padding: 17px;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+/* ---------- Tasks board ---------- */
+.tasks-shell .tasks-toolbar { flex-wrap: wrap; }
+.tasks-shell .task-selectors { margin-left: auto; }
+
+.tasks-shell .view-toggle {
+  display: inline-flex; gap: 2px; margin-bottom: 7px; padding: 3px;
+  border: 1px solid var(--line); border-radius: 9px; background: var(--surface-subtle);
+}
+.tasks-shell .view-toggle button {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px;
+  border: 0; border-radius: 7px; background: transparent; color: var(--ink-soft);
+  cursor: pointer; font-size: 12px;
+}
+.tasks-shell .view-toggle button svg {
+  width: 15px; height: 15px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.tasks-shell .view-toggle button.on { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+
+.tasks-shell .board {
+  display: grid; align-items: start; gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+.tasks-shell .board-column {
+  --col: var(--accent);
+  padding: 12px; border: 1px solid var(--line);
+  border-radius: var(--radius, 12px); background: var(--surface);
+}
+.tasks-shell .board-column[data-status='pending'] { --col: #a68aff; }
+.tasks-shell .board-column[data-status='inprogress'] { --col: #54c6bb; }
+.tasks-shell .board-column[data-status='completed'] { --col: #9bcf83; }
+.tasks-shell .board-column[data-status='cancelled'] { --col: #ad96df; }
+
+.tasks-shell .board-column-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.tasks-shell .board-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--col); }
+.tasks-shell .board-column-head h3 { margin: 0; color: var(--ink); font-size: 13px; font-weight: 700; }
+.tasks-shell .board-count {
+  margin-left: auto; padding: 2px 8px; border-radius: 999px;
+  background: var(--surface-subtle); color: var(--ink-soft); font-size: 11px;
+}
+
+.tasks-shell .board-list { display: grid; align-content: start; gap: 10px; min-height: 96px; }
+.tasks-shell .board-empty {
+  display: grid; place-items: center; margin: 0; padding: 22px 10px;
+  border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: 12px;
+}
+
+.tasks-shell .board-card {
+  display: grid; gap: 8px; padding: 12px; cursor: grab;
+  border: 1px solid var(--line); border-top: 3px solid var(--col);
+  border-radius: 10px; background: var(--surface-subtle);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.tasks-shell .board-card:hover { border-color: var(--col); }
+.tasks-shell .board-card h4 { margin: 0; color: var(--ink); font-size: 13px; font-weight: 650; line-height: 1.35; }
+.tasks-shell .board-card p {
+  display: -webkit-box; overflow: hidden; margin: 0; color: var(--muted);
+  font-size: 12px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+}
+.tasks-shell .board-card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.tasks-shell .board-card .task-priority { font-size: 12px; }
+.tasks-shell .board-due { color: var(--ink-soft); font-size: 12px; }
+.tasks-shell .board-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.tasks-shell .move-select {
+  max-width: 110px; min-height: 28px; padding: 0 6px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 7px;
+  background: var(--surface); color: var(--ink-soft); font-size: 11px;
+}
+
+.tasks-shell .board-card.cdk-drag-preview {
+  box-shadow: 0 14px 34px rgb(0 0 0 / 38%); cursor: grabbing;
+}
+.tasks-shell .cdk-drag-placeholder { opacity: 0.3; }
+.tasks-shell .cdk-drag-animating { transition: transform 200ms cubic-bezier(0, 0, 0.2, 1); }
+
+.app-shell[data-card='glass'] .board-column {
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+}
+.app-shell[data-card='outlined'] .board-column { background: transparent; border-width: 1.5px; }
+.app-shell[data-card='flat'] .board-column { border-color: transparent; }

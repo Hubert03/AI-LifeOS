@@ -218,20 +218,70 @@
               @if (report.totalTasks === 0) {
                 <div class="chart-empty">Task activity will appear when users create tasks.</div>
               } @else {
-                <div class="status-chart" role="img" aria-label="Organization tasks by status">
+                <!-- <div class="status-chart" role="img" aria-label="Organization tasks by status">
                   @for (status of adminTaskStatuses(); track status.status) {
                     <div class="chart-column"><span class="chart-count">{{ status.total }}</span><div class="chart-track"><span [class]="status.color" [style.height.%]="status.percentage"></span></div><span class="chart-label">{{ status.label }}</span></div>
                   }
-                </div>
+                </div> -->
+                  <div class="donut-wrap">
+                    <div class="donut" role="img" [attr.aria-label]="'Organization task status chart, ' + adminDonut().total + ' tasks'">
+                      <svg viewBox="0 0 42 42" aria-hidden="true">
+                        <circle class="donut-track" cx="21" cy="21" r="15.9155" />
+                        @for (s of adminDonut().slices; track s.label) {
+                          @if (s.count > 0) {
+                            <circle class="donut-seg" cx="21" cy="21" r="15.9155"
+                                    [attr.stroke]="s.color" [attr.stroke-dasharray]="s.dash" [attr.stroke-dashoffset]="s.offset" />
+                          }
+                        }
+                      </svg>
+                      <div class="donut-center"><strong>{{ adminDonut().total }}</strong><span>tasks</span></div>
+                    </div>
+                    <ul class="donut-legend">
+                      @for (s of adminDonut().slices; track s.label) {
+                        <li>
+                          <div class="donut-row">
+                            <i [style.background]="s.color"></i><span>{{ s.label }}</span><strong>{{ s.count }}</strong><small>{{ s.percent }}%</small>
+                          </div>
+                        </li>
+                      }
+                    </ul>
+                    <!-- <ul class="donut-legend">
+                      @for (s of adminDonut().slices; track s.label) {
+                        <li><i [style.background]="s.color"></i><span>{{ s.label }}</span><strong>{{ s.count }}</strong><small>{{ s.percent }}%</small></li>
+                      }
+                    </ul> -->
+                  </div>
+
               }
             </article>
             <article class="overview-panel admin-chart-panel">
               <header class="overview-panel-heading"><div><h2>Team activity</h2><p>Workspace changes over the last seven days</p></div><span class="chart-legend"><i></i> Events</span></header>
-              <div class="weekly-chart-grid" role="img" aria-label="Workspace activity events over the last seven days">
+              <!-- <div class="weekly-chart-grid" role="img" aria-label="Workspace activity events over the last seven days">
                 @for (day of adminActivityDays(); track day.dateUtc) {
                   <div class="weekly-chart-day"><span class="weekly-chart-count">{{ day.total }}</span><div class="weekly-chart-track"><span [style.height.%]="day.percentage"></span></div><span class="weekly-chart-label">{{ day.label }}</span></div>
                 }
-              </div>
+              </div> -->
+            
+        <div class="line-chart" role="img" aria-label="Workspace activity events over the last seven days">
+        <div class="line-plot">
+          <svg viewBox="0 0 300 120" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="adm-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" class="grad-top" /><stop offset="100%" class="grad-bottom" />
+              </linearGradient>
+            </defs>
+            <path [attr.d]="adminLine().area" fill="url(#adm-grad)" />
+            <path class="line-stroke" [attr.d]="adminLine().line" fill="none" />
+          </svg>
+          @for (p of adminLine().points; track $index) {
+            <span class="line-dot" [style.left.%]="p.leftPct" [style.top.%]="p.topPct" [attr.title]="p.label + ': ' + p.value"><b>{{ p.value }}</b></span>
+          }
+        </div>
+        <div class="line-labels">
+          @for (p of adminLine().points; track $index) { <span>{{ p.label }}</span> }
+        </div>
+      </div>
+            
             </article>
           </section>
 
@@ -348,6 +398,7 @@
                     @if (workspace.notes.items.length < workspace.notes.totalCount) { <button class="admin-load-more" type="button" [disabled]="loadingAdminCollection() !== null" (click)="loadMoreAdminWorkspace('notes')">{{ loadingAdminCollection() === 'notes' ? 'Loading…' : 'Load more notes' }}</button> }
                   </section>
                 </div>
+                <app-admin-access-log [refreshOn]="adminWorkspace()" />
               }
             </section>
           }
@@ -368,13 +419,24 @@
           <span class="total-card-label">Total tasks</span>
           <strong>{{ tasksLoading() ? '—' : tasks().length }}</strong>
           <span class="total-card-note">{{ dueTodayCount() }} due today</span>
-          <span class="gold-orbit orbit-one"></span><span class="gold-orbit orbit-two"></span>
+          <svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
+          <path class="spark-area" [attr.d]="createdSpark().area" />
+          <path class="spark-line" [attr.d]="createdSpark().line" />
+        </svg>
+        <span class="gold-orbit orbit-one"></span><span class="gold-orbit orbit-two"></span>
         </a>
 
         <div class="status-summary-card">
           <a class="summary-stat" routerLink="/tasks" [queryParams]="{ status: 'Pending' }"><span>To do</span><strong>{{ tasksLoading() ? '—' : pendingCount() }}</strong><small>Tasks to start</small></a>
           <a class="summary-stat" routerLink="/tasks" [queryParams]="{ status: 'InProgress' }"><span>In progress</span><strong>{{ tasksLoading() ? '—' : inProgressCount() }}</strong><small>On your plate</small></a>
-          <a class="summary-stat" routerLink="/tasks" [queryParams]="{ status: 'Completed' }"><span>Completed</span><strong>{{ tasksLoading() ? '—' : completedCount() }}</strong><small>Well done</small></a>
+          <!-- <a class="summary-stat" routerLink="/tasks" [queryParams]="{ status: 'Completed' }"><span>Completed</span><strong>{{ tasksLoading() ? '—' : completedCount() }}</strong><small>Well done</small></a> -->
+          
+          <a class="summary-stat" routerLink="/tasks" [queryParams]="{ status: 'Completed' }"><span>Completed</span><strong>{{ tasksLoading() ? '—' : completedCount() }}</strong><small>Well done</small>
+          <svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
+            <path class="spark-area" [attr.d]="completedSpark().area" />
+            <path class="spark-line" [attr.d]="completedSpark().line" />
+          </svg>
+        </a>
           <a class="summary-stat" routerLink="/tasks" [queryParams]="{ status: 'Cancelled' }"><span>Cancelled</span><strong>{{ tasksLoading() ? '—' : cancelledCount() }}</strong><small>Not active</small></a>
         </div>
 
@@ -384,7 +446,8 @@
           <small>Plan your next step</small>
         </a>
       </section>
-      
+      <app-smart-capture (saved)="loadTasks(); loadOverviewExtras();" />
+      <app-weekly-review  (saved)="loadOverviewExtras()" ></app-weekly-review>
       <app-daily-briefing />
      
       <app-ai-planner context="overview"></app-ai-planner>
@@ -411,7 +474,37 @@
                 <a routerLink="/tasks">Create your first task <span aria-hidden="true">→</span></a>
               </div>
             } @else {
-              <div class="status-chart" role="img" aria-label="Task count by status">
+
+              <div class="donut-wrap">
+              <div class="donut" role="img" [attr.aria-label]="'Task status chart, ' + taskDonut().total + ' tasks'">
+                <svg viewBox="0 0 42 42" aria-hidden="true">
+                  <circle class="donut-track" cx="21" cy="21" r="15.9155" />
+                  @for (s of taskDonut().slices; track s.label) {
+                    @if (s.count > 0) {
+                      <circle class="donut-seg" cx="21" cy="21" r="15.9155"
+                              [attr.stroke]="s.color" [attr.stroke-dasharray]="s.dash" [attr.stroke-dashoffset]="s.offset" />
+                    }
+                  }
+                </svg>
+                <div class="donut-center"><strong>{{ taskDonut().total }}</strong><span>tasks</span></div>
+              </div>
+              <ul class="donut-legend">
+                @for (s of taskDonut().slices; track s.label) {
+                  <li>
+                    <a class="donut-row donut-link" routerLink="/tasks" [queryParams]="{ status: s.status }"
+                      [attr.aria-label]="'Show ' + s.label + ' tasks'">
+                      <i [style.background]="s.color"></i><span>{{ s.label }}</span><strong>{{ s.count }}</strong><small>{{ s.percent }}%</small>
+                    </a>
+                  </li>
+                }
+              </ul>
+              <!-- <ul class="donut-legend">
+                @for (s of taskDonut().slices; track s.label) {
+                  <li><i [style.background]="s.color"></i><span>{{ s.label }}</span><strong>{{ s.count }}</strong><small>{{ s.percent }}%</small></li>
+                }
+              </ul> -->
+            </div>
+              <!-- <div class="status-chart" role="img" aria-label="Task count by status">
                 @for (status of taskStatusSummary(); track status.label) {
                   <div class="chart-column">
                     <span class="chart-count">{{ status.count }}</span>
@@ -419,7 +512,7 @@
                     <span class="chart-label">{{ status.label }}</span>
                   </div>
                 }
-              </div>
+              </div> -->
               <div class="chart-footer"><span>{{ tasks().length }} total tasks</span><a routerLink="/tasks">Manage tasks <span aria-hidden="true">→</span></a></div>
             }
           </article>
@@ -432,7 +525,29 @@
             @if (tasksLoading()) {
               <div class="chart-empty" role="status">Loading weekly activity…</div>
             } @else {
-              <div class="weekly-chart-grid" role="img" aria-label="Tasks created each day during the last seven days">
+
+
+              <div class="line-chart" role="img" aria-label="Tasks created each day during the last seven days">
+              <div class="line-plot">
+                <svg viewBox="0 0 300 120" preserveAspectRatio="none" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="wk-grad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" class="grad-top" /><stop offset="100%" class="grad-bottom" />
+                    </linearGradient>
+                  </defs>
+                  <path [attr.d]="weeklyLine().area" fill="url(#wk-grad)" />
+                  <path class="line-stroke" [attr.d]="weeklyLine().line" fill="none" />
+                </svg>
+                @for (p of weeklyLine().points; track $index) {
+                  <span class="line-dot" [style.left.%]="p.leftPct" [style.top.%]="p.topPct" [attr.title]="p.label + ': ' + p.value"><b>{{ p.value }}</b></span>
+                }
+              </div>
+              <div class="line-labels">
+                @for (p of weeklyLine().points; track $index) { <span>{{ p.label }}</span> }
+              </div>
+            </div>
+
+              <!-- <div class="weekly-chart-grid" role="img" aria-label="Tasks created each day during the last seven days">
                 @for (day of weeklyTaskActivity(); track day.dateKey) {
                   <div class="weekly-chart-day">
                     <span class="weekly-chart-count">{{ day.count }}</span>
@@ -440,7 +555,7 @@
                     <span class="weekly-chart-label">{{ day.label }}</span>
                   </div>
                 }
-              </div>
+              </div> -->
             }
           </article>
 

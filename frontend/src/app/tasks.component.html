@@ -159,7 +159,59 @@
         </button>
       </section>
 
-      <section class="tasks-toolbar" aria-label="Task filters">
+            <section class="tasks-toolbar" aria-label="Task filters">
+        <div class="view-toggle" role="group" aria-label="Choose view">
+          <button type="button" [class.on]="view() === 'board'" [attr.aria-pressed]="view() === 'board'" (click)="setView('board')">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="7" height="16" rx="1.5" /><rect x="14" y="4" width="7" height="10" rx="1.5" /></svg>
+            Board
+          </button>
+          <button type="button" [class.on]="view() === 'list'" [attr.aria-pressed]="view() === 'list'" (click)="setView('list')">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" /></svg>
+            List
+          </button>
+        </div>
+
+        @if (view() === 'list') {
+          <div class="task-tabs" role="tablist" aria-label="Filter tasks by status">
+            @for (filter of statusFilters; track filter) {
+              <button
+                class="task-tab"
+                [class.selected]="statusFilter() === filter"
+                type="button"
+                role="tab"
+                [attr.aria-selected]="statusFilter() === filter"
+                (click)="setStatusFilter(filter)"
+              >
+                {{ filter === 'All' ? 'All tasks' : statusLabel(filter) }}
+                @if (filter === 'All') {
+                  <span class="tab-count">{{ tasks().length }}</span>
+                }
+              </button>
+            }
+          </div>
+        }
+
+        <div class="task-selectors">
+          <label>
+            <span class="sr-only">Filter by priority</span>
+            <select aria-label="Filter by priority" [value]="priorityFilter()" (change)="setPriorityFilter($event)">
+              <option value="All">All priorities</option>
+              @for (priority of priorityOptions; track priority.value) {
+                <option [value]="priority.value">{{ priority.label }} priority</option>
+              }
+            </select>
+          </label>
+          <label>
+            <span class="sr-only">Sort tasks</span>
+            <select aria-label="Sort tasks" [value]="sortOrder()" (change)="setSortOrder($event)">
+              <option value="due">Sort: Due date</option>
+              <option value="priority">Sort: Priority</option>
+              <option value="newest">Sort: Newest</option>
+            </select>
+          </label>
+        </div>
+      </section>
+      <!-- <section class="tasks-toolbar" aria-label="Task filters">
         <div class="task-tabs" role="tablist" aria-label="Filter tasks by status">
           @for (filter of statusFilters; track filter) {
             <button
@@ -196,7 +248,7 @@
             </select>
           </label>
         </div>
-      </section>
+      </section> -->
 
       @if (successMessage()) {
         <p class="task-feedback success-feedback" role="status">{{ successMessage() }}</p>
@@ -207,8 +259,140 @@
           <button type="button" class="text-button" (click)="loadTasks()">Try again</button>
         </div>
       }
+      @if (view() === 'board') {
+        @if (isLoading()) {
+          <section class="task-list-panel">
+            <div class="task-list-message" role="status"><span class="spinner" aria-hidden="true"></span> Loading your tasks…</div>
+          </section>
+        } @else {
+          <section class="board" cdkDropListGroup aria-label="Task board">
+            @for (column of boardColumns(); track column.status) {
+              <div class="board-column" [attr.data-status]="column.status.toLowerCase()">
+                <header class="board-column-head">
+                  <span class="board-dot" aria-hidden="true"></span>
+                  <h3>{{ column.label }}</h3>
+                  <span class="board-count">{{ column.tasks.length }}</span>
+                </header>
 
-      <section class="task-list-panel" aria-label="Task list">
+                <div class="board-list" cdkDropList cdkDropListSortingDisabled
+                     [cdkDropListData]="column.status" (cdkDropListDropped)="onDrop($event)"
+                     [attr.aria-label]="column.label + ' tasks'">
+                  @for (task of column.tasks; track task.taskId) {
+                    <article class="board-card" cdkDrag cdkDragPreviewContainer="parent"
+                             [cdkDragData]="task" [cdkDragDisabled]="busyTaskId() !== null">
+                      <h4>{{ task.title }}</h4>
+                      @if (task.description) { <p>{{ task.description }}</p> }
+                      <div class="board-card-meta">
+                        <span class="task-priority" [class]="'task-priority priority-' + task.priority">
+                          <span class="priority-dot" aria-hidden="true"></span>{{ priorityLabel(task.priority) }}
+                        </span>
+                        @if (task.dueAtUtc) {
+                          <span class="board-due" [class.due-overdue]="isOverdue(task)">
+                            {{ task.dueAtUtc | date: 'MMM d' : 'UTC' }}@if (isOverdue(task)) { · Overdue }
+                          </span>
+                        }
+                      </div>
+                      <div class="board-card-foot">
+                        <select class="move-select" [attr.aria-label]="'Move ' + task.title" (change)="onMoveSelect(task, $event)">
+                          <option value="" selected>Move to…</option>
+                          @for (target of boardStatuses; track target.status) {
+                            @if (target.status !== task.status) {
+                              <option [value]="target.status">{{ target.label }}</option>
+                            }
+                          }
+                        </select>
+                        <div class="task-row-actions">
+                          <button type="button" aria-label="Edit task" title="Edit task" (click)="openEditDialog(task)">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 5 5M4 20l4-.8L19 8a2.1 2.1 0 0 0-3-3L5 16l-1 4Z" /></svg>
+                          </button>
+                          <button type="button" class="delete-action" aria-label="Delete task" title="Delete task" [disabled]="busyTaskId() === task.taskId" (click)="deleteTask(task)">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3" /></svg>
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  } @empty {
+                    <p class="board-empty">Drop a task here</p>
+                  }
+                </div>
+              </div>
+            }
+          </section>
+        }
+           } @else {
+        <section class="task-list-panel" aria-label="Task list">
+          <div class="task-list-head">
+            <span class="task-col-title">Task</span>
+            <span>Priority</span>
+            <span>Due date</span>
+            <span>Status</span>
+            <span class="sr-only">Actions</span>
+          </div>
+
+          @if (isLoading()) {
+            <div class="task-list-message" role="status"><span class="spinner" aria-hidden="true"></span> Loading your tasks…</div>
+          } @else if (!errorMessage() && visibleTasks().length === 0) {
+            <div class="tasks-empty-state">
+              <span class="empty-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M8 5h12M8 12h12M8 19h12" /><path d="m3 5 1 1 2-2M3 12l1 1 2-2M3 19l1 1 2-2" /></svg>
+              </span>
+              <h3>{{ searchTerm() || statusFilter() !== 'All' || priorityFilter() !== 'All' ? 'No tasks match these filters' : 'Your task list starts here' }}</h3>
+              <p>{{ searchTerm() || statusFilter() !== 'All' || priorityFilter() !== 'All' ? 'Try changing your search or filters.' : 'Create a task to capture what you want to get done.' }}</p>
+              @if (!searchTerm() && statusFilter() === 'All' && priorityFilter() === 'All') {
+                <button class="primary-action secondary-action" type="button" (click)="openCreateDialog()">Create your first task</button>
+              }
+            </div>
+          } @else {
+            @for (task of visibleTasks(); track task.taskId) {
+              <article class="task-row" [class.task-completed]="task.status === 'Completed'">
+                <div class="task-main">
+                  <button
+                    class="completion-control"
+                    type="button"
+                    [attr.aria-label]="task.status === 'Completed' ? 'Reopen ' + task.title : 'Complete ' + task.title"
+                    [attr.aria-pressed]="task.status === 'Completed'"
+                    [disabled]="busyTaskId() === task.taskId"
+                    (click)="toggleComplete(task)"
+                  >
+                    @if (task.status === 'Completed') {
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+                    }
+                  </button>
+                  <div class="task-description">
+                    <h3>{{ task.title }}</h3>
+                    @if (task.description) {
+                      <p>{{ task.description }}</p>
+                    }
+                  </div>
+                </div>
+                <span class="task-priority" [class]="'task-priority priority-' + task.priority">
+                  <span class="priority-dot" aria-hidden="true"></span>{{ priorityLabel(task.priority) }}
+                </span>
+                <span class="task-due" [class.due-overdue]="isOverdue(task)">
+                  @if (task.dueAtUtc) {
+                    {{ task.dueAtUtc | date: 'MMM d, y' : 'UTC' }}
+                    @if (isOverdue(task)) { <small>Overdue</small> }
+                  } @else {
+                    <span class="no-due-date">No due date</span>
+                  }
+                </span>
+                <span class="task-status" [class]="'task-status status-' + task.status.toLowerCase()">
+                  {{ statusLabel(task.status) }}
+                </span>
+                <div class="task-row-actions">
+                  <button type="button" aria-label="Edit task" title="Edit task" (click)="openEditDialog(task)">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 5 5M4 20l4-.8L19 8a2.1 2.1 0 0 0-3-3L5 16l-1 4Z" /></svg>
+                  </button>
+                  <button type="button" class="delete-action" aria-label="Delete task" title="Delete task" [disabled]="busyTaskId() === task.taskId" (click)="deleteTask(task)">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3" /></svg>
+                  </button>
+                </div>
+              </article>
+            }
+          }
+        </section>
+      }
+      <!-- <section class="task-list-panel" aria-label="Task list">
         <div class="task-list-head">
           <span class="task-col-title">Task</span>
           <span>Priority</span>
@@ -278,10 +462,10 @@
             </article>
           }
         }
-      </section>
+      </section> -->
 
       <footer class="tasks-footer">
-        <span>Showing {{ visibleTasks().length }} of {{ tasks().length }} tasks</span>
+        <span>Showing {{ (view() === 'board' ? boardTasks() : visibleTasks()).length }} of {{ tasks().length }} tasks</span>
         <span>Your tasks are private to your account</span>
       </footer>
     </div>

@@ -23,8 +23,10 @@ import { ThemeService } from './theme.service';
 import { forkJoin } from 'rxjs';
 import { StyleCreatorService } from './style-creator.service';
 import { StyleStudioComponent } from './style-studio.component';
-
 import { DailyBriefingComponent } from './daily-briefing.component';
+import { SmartCaptureComponent } from './smart-capture.component';
+import { WeeklyReviewComponent } from './weekly-review.component';
+import { AdminAccessLogComponent } from './admin-access-log.component';
 
 
 interface AdminWorkspace {
@@ -41,9 +43,114 @@ type AdminFilter =
 
 type AdminWorkspaceCollection = keyof AdminWorkspace;
 
+interface DonutSlice {
+  label: string;
+  count: number;
+  color: string;
+  status?: string;
+  percent: number;
+  dash: string;
+  offset: number;
+}
+
+interface LinePoint {
+  x: number;
+  y: number;
+  value: number;
+  label: string;
+  leftPct: number;
+  topPct: number;
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  Pending: '#a68aff',
+  InProgress: '#54c6bb',
+  Completed: '#9bcf83',
+  Cancelled: '#ad96df',
+};
+
+const CHART_W = 300;
+const CHART_H = 120;
+
+function buildDonut(items: { label: string; count: number; color: string; status?: string }[]): {
+  total: number;
+  slices: DonutSlice[];
+} {
+  const total = items.reduce((sum, item) => sum + item.count, 0);
+  const gap = items.filter((item) => item.count > 0).length > 1 ? 1 : 0;
+  let acc = 0;
+  const slices = items.map((item) => {
+    const pct = total ? (item.count / total) * 100 : 0;
+    const length = Math.max(0, pct - gap);
+    const slice: DonutSlice = {
+      ...item,
+      percent: Math.round(pct),
+      dash: `${length.toFixed(2)} ${(100 - length).toFixed(2)}`,
+      offset: Number((25 - acc - gap / 2).toFixed(2)),
+    };
+    acc += pct;
+    return slice;
+  });
+  return { total, slices };
+}
+
+function buildLine(days: { label: string; value: number }[]): {
+  line: string;
+  area: string;
+  points: LinePoint[];
+} {
+  const n = days.length;
+  if (!n) return { line: '', area: '', points: [] };
+
+  const peak = Math.max(1, ...days.map((day) => day.value));
+  const top = 24;
+  const bottom = 6;
+  const points: LinePoint[] = days.map((day, index) => {
+    const x = ((index + 0.5) * CHART_W) / n;
+    const y = CHART_H - bottom - (day.value / peak) * (CHART_H - top - bottom);
+    return {
+      x,
+      y,
+      value: day.value,
+      label: day.label,
+      leftPct: (x / CHART_W) * 100,
+      topPct: (y / CHART_H) * 100,
+    };
+  });
+
+  let line = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+  for (let i = 1; i < n; i++) {
+    const from = points[i - 1];
+    const to = points[i];
+    const mid = ((from.x + to.x) / 2).toFixed(1);
+    line += ` C ${mid} ${from.y.toFixed(1)}, ${mid} ${to.y.toFixed(1)}, ${to.x.toFixed(1)} ${to.y.toFixed(1)}`;
+  }
+  const area = `${line} L ${points[n - 1].x.toFixed(1)} ${CHART_H} L ${points[0].x.toFixed(1)} ${CHART_H} Z`;
+  return { line, area, points };
+}
+function buildSpark(values: number[]): { line: string; area: string } {
+  const n = values.length;
+  if (n < 2) return { line: '', area: '' };
+
+  const w = 100;
+  const h = 28;
+  const pad = 3;
+  const peak = Math.max(1, ...values);
+  const pts = values.map((value, i) => ({
+    x: (i / (n - 1)) * w,
+    y: h - pad - (value / peak) * (h - pad * 2),
+  }));
+
+  let line = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+  for (let i = 1; i < n; i++) {
+    const mid = ((pts[i - 1].x + pts[i].x) / 2).toFixed(1);
+    line += ` C ${mid} ${pts[i - 1].y.toFixed(1)}, ${mid} ${pts[i].y.toFixed(1)}, ${pts[i].x.toFixed(1)} ${pts[i].y.toFixed(1)}`;
+  }
+  return { line, area: `${line} L ${w} ${h} L 0 ${h} Z` };
+}
 @Component({
   selector: 'app-dashboard',
-  imports: [AiPlannerComponent, DatePipe, RouterLink, ThemePickerComponent,StyleStudioComponent,DailyBriefingComponent],
+  imports: [AiPlannerComponent, DatePipe, RouterLink, ThemePickerComponent,StyleStudioComponent,DailyBriefingComponent,SmartCaptureComponent,WeeklyReviewComponent,AdminAccessLogComponent],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent {
@@ -273,6 +380,44 @@ protected onScale(e: Event): void {
     }
   }
 
+ protected readonly taskDonut = computed(() =>
+  buildDonut([
+    { label: 'To do', count: this.pendingCount(), color: STATUS_COLORS['Pending'], status: 'Pending' },
+    { label: 'In progress', count: this.inProgressCount(), color: STATUS_COLORS['InProgress'], status: 'InProgress' },
+    { label: 'Completed', count: this.completedCount(), color: STATUS_COLORS['Completed'], status: 'Completed' },
+    { label: 'Cancelled', count: this.cancelledCount(), color: STATUS_COLORS['Cancelled'], status: 'Cancelled' },
+  ]),
+);
+
+protected readonly adminDonut = computed(() =>
+  buildDonut(
+    this.adminTaskStatuses().map((s) => ({
+      label: s.label,
+      count: s.total,
+      color: STATUS_COLORS[s.status] ?? '#888780',
+    })),
+  ),
+);
+
+protected readonly weeklyLine = computed(() =>
+  buildLine(this.weeklyTaskActivity().map((d) => ({ label: d.label, value: d.count }))),
+);
+
+protected readonly createdSpark = computed(() =>
+  buildSpark(this.weeklyTaskActivity().map((day) => day.count)),
+);
+
+protected readonly completedSpark = computed(() => {
+  const done = this.tasks().filter((task) => task.status === 'Completed' && task.updatedAtUtc);
+  return buildSpark(
+    this.weeklyTaskActivity().map(
+      (day) => done.filter((task) => task.updatedAtUtc!.slice(0, 10) === day.dateKey).length,
+    ),
+  );
+});
+protected readonly adminLine = computed(() =>
+  buildLine(this.adminActivityDays().map((d) => ({ label: d.label, value: d.total }))),
+);
   protected loadAdminDashboard(): void {
     this.adminDashboardLoading.set(true);
     this.adminDashboardError.set(null);

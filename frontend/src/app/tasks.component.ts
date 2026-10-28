@@ -10,12 +10,18 @@ import { LifeTask, SaveTask, TaskStatus, TasksService } from './tasks.service';
 import { ThemePickerComponent } from './theme-picker.component';
 import { ThemeService } from './theme.service';
 import { StyleCreatorService } from './style-creator.service';
+import { CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
+
 type TaskFilter = 'All' | TaskStatus;
+
+type TaskView = 'board' | 'list';
+const VIEW_KEY = 'ai-lifeos-tasks-view';
+
 type PriorityFilter = 'All' | number;
 import { StyleStudioComponent } from './style-studio.component';
 @Component({
   selector: 'app-tasks',
-  imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink, ThemePickerComponent,StyleStudioComponent],
+  imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink, ThemePickerComponent,StyleStudioComponent,CdkDrag, CdkDropList, CdkDropListGroup],
   templateUrl: './tasks.component.html',
 })
 export class TasksComponent {
@@ -47,7 +53,7 @@ export class TasksComponent {
   protected editingTask: LifeTask | null = null;
   protected taskForm = this.emptyForm();
 
-protected readonly styleCreator = inject(StyleCreatorService);
+  protected readonly styleCreator = inject(StyleCreatorService);
 
   protected readonly statusFilters: TaskFilter[] = [
     'All',
@@ -71,41 +77,32 @@ protected readonly styleCreator = inject(StyleCreatorService);
   protected readonly displayName = computed(
     () => this.currentUser()?.displayName.trim().split(/\s+/)[0] || 'there',
   );
-  protected readonly visibleTasks = computed(() => {
-    const query = this.searchTerm().trim().toLocaleLowerCase();
-    const filtered = this.tasks().filter((task) => {
-      const matchesQuery =
-        !query ||
-        `${task.title} ${task.description ?? ''}`.toLocaleLowerCase().includes(query);
-      const matchesStatus =
-        this.statusFilter() === 'All' || task.status === this.statusFilter();
-      const matchesPriority =
-        this.priorityFilter() === 'All' || task.priority === this.priorityFilter();
-      return matchesQuery && matchesStatus && matchesPriority;
-    });
+    protected readonly view = signal<TaskView>(this.loadView());
 
-    return filtered.sort((left, right) => {
-      if (this.sortOrder() === 'newest') {
-        return right.createdAtUtc.localeCompare(left.createdAtUtc);
-      }
-      if (this.sortOrder() === 'priority') {
-        return left.priority - right.priority;
-      }
-      if (!left.dueAtUtc) {
-        return right.dueAtUtc ? 1 : 0;
-      }
-      if (!right.dueAtUtc) {
-        return -1;
-      }
-      return left.dueAtUtc.localeCompare(right.dueAtUtc);
-    });
+  protected readonly boardStatuses: { status: TaskStatus; label: string }[] = [
+    { status: 'Pending', label: 'To do' },
+    { status: 'InProgress', label: 'In progress' },
+    { status: 'Completed', label: 'Completed' },
+    { status: 'Cancelled', label: 'Cancelled' },
+  ];
+
+  protected readonly visibleTasks = computed(() => this.filterAndSort(true));
+  protected readonly boardTasks = computed(() => this.filterAndSort(false));
+  protected readonly boardColumns = computed(() => {
+    const tasks = this.boardTasks();
+    return this.boardStatuses.map((column) => ({
+      ...column,
+      tasks: tasks.filter((task) => task.status === column.status),
+    }));
   });
-
   constructor() {
-    this.route.queryParamMap.subscribe((params) => {
+        this.route.queryParamMap.subscribe((params) => {
       const status = this.statusFilters.find((filter) => filter === params.get('status'));
       if (status) {
         this.statusFilter.set(status);
+        if (status !== 'All') {
+          this.view.set('list');
+        }
       }
     });
     this.loadTasks();
@@ -141,7 +138,108 @@ protected readonly styleCreator = inject(StyleCreatorService);
   protected setSortOrder(event: Event): void {
     this.sortOrder.set((event.target as HTMLSelectElement).value as 'due' | 'priority' | 'newest');
   }
+  protected setView(view: TaskView): void {
+    this.view.set(view);
+    try {
+      localStorage.setItem(VIEW_KEY, view);
+    } catch {
+      /* storage unavailable */
+    }
+  }
 
+  protected onDrop(event: CdkDragDrop<TaskStatus, TaskStatus, LifeTask>): void {
+    if (event.previousContainer === event.container) {
+      return;
+    }
+    this.moveTask(event.item.data, event.container.data);
+  }
+
+  protected onMoveSelect(task: LifeTask, event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    const status = this.editableStatuses.find((item) => item === select.value);
+    select.value = '';
+    if (status) {
+      this.moveTask(task, status);
+    }
+  }
+
+  protected moveTask(task: LifeTask, status: TaskStatus): void {
+    if (task.status === status || this.busyTaskId()) {
+      return;
+    }
+
+    const previous = this.tasks();
+    this.tasks.update((list) =>
+      list.map((item) => (item.taskId === task.taskId ? { ...item, status } : item)),
+    );
+    this.busyTaskId.set(task.taskId);
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+
+    const update: SaveTask = {
+      title: task.title,
+      description: task.description,
+      dueAtUtc: task.dueAtUtc,
+      priority: task.priority,
+      status,
+    };
+    this.tasksService.updateTask(task.taskId, update).subscribe({
+      next: (saved) => {
+        this.tasks.update((list) =>
+          list.map((item) => (item.taskId === saved.taskId ? saved : item)),
+        );
+        this.successMessage.set(
+          `Moved to ${this.boardStatuses.find((s) => s.status === status)?.label ?? status}.`,
+        );
+        this.busyTaskId.set(null);
+      },
+      error: (error: unknown) => {
+        this.tasks.set(previous);
+        this.errorMessage.set(this.getRequestError(error));
+        this.busyTaskId.set(null);
+      },
+    });
+  }
+
+  private loadView(): TaskView {
+    try {
+      return localStorage.getItem(VIEW_KEY) === 'list' ? 'list' : 'board';
+    } catch {
+      return 'board';
+    }
+  }
+
+  private filterAndSort(useStatusFilter: boolean): LifeTask[] {
+    const query = this.searchTerm().trim().toLocaleLowerCase();
+    const filtered = this.tasks().filter((task) => {
+      const matchesQuery =
+        !query ||
+        `${task.title} ${task.description ?? ''}`.toLocaleLowerCase().includes(query);
+      const matchesStatus =
+        !useStatusFilter ||
+        this.statusFilter() === 'All' ||
+        task.status === this.statusFilter();
+      const matchesPriority =
+        this.priorityFilter() === 'All' || task.priority === this.priorityFilter();
+      return matchesQuery && matchesStatus && matchesPriority;
+    });
+
+    return filtered.sort((left, right) => {
+      if (this.sortOrder() === 'newest') {
+        return right.createdAtUtc.localeCompare(left.createdAtUtc);
+      }
+      if (this.sortOrder() === 'priority') {
+        return left.priority - right.priority;
+      }
+      if (!left.dueAtUtc) {
+        return right.dueAtUtc ? 1 : 0;
+      }
+      if (!right.dueAtUtc) {
+        return -1;
+      }
+      return left.dueAtUtc.localeCompare(right.dueAtUtc);
+    });
+  }
   protected openCreateDialog(): void {
     this.editingTask = null;
     this.taskForm = this.emptyForm();
