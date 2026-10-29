@@ -3,8 +3,12 @@ import { HttpInterceptorFn } from '@angular/common/http';
 import { environment } from '../environments/environment';
 
 export const apiUrlInterceptor: HttpInterceptorFn = (req, next) => {
-  // Do not modify absolute URLs.
+  // Do not modify absolute URLs, but allow cookies for the hosted API.
   if (/^https?:\/\//i.test(req.url)) {
+    if (environment.production && req.url.startsWith(environment.apiUrl)) {
+      return next(req.clone({ withCredentials: true }));
+    }
+
     return next(req);
   }
 
@@ -22,7 +26,8 @@ export const apiUrlInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(
     req.clone({
-      url: `${apiUrl}${req.url}`
+      url: `${apiUrl}${req.url}`,
+      withCredentials: true
     })
   );
 };
