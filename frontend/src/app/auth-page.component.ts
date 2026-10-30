@@ -27,25 +27,53 @@ export class AuthPageComponent {
       this.errorMessage.set('Cannot verify your sign-in. Make sure the .NET API is running.');
     }
   }
+protected submit(): void {
+  console.log('LOGIN SUBMIT TRIGGERED');
 
-  protected submit(): void {
-    if (this.isSubmitting()) {
-      return;
-    }
+  console.log('Email entered:', !!this.email);
+  console.log('Password entered:', !!this.password);
 
-    this.errorMessage.set(null);
-    this.isSubmitting.set(true);
-
-    this.authService.login(this.email, this.password).subscribe({
-      next: (user) =>
-        void this.router.navigateByUrl(
-          user.mustChangePassword ? '/change-password' : '/',
-        ),
-      error: (error: unknown) => {
-        this.errorMessage.set(this.authService.getErrorMessage(error));
-        this.isSubmitting.set(false);
-      },
-      complete: () => this.isSubmitting.set(false),
-    });
+  if (this.isSubmitting()) {
+    console.log('Already submitting');
+    return;
   }
+
+  this.errorMessage.set(null);
+  this.isSubmitting.set(true);
+
+  console.log('Calling AuthService.login');
+
+  this.authService.login(this.email, this.password).subscribe({
+    next: (user) =>
+      void this.router.navigateByUrl(
+        user.mustChangePassword ? '/change-password' : '/',
+      ),
+    error: (error: unknown) => {
+      console.error('LOGIN API ERROR:', error);
+      this.errorMessage.set(this.authService.getErrorMessage(error));
+      this.isSubmitting.set(false);
+    },
+    complete: () => this.isSubmitting.set(false),
+  });
+}
+  // protected submit(): void {
+  //   if (this.isSubmitting()) {
+  //     return;
+  //   }
+
+  //   this.errorMessage.set(null);
+  //   this.isSubmitting.set(true);
+
+  //   this.authService.login(this.email, this.password).subscribe({
+  //     next: (user) =>
+  //       void this.router.navigateByUrl(
+  //         user.mustChangePassword ? '/change-password' : '/',
+  //       ),
+  //     error: (error: unknown) => {
+  //       this.errorMessage.set(this.authService.getErrorMessage(error));
+  //       this.isSubmitting.set(false);
+  //     },
+  //     complete: () => this.isSubmitting.set(false),
+  //   });
+  // }
 }
