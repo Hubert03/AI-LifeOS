@@ -33,7 +33,7 @@ describe('ActivityService', () => {
       title: 'Read chapter',
       deletedAtUtc: '2026-10-11T00:00:00Z',
     }).subscribe();
-    http.expectOne('/api/auth/csrf').flush({ requestToken: 'restore-token' });
+    http.expectOne('/api/auth/csrf').flush({ token: 'restore-token' });
     const restore = http.expectOne('/api/activity/trash/task/task-1/restore');
     expect(restore.request.method).toBe('POST');
     expect(restore.request.headers.get('X-CSRF-TOKEN')).toBe('restore-token');

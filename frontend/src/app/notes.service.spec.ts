@@ -26,7 +26,7 @@ describe('NotesService', () => {
 
     const note = { title: 'Study plan', content: 'Review chapter one', isPinned: true, color: '#DCCB9A' };
     service.createNote(note).subscribe();
-    http.expectOne('/api/auth/csrf').flush({ requestToken: 'note-token' });
+    http.expectOne('/api/auth/csrf').flush({ token: 'note-token' });
     const create = http.expectOne('/api/notes');
     expect(create.request.method).toBe('POST');
     expect(create.request.headers.get('X-CSRF-TOKEN')).toBe('note-token');
@@ -38,7 +38,7 @@ describe('NotesService', () => {
     });
 
     service.deleteNote('note-1').subscribe();
-    http.expectOne('/api/auth/csrf').flush({ requestToken: 'delete-note-token' });
+    http.expectOne('/api/auth/csrf').flush({ token: 'delete-note-token' });
     const remove = http.expectOne('/api/notes/note-1');
     expect(remove.request.method).toBe('DELETE');
     expect(remove.request.headers.get('X-CSRF-TOKEN')).toBe('delete-note-token');

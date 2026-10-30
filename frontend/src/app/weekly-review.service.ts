@@ -50,10 +50,10 @@ export class WeeklyReviewService {
   }
 
   private fetchRefresh(): Observable<WeeklyReview> {
-    return this.http.get<{ requestToken: string }>('/api/auth/csrf').pipe(
-      switchMap(({ requestToken }) =>
+    return this.http.get<{ token: string }>('/api/auth/csrf').pipe(
+      switchMap(({ token }) =>
         this.http.post<WeeklyReview>('/api/ai/weekly-review/refresh', {}, {
-          headers: new HttpHeaders({ 'X-CSRF-TOKEN': requestToken }),
+          headers: new HttpHeaders({ 'X-CSRF-TOKEN': token }),
         }),
       ),
     );
@@ -93,10 +93,10 @@ export class WeeklyReviewService {
 //   }
 
 //   refresh(): Observable<WeeklyReview> {
-//     return this.http.get<{ requestToken: string }>('/api/auth/csrf').pipe(
-//       switchMap(({ requestToken }) =>
+//     return this.http.get<{ token: string }>('/api/auth/csrf').pipe(
+//       switchMap(({ token }) =>
 //         this.http.post<WeeklyReview>('/api/ai/weekly-review/refresh', {}, {
-//           headers: new HttpHeaders({ 'X-CSRF-TOKEN': requestToken }),
+//           headers: new HttpHeaders({ 'X-CSRF-TOKEN': token }),
 //         }),
 //       ),
 //     );

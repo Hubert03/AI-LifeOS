@@ -51,7 +51,7 @@ describe('SettingsService', () => {
 
     service.updateAiProviderSettings(update).subscribe((result) => expect(result).toEqual(settings));
 
-    http.expectOne('/api/auth/csrf').flush({ requestToken: 'settings-token' });
+    http.expectOne('/api/auth/csrf').flush({ token: 'settings-token' });
 
     const request = http.expectOne('/api/settings/ai-provider');
     expect(request.request.method).toBe('PUT');

@@ -25,7 +25,7 @@ describe('AiPlanningService', () => {
     service.createPlan('Prepare for biology', 'tasks').subscribe((result) => {
       expect(result).toEqual(plan);
     });
-    http.expectOne('/api/auth/csrf').flush({ requestToken: 'plan-token' });
+    http.expectOne('/api/auth/csrf').flush({ token: 'plan-token' });
     const request = http.expectOne('/api/ai/plan');
     expect(request.request.method).toBe('POST');
     expect(request.request.headers.get('X-CSRF-TOKEN')).toBe('plan-token');

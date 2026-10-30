@@ -31,7 +31,7 @@ describe('AuthService', () => {
       expect(service.currentUser()).toEqual(user);
     });
 
-    httpTesting.expectOne('/api/auth/csrf').flush({ requestToken: 'csrf-token' });
+    httpTesting.expectOne('/api/auth/csrf').flush({ token: 'csrf-token' });
 
     const request = httpTesting.expectOne('/api/auth/login');
     expect(request.request.method).toBe('POST');
@@ -46,7 +46,7 @@ describe('AuthService', () => {
       expect(service.currentUser()).toEqual(user);
     });
 
-    httpTesting.expectOne('/api/auth/csrf').flush({ requestToken: 'invite-csrf' });
+    httpTesting.expectOne('/api/auth/csrf').flush({ token: 'invite-csrf' });
     const request = httpTesting.expectOne('/api/auth/accept-invitation');
     expect(request.request.method).toBe('POST');
     expect(request.request.headers.get('X-CSRF-TOKEN')).toBe('invite-csrf');
@@ -61,7 +61,7 @@ describe('AuthService', () => {
     service.currentUser.set(user);
     service.logout().subscribe();
 
-    httpTesting.expectOne('/api/auth/csrf').flush({ requestToken: 'logout-token' });
+    httpTesting.expectOne('/api/auth/csrf').flush({ token: 'logout-token' });
 
     const request = httpTesting.expectOne('/api/auth/logout');
     expect(request.request.headers.get('X-CSRF-TOKEN')).toBe('logout-token');
@@ -80,7 +80,7 @@ describe('AuthService', () => {
       expect(service.currentUser()).toEqual(result);
     });
 
-    httpTesting.expectOne('/api/auth/csrf').flush({ requestToken: 'profile-token' });
+    httpTesting.expectOne('/api/auth/csrf').flush({ token: 'profile-token' });
 
     const request = httpTesting.expectOne('/api/auth/profile');
     expect(request.request.method).toBe('PUT');
@@ -99,7 +99,7 @@ describe('AuthService', () => {
   it('should send a CSRF-protected password change request', () => {
     service.changePassword('Current-Strong1!', 'New-StrongPassword1!').subscribe();
 
-    httpTesting.expectOne('/api/auth/csrf').flush({ requestToken: 'password-token' });
+    httpTesting.expectOne('/api/auth/csrf').flush({ token: 'password-token' });
 
     const request = httpTesting.expectOne('/api/auth/change-password');
     expect(request.request.method).toBe('POST');

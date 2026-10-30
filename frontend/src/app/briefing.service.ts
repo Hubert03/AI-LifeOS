@@ -76,10 +76,10 @@ export class BriefingService {
   }
 
   private fetchRefresh(): Observable<Briefing> {
-    return this.http.get<{ requestToken: string }>('/api/auth/csrf').pipe(
-      switchMap(({ requestToken }) =>
+    return this.http.get<{ token: string }>('/api/auth/csrf').pipe(
+      switchMap(({ token }) =>
         this.http.post<Briefing>('/api/ai/briefing/refresh', {}, {
-          headers: new HttpHeaders({ 'X-CSRF-TOKEN': requestToken }),
+          headers: new HttpHeaders({ 'X-CSRF-TOKEN': token }),
         }),
       ),
     );
@@ -117,10 +117,10 @@ export class BriefingService {
 //   }
 
 //   refresh(): Observable<Briefing> {
-//     return this.http.get<{ requestToken: string }>('/api/auth/csrf').pipe(
-//       switchMap(({ requestToken }) =>
+//     return this.http.get<{ token: string }>('/api/auth/csrf').pipe(
+//       switchMap(({ token }) =>
 //         this.http.post<Briefing>('/api/ai/briefing/refresh', {}, {
-//           headers: new HttpHeaders({ 'X-CSRF-TOKEN': requestToken }),
+//           headers: new HttpHeaders({ 'X-CSRF-TOKEN': token }),
 //         }),
 //       ),
 //     );

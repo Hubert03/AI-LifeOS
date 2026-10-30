@@ -49,7 +49,7 @@ describe('GoalsService', () => {
       milestones: [{ title: 'Read one book', isCompleted: false }],
     };
     service.createGoal(goal).subscribe();
-    httpTesting.expectOne('/api/auth/csrf').flush({ requestToken: 'create-goal-token' });
+    httpTesting.expectOne('/api/auth/csrf').flush({ token: 'create-goal-token' });
     const create = httpTesting.expectOne('/api/goals');
     expect(create.request.method).toBe('POST');
     expect(create.request.headers.get('X-CSRF-TOKEN')).toBe('create-goal-token');
@@ -64,7 +64,7 @@ describe('GoalsService', () => {
     service
       .updateGoal('73f35d0d-8c5a-4f9f-bb3a-13f6820ea59b', { ...goal, progress: 30 })
       .subscribe();
-    httpTesting.expectOne('/api/auth/csrf').flush({ requestToken: 'update-goal-token' });
+    httpTesting.expectOne('/api/auth/csrf').flush({ token: 'update-goal-token' });
     const update = httpTesting.expectOne('/api/goals/73f35d0d-8c5a-4f9f-bb3a-13f6820ea59b');
     expect(update.request.method).toBe('PUT');
     expect(update.request.headers.get('X-CSRF-TOKEN')).toBe('update-goal-token');
@@ -78,7 +78,7 @@ describe('GoalsService', () => {
     });
 
     service.deleteGoal('73f35d0d-8c5a-4f9f-bb3a-13f6820ea59b').subscribe();
-    httpTesting.expectOne('/api/auth/csrf').flush({ requestToken: 'delete-goal-token' });
+    httpTesting.expectOne('/api/auth/csrf').flush({ token: 'delete-goal-token' });
     const remove = httpTesting.expectOne('/api/goals/73f35d0d-8c5a-4f9f-bb3a-13f6820ea59b');
     expect(remove.request.method).toBe('DELETE');
     expect(remove.request.headers.get('X-CSRF-TOKEN')).toBe('delete-goal-token');

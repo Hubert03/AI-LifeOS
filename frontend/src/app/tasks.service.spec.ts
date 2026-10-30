@@ -34,7 +34,7 @@ describe('TasksService', () => {
     service.createTask(task).subscribe((created) => {
       expect(created.title).toBe(task.title);
     });
-    httpTesting.expectOne('/api/auth/csrf').flush({ requestToken: 'create-token' });
+    httpTesting.expectOne('/api/auth/csrf').flush({ token: 'create-token' });
     const createRequest = httpTesting.expectOne('/api/tasks');
     expect(createRequest.request.method).toBe('POST');
     expect(createRequest.request.headers.get('X-CSRF-TOKEN')).toBe('create-token');
@@ -49,7 +49,7 @@ describe('TasksService', () => {
       ...task,
       status: 'Completed',
     }).subscribe();
-    httpTesting.expectOne('/api/auth/csrf').flush({ requestToken: 'update-token' });
+    httpTesting.expectOne('/api/auth/csrf').flush({ token: 'update-token' });
     const updateRequest = httpTesting.expectOne(
       '/api/tasks/e8bc34f7-33b9-48cd-989f-5e5dc0650bd2',
     );
@@ -64,7 +64,7 @@ describe('TasksService', () => {
     });
 
     service.deleteTask('e8bc34f7-33b9-48cd-989f-5e5dc0650bd2').subscribe();
-    httpTesting.expectOne('/api/auth/csrf').flush({ requestToken: 'delete-token' });
+    httpTesting.expectOne('/api/auth/csrf').flush({ token: 'delete-token' });
     const deleteRequest = httpTesting.expectOne(
       '/api/tasks/e8bc34f7-33b9-48cd-989f-5e5dc0650bd2',
     );

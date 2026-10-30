@@ -29,7 +29,7 @@ describe('TeamService', () => {
       expect(user).toEqual(created);
     });
 
-    httpTesting.expectOne('/api/auth/csrf').flush({ requestToken: 'admin-token' });
+    httpTesting.expectOne('/api/auth/csrf').flush({ token: 'admin-token' });
     const request = httpTesting.expectOne('/api/admin/users');
     expect(request.request.method).toBe('POST');
     expect(request.request.headers.get('X-CSRF-TOKEN')).toBe('admin-token');
@@ -52,7 +52,7 @@ describe('TeamService', () => {
   it('updates both role and active state through a CSRF-protected admin request', () => {
     service.setUserAccess('user-123', true, true).subscribe();
 
-    httpTesting.expectOne('/api/auth/csrf').flush({ requestToken: 'admin-token' });
+    httpTesting.expectOne('/api/auth/csrf').flush({ token: 'admin-token' });
     const request = httpTesting.expectOne('/api/admin/users/user-123/access');
     expect(request.request.method).toBe('PATCH');
     expect(request.request.headers.get('X-CSRF-TOKEN')).toBe('admin-token');

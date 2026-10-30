@@ -104,7 +104,7 @@ describe('GoalsComponent', () => {
       (button) => button.textContent?.includes('Build a weekly habit'),
     );
     milestoneButton?.click();
-    httpTesting.expectOne('/api/auth/csrf').flush({ requestToken: 'milestone-token' });
+    httpTesting.expectOne('/api/auth/csrf').flush({ token: 'milestone-token' });
     const update = httpTesting.expectOne(
       '/api/goals/73f35d0d-8c5a-4f9f-bb3a-13f6820ea59b',
     );
@@ -136,7 +136,7 @@ describe('GoalsComponent', () => {
     );
     milestone?.click();
 
-    httpTesting.expectOne('/api/auth/csrf').flush({ requestToken: 'goal-token' });
+    httpTesting.expectOne('/api/auth/csrf').flush({ token: 'goal-token' });
     httpTesting.expectOne('/api/goals/73f35d0d-8c5a-4f9f-bb3a-13f6820ea59b').flush(
       {},
       { status: 500, statusText: 'Internal Server Error' },

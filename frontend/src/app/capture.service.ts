@@ -20,12 +20,12 @@ export class CaptureService {
   private readonly http = inject(HttpClient);
 
   capture(text: string, localDate: string): Observable<CaptureDraft> {
-    return this.http.get<{ requestToken: string }>('/api/auth/csrf').pipe(
-      switchMap(({ requestToken }) =>
+    return this.http.get<{ token: string }>('/api/auth/csrf').pipe(
+      switchMap(({ token }) =>
         this.http.post<CaptureDraft>(
           '/api/ai/capture',
           { text, localDate },
-          { headers: new HttpHeaders({ 'X-CSRF-TOKEN': requestToken }) },
+          { headers: new HttpHeaders({ 'X-CSRF-TOKEN': token }) },
         ),
       ),
     );

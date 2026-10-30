@@ -33,7 +33,7 @@ describe('AiPlannerComponent', () => {
     (page.querySelector('form button[type="submit"]') as HTMLButtonElement).click();
     fixture.detectChanges();
 
-    http.expectOne('/api/auth/csrf').flush({ requestToken: 'plan-token' });
+    http.expectOne('/api/auth/csrf').flush({ token: 'plan-token' });
     const planRequest = http.expectOne('/api/ai/plan');
     expect(planRequest.request.body).toEqual({
       objective: 'Help me study biology for my exam',
@@ -60,7 +60,7 @@ describe('AiPlannerComponent', () => {
 
     (page.querySelector('.ai-save-plan') as HTMLButtonElement).click();
     fixture.detectChanges();
-    http.expectOne('/api/auth/csrf').flush({ requestToken: 'save-task-token' });
+    http.expectOne('/api/auth/csrf').flush({ token: 'save-task-token' });
     const createTask = http.expectOne('/api/tasks');
     expect(createTask.request.method).toBe('POST');
     expect(createTask.request.body.title).toBe('Review biology chapter one');
@@ -89,7 +89,7 @@ describe('AiPlannerComponent', () => {
     fixture.detectChanges();
     (page.querySelector('form button[type="submit"]') as HTMLButtonElement).click();
 
-    http.expectOne('/api/auth/csrf').flush({ requestToken: 'notes-plan-token' });
+    http.expectOne('/api/auth/csrf').flush({ token: 'notes-plan-token' });
     const planRequest = http.expectOne('/api/ai/plan');
     expect(planRequest.request.body).toEqual({
       objective: 'Capture the key ideas from my project meeting',
@@ -123,7 +123,7 @@ describe('AiPlannerComponent', () => {
 
     (page.querySelector('.ai-save-plan') as HTMLButtonElement).click();
     fixture.detectChanges();
-    http.expectOne('/api/auth/csrf').flush({ requestToken: 'save-note-token' });
+    http.expectOne('/api/auth/csrf').flush({ token: 'save-note-token' });
     const createNote = http.expectOne('/api/notes');
     expect(createNote.request.method).toBe('POST');
     expect(createNote.request.body).toEqual({
@@ -159,7 +159,7 @@ describe('AiPlannerComponent', () => {
     fixture.detectChanges();
     (page.querySelector('form button[type="submit"]') as HTMLButtonElement).click();
 
-    http.expectOne('/api/auth/csrf').flush({ requestToken: 'goal-plan-token' });
+    http.expectOne('/api/auth/csrf').flush({ token: 'goal-plan-token' });
     const planRequest = http.expectOne('/api/ai/plan');
     expect(planRequest.request.body).toEqual({
       objective: 'Build a steady reading habit',
@@ -186,7 +186,7 @@ describe('AiPlannerComponent', () => {
 
     (page.querySelector('.ai-save-plan') as HTMLButtonElement).click();
     fixture.detectChanges();
-    http.expectOne('/api/auth/csrf').flush({ requestToken: 'save-goal-token' });
+    http.expectOne('/api/auth/csrf').flush({ token: 'save-goal-token' });
     const createGoal = http.expectOne('/api/goals');
     expect(createGoal.request.method).toBe('POST');
     expect(createGoal.request.body.title).toBe('Read every day');
@@ -216,7 +216,7 @@ describe('AiPlannerComponent', () => {
     fixture.detectChanges();
     (page.querySelector('form button[type="submit"]') as HTMLButtonElement).click();
 
-    http.expectOne('/api/auth/csrf').flush({ requestToken: 'plan-token' });
+    http.expectOne('/api/auth/csrf').flush({ token: 'plan-token' });
     http.expectOne('/api/ai/plan').flush(
       { message: 'The AI planning provider could not be reached.' },
       { status: 502, statusText: 'Bad Gateway' },

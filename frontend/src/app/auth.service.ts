@@ -10,7 +10,7 @@ export interface CurrentUser {
   mustChangePassword: boolean;
 }
 
-// ✅ FIX 1: Change 'requestToken' to 'token'
+// ✅ FIX 1: Change 'token' to 'token'
 interface CsrfResponse {
   token: string; 
 }
@@ -31,7 +31,7 @@ export class AuthService {
     return this.http.get<CsrfResponse>('/api/auth/csrf', {
       withCredentials: true
     }).pipe(
-      // ✅ FIX 2: Read 'response.token' instead of 'response.requestToken'
+      // ✅ FIX 2: Read 'response.token' instead of 'response.token'
       tap((response) => (this.csrfToken = response.token)),
       map(() => undefined),
     );

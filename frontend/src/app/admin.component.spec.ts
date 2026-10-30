@@ -39,7 +39,7 @@ describe('AdminComponent', () => {
       new Event('submit', { bubbles: true, cancelable: true }),
     );
 
-    http.expectOne('/api/auth/csrf').flush({ requestToken: 'admin-token' });
+    http.expectOne('/api/auth/csrf').flush({ token: 'admin-token' });
     http.expectOne('/api/admin/users').flush(
       {
         title: 'One or more validation errors occurred.',
