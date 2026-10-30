@@ -38,14 +38,25 @@
         minlength="1"
         maxlength="128"
       />
-
-      <button
+<!-- Find your button and update it to this: -->
+<button
+  type="submit"
+  [disabled]="isSubmitting()"
+  class="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+>
+  @if (isSubmitting()) {
+    Signing in...
+  } @else {
+    Sign in
+  }
+</button>
+      <!-- <button
         class="submit-button"
         type="submit"
         [disabled]="!csrfReady() || isSubmitting() || !authForm.valid"
       >
         {{ isSubmitting() ? 'Please wait…' : 'Sign in' }}
-      </button>
+      </button> -->
     </form>
 
     <p class="switch-mode">Accounts are provisioned by your AI LifeOS administrator.</p>

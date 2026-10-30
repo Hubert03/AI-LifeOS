@@ -16,7 +16,6 @@ export class AuthPageComponent {
   private readonly router = inject(Router);
   protected readonly themeService = inject(ThemeService);
 
-  protected readonly csrfReady = signal(false);
   protected readonly isSubmitting = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly isDarkTheme = this.themeService.isDarkTheme;
@@ -27,15 +26,10 @@ export class AuthPageComponent {
     if (this.route.snapshot.queryParamMap.get('reason') === 'api-unavailable') {
       this.errorMessage.set('Cannot verify your sign-in. Make sure the .NET API is running.');
     }
-
-    this.authService.loadCsrfToken().subscribe({
-      next: () => this.csrfReady.set(true),
-      error: (error: unknown) => this.errorMessage.set(this.authService.getErrorMessage(error)),
-    });
   }
 
   protected submit(): void {
-    if (this.isSubmitting() || !this.csrfReady()) {
+    if (this.isSubmitting()) {
       return;
     }
 
@@ -54,5 +48,4 @@ export class AuthPageComponent {
       complete: () => this.isSubmitting.set(false),
     });
   }
-
 }

@@ -11,7 +11,7 @@ import { ChatGroup, ChatMessage, TeamService } from './team.service';
 
 import { StyleCreatorService } from './style-creator.service';
 import { StyleStudioComponent } from './style-studio.component';
-
+import { environment } from '../environments/environment';
 @Component({
   selector: 'app-team-chat',
   imports: [DatePipe, FormsModule, RouterLink, ThemePickerComponent, StyleStudioComponent],
@@ -38,10 +38,13 @@ export class TeamChatComponent {
   protected readonly styleCreator = inject(StyleCreatorService);
 
   constructor() {
-    this.connection = new HubConnectionBuilder()
-      .withUrl('/hubs/chat')
-      .withAutomaticReconnect()
-      .build();
+const apiBaseUrl = environment.apiUrl.replace(/\/+$/, '');
+this.connection = new HubConnectionBuilder()
+  .withUrl(`${apiBaseUrl}/hubs/chat`, {
+    withCredentials: true
+  })
+  .withAutomaticReconnect()
+  .build();
     this.connection.on('MessageReceived', (message: ChatMessage) => {
       if (message.groupId === this.selectedGroupId()) this.appendMessage(message);
     });
