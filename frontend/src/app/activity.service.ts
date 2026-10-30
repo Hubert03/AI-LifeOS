@@ -19,7 +19,7 @@ export interface TrashEntry {
 }
 
 interface CsrfResponse {
-  requestToken: string;
+  token: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -43,8 +43,8 @@ export class ActivityService {
 
   private withCsrf<T>(request: (headers: HttpHeaders) => Observable<T>): Observable<T> {
     return this.http.get<CsrfResponse>('/api/auth/csrf').pipe(
-      switchMap(({ requestToken }) =>
-        request(new HttpHeaders({ 'X-CSRF-TOKEN': requestToken })),
+      switchMap(({ token }) =>
+        request(new HttpHeaders({ 'X-CSRF-TOKEN': token })),
       ),
     );
   }
