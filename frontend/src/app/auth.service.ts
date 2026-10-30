@@ -10,8 +10,9 @@ export interface CurrentUser {
   mustChangePassword: boolean;
 }
 
+// ✅ FIX 1: Change 'requestToken' to 'token'
 interface CsrfResponse {
-  requestToken: string;
+  token: string; 
 }
 
 interface AuthErrorResponse {
@@ -27,91 +28,118 @@ export class AuthService {
   readonly currentUser = signal<CurrentUser | null>(null);
 
   loadCsrfToken(): Observable<void> {
-    return this.http.get<CsrfResponse>('/api/auth/csrf').pipe(
-      tap((response) => (this.csrfToken = response.requestToken)),
+    return this.http.get<CsrfResponse>('/api/auth/csrf', {
+      withCredentials: true
+    }).pipe(
+      // ✅ FIX 2: Read 'response.token' instead of 'response.requestToken'
+      tap((response) => (this.csrfToken = response.token)),
       map(() => undefined),
     );
   }
-
-  acceptInvitation(token: string, password: string): Observable<CurrentUser> {
-    return this.loadCsrfToken().pipe(
-      switchMap(() =>
-        this.http.post<CurrentUser>(
-          '/api/auth/accept-invitation',
-          { token, password },
-          { headers: this.csrfHeaders() },
-        ),
-      ),
-      tap((user) => this.currentUser.set(user)),
-    );
-  }
-
-  login(email: string, password: string): Observable<CurrentUser> {
-    return this.loadCsrfToken().pipe(
-      switchMap(() =>
-        this.http.post<CurrentUser>(
-          '/api/auth/login',
-          { email, password },
-          { headers: this.csrfHeaders() },
-        ),
-      ),
-      tap((user) => this.currentUser.set(user)),
-    );
-  }
-
-  getCurrentUser(): Observable<CurrentUser | null> {
-    return this.http.get<CurrentUser>('/api/auth/me').pipe(
-      tap((user) => this.currentUser.set(user)),
-      catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          this.currentUser.set(null);
-          return of(null);
+acceptInvitation(token: string, password: string): Observable<CurrentUser> {
+  return this.loadCsrfToken().pipe(
+    switchMap(() =>
+      this.http.post<CurrentUser>(
+        '/api/auth/accept-invitation',
+        { token, password },
+        {
+          headers: this.csrfHeaders(),
+          withCredentials: true
         }
-
-        return throwError(() => error);
-      }),
-    );
-  }
-
-  logout(): Observable<void> {
-    return this.loadCsrfToken()
-      .pipe(
-        switchMap(() =>
-          this.http.post<void>('/api/auth/logout', {}, { headers: this.csrfHeaders() }),
-        ),
       )
-      .pipe(tap(() => this.currentUser.set(null)));
-  }
+    ),
+    tap((user) => this.currentUser.set(user))
+  );
+}
 
-  updateProfile(displayName: string, email: string): Observable<CurrentUser> {
-    return this.loadCsrfToken().pipe(
-      switchMap(() =>
-        this.http.put<CurrentUser>(
-          '/api/auth/profile',
-          { displayName, email },
-          { headers: this.csrfHeaders() },
-        ),
-      ),
-      tap((user) => this.currentUser.set(user)),
-    );
-  }
 
-  changePassword(currentPassword: string, newPassword: string): Observable<void> {
-    return this.loadCsrfToken().pipe(
-      switchMap(() =>
-        this.http.post<void>(
-          '/api/auth/change-password',
-          { currentPassword, newPassword },
-          { headers: this.csrfHeaders() },
-        ),
+ login(email: string, password: string): Observable<CurrentUser> {
+  return this.loadCsrfToken().pipe(
+    switchMap(() =>
+      this.http.post<CurrentUser>(
+        '/api/auth/login',
+        { email, password },
+        {
+          headers: this.csrfHeaders(),
+          withCredentials: true
+        },
       ),
-      tap(() => {
-        this.currentUser.update((user) =>
-          user ? { ...user, mustChangePassword: false } : null,
-        );
-      }),
-    );
-  }
+    ),
+    tap((user) => this.currentUser.set(user)),
+  );
+}
+ 
+getCurrentUser(): Observable<CurrentUser | null> {
+  return this.http.get<CurrentUser>('/api/auth/me', {
+    withCredentials: true
+  }).pipe(
+    tap((user) => this.currentUser.set(user)),
+    catchError((error: HttpErrorResponse) => {
+      if (error.status === 401) {
+        this.currentUser.set(null);
+        return of(null);
+      }
+      return throwError(() => error);
+    }),
+  );
+}
+
+
+ 
+logout(): Observable<void> {
+  return this.loadCsrfToken().pipe(
+    switchMap(() =>
+      this.http.post<void>(
+        '/api/auth/logout',
+        {},
+        {
+          headers: this.csrfHeaders(),
+          withCredentials: true
+        }
+      )
+    ),
+    tap(() => this.currentUser.set(null))
+  );
+}
+
+  
+updateProfile(displayName: string, email: string): Observable<CurrentUser> {
+  return this.loadCsrfToken().pipe(
+    switchMap(() =>
+      this.http.put<CurrentUser>(
+        '/api/auth/profile',
+        { displayName, email },
+        {
+          headers: this.csrfHeaders(),
+          withCredentials: true
+        }
+      )
+    ),
+    tap((user) => this.currentUser.set(user))
+  );
+}
+
+  
+changePassword(currentPassword: string, newPassword: string): Observable<void> {
+  return this.loadCsrfToken().pipe(
+    switchMap(() =>
+      this.http.post<void>(
+        '/api/auth/change-password',
+        { currentPassword, newPassword },
+        {
+          headers: this.csrfHeaders(),
+          withCredentials: true
+        }
+      )
+    ),
+    tap(() => {
+      this.currentUser.update((user) =>
+        user ? { ...user, mustChangePassword: false } : null
+      );
+    })
+  );
+}
+
 
   getErrorMessage(error: unknown): string {
     if (error instanceof HttpErrorResponse) {
@@ -126,6 +154,10 @@ export class AuthService {
         return 'Cannot reach the API. Make sure the .NET API is running.';
       }
     }
+    // ✅ FIX 3: Catch the generic Error thrown by csrfHeaders() if token is missing
+    if (error instanceof Error) {
+      return error.message; 
+    }
 
     return 'Something went wrong. Please try again.';
   }
@@ -134,7 +166,6 @@ export class AuthService {
     if (!this.csrfToken) {
       throw new Error('A CSRF token is required before sending authentication requests.');
     }
-
     return new HttpHeaders({ 'X-CSRF-TOKEN': this.csrfToken });
   }
 }

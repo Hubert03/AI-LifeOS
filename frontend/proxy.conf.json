@@ -1,15 +1,15 @@
 {
-  "/WeatherForecast": {
-    "target": "http://localhost:5090",
-    "secure": false
-  },
   "/api": {
     "target": "http://localhost:5090",
-    "secure": false
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
   },
   "/hubs": {
     "target": "http://localhost:5090",
     "secure": false,
-    "ws": true
+    "changeOrigin": true,
+    "ws": true,
+    "logLevel": "debug"
   }
 }
