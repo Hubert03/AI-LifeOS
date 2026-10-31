@@ -42,13 +42,13 @@
   letter-spacing: 0.12em;
 }
 
-.notes-create,
-.notes-state button {
+.notes-shell .notes-create,
+.notes-shell .notes-state button {
   min-height: 40px;
   padding: 0 15px;
-  border: 1px solid #c8a44c;
-  border-radius: 8px;
-  background: #f0cf72;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius, 8px);
+  background: var(--accent);
   color: #10212a;
   cursor: pointer;
   font-weight: 700;
@@ -276,12 +276,9 @@
   resize: vertical;
 }
 
-.note-dialog .pin-choice {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.note-dialog .pin-choice input {
+  accent-color: var(--accent);
 }
-
 .note-dialog .pin-choice input {
   accent-color: #d8b858;
 }
@@ -303,8 +300,8 @@
 }
 
 .note-dialog form > footer button[type='submit'] {
-  border-color: #c8a44c;
-  background: #f0cf72;
+  border-color: var(--accent);
+  background: var(--accent);
   color: #10212a;
   font-weight: 700;
 }

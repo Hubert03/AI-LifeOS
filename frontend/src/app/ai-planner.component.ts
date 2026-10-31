@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, inject, input,output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { AiPlan, AiPlanningService } from './ai-planning.service';
@@ -8,6 +8,7 @@ import { GoalsService, SaveGoal } from './goals.service';
 import { NotesService, SaveNote } from './notes.service';
 import { SaveTask, TasksService } from './tasks.service';
 import { UiPreferencesService } from './ui-preferences.service';
+
 
 type PlannerContext = 'overview' | 'tasks' | 'goals' | 'notes';
 
@@ -37,6 +38,10 @@ export class AiPlannerComponent {
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly message = signal<string | null>(null);
+  
+  readonly tasksSaved = output<void>();
+  readonly goalsSaved = output<void>();
+  readonly notesSaved  = output<void>();
 
   protected toggle(): void {
     this.open.update((value) => !value);
@@ -179,6 +184,15 @@ export class AiPlannerComponent {
         `${savedMessage}${this.getErrorMessage(error, 'Some plan items could not be saved.')}`,
       );
     } finally {
+      if (savedTasks > 0) {
+        this.tasksSaved.emit();
+      }
+      if(savedGoal) {
+        this.goalsSaved.emit();
+      }
+      if(savedNote) {
+        this.notesSaved.emit();
+      }
       this.saving.set(false);
     }
   }

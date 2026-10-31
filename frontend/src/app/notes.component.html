@@ -30,9 +30,21 @@
         <button class="icon-button theme-button" type="button" [attr.aria-label]="isDarkTheme() ? 'Switch to light theme' : 'Switch to dark theme'" (click)="toggleTheme()">◐</button>
         <app-theme-picker />
         <app-style-studio />
-        <button class="profile-button" type="button" [attr.aria-expanded]="profileMenuOpen()" (click)="profileMenuOpen.set(!profileMenuOpen())"><span class="avatar" aria-hidden="true">{{ currentUser()?.displayName?.charAt(0)?.toUpperCase() || 'U' }}</span><span class="profile-name">{{ currentUser()?.displayName || 'My space' }}</span></button>
-        @if (profileMenuOpen()) { <button type="button" class="signout-button" (click)="logout()">Sign out</button> }
-      </div>
+
+      <div class="popover-anchor profile-anchor">
+          <button class="profile-button" type="button" [attr.aria-expanded]="profileMenuOpen()" (click)="profileMenuOpen.set(!profileMenuOpen()); notificationsOpen.set(false)">
+            <span class="avatar" aria-hidden="true">{{ displayName().charAt(0).toUpperCase() }}</span>
+            <span class="profile-name">{{ currentUser()?.displayName || 'My space' }}</span>
+            <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>
+          </button>
+          @if (profileMenuOpen()) {
+            <section class="popover profile-popover" aria-label="Profile menu">
+              <div class="profile-details"><strong>{{ currentUser()?.displayName || 'My space' }}</strong><span>{{ currentUser()?.email }}</span></div>
+              <button class="signout-button" type="button" (click)="logout()">Sign out</button>
+            </section>
+          }
+        </div>
+        </div> 
     </header>
 
     <div class="notes-content">
@@ -40,7 +52,7 @@
         <div><p class="notes-eyebrow">YOUR THOUGHTS, IN ONE PLACE</p><h2>A little space to think.</h2><p>Capture ideas, keep important notes close, and pin quick reminders to Overview.</p></div>
         <button class="notes-create" type="button" (click)="openCreate()">+ New note</button>
       </section>
-      <app-ai-planner context="notes"></app-ai-planner>
+      <app-ai-planner context="notes" (notesSaved)="loadNotes()"></app-ai-planner>
       @if (success()) { <p class="notes-success" role="status">{{ success() }}</p> }
       @if (error() && !dialogOpen()) { <p class="notes-error" role="alert">{{ error() }} <button type="button" (click)="loadNotes()">Retry</button></p> }
 

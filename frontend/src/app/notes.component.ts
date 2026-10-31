@@ -36,12 +36,16 @@ export class NotesComponent {
   protected readonly dialogOpen = signal(false);
   protected readonly isDarkTheme = this.themeService.isDarkTheme;
   protected readonly profileMenuOpen = signal(false);
+    protected readonly notificationsOpen = signal(false);
   protected readonly mobileNavOpen = signal(false);
   protected readonly editingNote = signal<LifeNote | null>(null);
   protected readonly form = signal<SaveNote>(this.emptyForm());
 
 protected readonly styleCreator = inject(StyleCreatorService);
 
+protected readonly displayName = computed(
+    () => this.currentUser()?.displayName.trim().split(/\s+/)[0] || 'there',
+  );
   protected readonly visibleNotes = computed(() => {
     const query = this.searchTerm().trim().toLocaleLowerCase();
     return [...this.notes()]

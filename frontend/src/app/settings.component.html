@@ -1,4 +1,4 @@
-<div class="app-shell settings-shell" [class.theme-light]="!isDarkTheme()" [attr.data-theme]="themeService.theme()">
+<div class="app-shell settings-shell" [style]="styleCreator.cssVars()" [class.theme-light]="!isDarkTheme()" [attr.data-theme]="themeService.theme()">
   <aside class="sidebar">
     <a class="brand" routerLink="/" aria-label="AI LifeOS home">
       <span class="brand-mark" aria-hidden="true">⌁</span>

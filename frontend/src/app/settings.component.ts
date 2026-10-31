@@ -7,6 +7,7 @@ import { AiProviderSettings, SettingsService } from './settings.service';
 import { ThemePickerComponent } from './theme-picker.component';
 import { ThemeMode, ThemeService } from './theme.service';
 import { AlertStyle, LoaderStyle, UiPreferencesService } from './ui-preferences.service';
+import { StyleCreatorService } from './style-creator.service';
 
 @Component({
   selector: 'app-settings',
@@ -19,7 +20,7 @@ export class SettingsComponent {
   private readonly settingsService = inject(SettingsService);
   protected readonly themeService = inject(ThemeService);
   protected readonly uiPreferences = inject(UiPreferencesService);
-
+  protected readonly styleCreator = inject(StyleCreatorService);
   protected readonly currentUser = this.authService.currentUser;
   protected readonly isDarkTheme = this.themeService.isDarkTheme;
   protected readonly themeOptions = [

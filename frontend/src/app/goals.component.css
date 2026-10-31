@@ -23,19 +23,23 @@
   color: var(--accent);
 }
 
-.goals-shell .goals-create-button {
-  border: 1px solid #c8a44c;
-  background: #f0cf72;
-  color: #10212a;
+.goals-shell button.goals-create-button {
+  border: 1px solid var(--accent) !important;
+  border-radius: var(--radius, 8px);
+  background-color: var(--accent) !important;
+  background-image: none !important;
+  color: #10212a !important;
   cursor: pointer;
+  transition: filter 160ms ease, transform 160ms ease;
 }
 
-.goals-shell .goals-create-button:hover:not(:disabled) {
-  border-color: #ffdf83;
-  background: #ffdf83;
+.goals-shell button.goals-create-button:hover:not(:disabled) {
+  background-color: var(--accent) !important;
+  filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 
-.goals-shell .goals-create-button:disabled {
+.goals-shell button.goals-create-button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
@@ -194,11 +198,7 @@
 .goals-shell .goal-list-track span,
 .goals-shell .goal-card-track span,
 .goals-shell .milestone-summary-track span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #d6b65c, #f0d783);
-  transition: width 220ms ease;
+  background: var(--accent);
 }
 
 .goals-shell .goal-chart-caption {
@@ -327,11 +327,10 @@
 }
 
 .goals-shell .goal-filters button.goal-filter-active {
-  background: #192b32;
+  background: var(--accent-soft);
   color: var(--accent);
   font-weight: 700;
 }
-
 .goals-shell.theme-light .goal-filters button.goal-filter-active {
   background: var(--accent-soft);
 }
@@ -430,9 +429,13 @@
 }
 
 .goals-shell .goal-card-track span {
-  background: linear-gradient(90deg, #bea34f, #f0cf72);
+  background: var(--accent);
 }
 
+.goals-shell .goal-progress-field input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+}
 .goals-shell .goal-target,
 .goals-shell .goal-due-state {
   color: var(--muted);
@@ -477,7 +480,7 @@
   height: 15px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid #50616a;
+  border: 1px solid var(--line);
   border-radius: 4px;
   color: #10212a;
 }
@@ -837,7 +840,7 @@
 .goals-shell .goal-milestone-input-row input[type='checkbox'] {
   width: 14px;
   height: 14px;
-  accent-color: #e5c15f;
+  accent-color: var(--accent);
 }
 
 .goals-shell .goal-milestone-input-row input[type='text'] {
@@ -958,4 +961,12 @@
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+.goals-shell {
+  --debug-accent: var(--accent);
+}
+
+.goals-shell .goals-create-button {
+  background-color: var(--debug-accent) !important;
 }

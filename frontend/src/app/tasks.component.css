@@ -36,9 +36,9 @@
   justify-content: center;
   gap: 8px;
   padding: 0 13px;
-  border: 1px solid #754eff;
-  border-radius: 8px;
-  background: #754eff;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius, 8px);
+  background: var(--accent);
   color: #fff;
   cursor: pointer;
   font-size: 11px;
@@ -47,10 +47,8 @@
 }
 
 .primary-action:hover:not(:disabled) {
-  border-color: #8a6aff;
-  background: #8a6aff;
+  filter: brightness(1.1);
 }
-
 .primary-action:disabled,
 .secondary-action:disabled {
   cursor: not-allowed;
@@ -202,10 +200,10 @@
   height: 19px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid #555362;
-  border-radius: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius, 6px);
   background: transparent;
-  color: #fff;
+  color: var(--ink);
   cursor: pointer;
 }
 
@@ -746,10 +744,12 @@
   padding: 12px; border: 1px solid var(--line);
   border-radius: var(--radius, 12px); background: var(--surface);
 }
-.tasks-shell .board-column[data-status='pending'] { --col: #a68aff; }
-.tasks-shell .board-column[data-status='inprogress'] { --col: #54c6bb; }
-.tasks-shell .board-column[data-status='completed'] { --col: #9bcf83; }
-.tasks-shell .board-column[data-status='cancelled'] { --col: #ad96df; }
+.tasks-shell .board-column[data-status='pending'],
+.tasks-shell .board-column[data-status='inprogress'],
+.tasks-shell .board-column[data-status='completed'],
+.tasks-shell .board-column[data-status='cancelled'] {
+  --col: var(--accent);
+}
 
 .tasks-shell .board-column-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .tasks-shell .board-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--col); }

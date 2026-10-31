@@ -405,9 +405,11 @@ input:focus-visible {
 }
 
 .dashboard-content {
-  max-width: 1310px;
-  margin: 0 auto;
-  padding: 31px 45px 24px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 24px 32px 24px;
+  box-sizing: border-box;
 }
 
 .welcome {
@@ -2779,4 +2781,79 @@ input:focus-visible {
 
 .dashboard-shell .summary-stat .spark {
   position: static; width: 64%; height: 22px; margin-top: 6px; color: var(--accent);
+}
+
+
+/* ===== Dashboard Full Width Layout ===== */
+
+.dashboard-shell .overview-grid {
+  grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+.dashboard-shell .overview-main-column,
+.dashboard-shell .overview-side-column {
+  min-width: 0;
+  width: 100%;
+}
+
+.dashboard-shell .overview-panel {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard-shell .pinned-notes-panel,
+.dashboard-shell .recent-activity-panel,
+.dashboard-shell .trash-panel {
+  min-width: 0;
+}
+
+/* ===== Improve Dashboard Text Clarity ===== */
+
+.dashboard-shell .overview-panel-heading h2 {
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.dashboard-shell .overview-panel-heading p {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.dashboard-shell .activity-entry strong,
+.dashboard-shell .trash-entry strong {
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.dashboard-shell .activity-entry > div span,
+.dashboard-shell .trash-entry > div span {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.dashboard-shell .activity-entry time {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.dashboard-shell .overview-extra-empty {
+  font-size: 11px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+/* ===== Responsive Layout ===== */
+
+@media (max-width: 900px) {
+  .dashboard-shell .overview-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-content {
+    padding: 20px 16px;
+  }
 }

@@ -1,4 +1,4 @@
-<div class="app-shell tasks-shell" [class.theme-light]="!isDarkTheme()" [attr.data-theme]="themeService.theme()" [attr.data-card]="styleCreator.style().card" [attr.data-bg]="styleCreator.style().background">
+<div class="app-shell tasks-shell" [style]="styleCreator.cssVars()" [class.theme-light]="!isDarkTheme()" [attr.data-theme]="themeService.theme()" [attr.data-card]="styleCreator.style().card" [attr.data-bg]="styleCreator.style().background">
        @if (mobileNavOpen()) {
     <button
       class="mobile-backdrop"
@@ -121,23 +121,41 @@
         <app-theme-picker />
         <app-style-studio />
         <div class="popover-anchor profile-anchor">
-          <button
-            class="profile-button"
-            type="button"
-            [attr.aria-expanded]="profileMenuOpen()"
-            (click)="profileMenuOpen.set(!profileMenuOpen()); notificationsOpen.set(false)"
-          >
-            <span class="avatar" aria-hidden="true">{{ displayName().charAt(0).toUpperCase() }}</span>
-            <span class="profile-name">{{ currentUser()?.displayName || 'My space' }}</span>
-            <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>
-          </button>
-          @if (profileMenuOpen()) {
-            <section class="popover profile-popover" aria-label="Profile menu">
-              <div class="profile-details"><strong>{{ currentUser()?.displayName || 'My space' }}</strong><span>{{ currentUser()?.email }}</span></div>
-              <button class="signout-button" type="button" (click)="logout()">Sign out</button>
-            </section>
-          }
-        </div>
+        <button
+          class="profile-button"
+          type="button"
+          [attr.aria-expanded]="profileMenuOpen()"
+          (click)="profileMenuOpen.set(!profileMenuOpen())">
+
+          <span class="avatar" aria-hidden="true">
+            {{ currentUser()?.displayName?.charAt(0)?.toUpperCase() || 'U' }}
+          </span>
+
+          <span class="profile-name">
+            {{ currentUser()?.displayName || 'My space' }}
+          </span>
+
+          <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m7 10 5 5 5-5" />
+          </svg>
+        </button>
+
+        @if (profileMenuOpen()) {
+          <section class="popover profile-popover" aria-label="Profile menu">
+            <div class="profile-details">
+              <strong>{{ currentUser()?.displayName || 'My space' }}</strong>
+              <span>{{ currentUser()?.email }}</span>
+            </div>
+
+            <button
+              class="signout-button"
+              type="button"
+              (click)="logout()">
+              Sign out
+            </button>
+          </section>
+        }
+      </div>
       </div>
     </header>
 
@@ -146,7 +164,7 @@
     }
 
     <div class="tasks-content">
-      <app-ai-planner context="tasks"></app-ai-planner>
+      <app-ai-planner context="tasks" (tasksSaved)="loadTasks()"></app-ai-planner>
       <section class="tasks-title-row">
         <div>
           <p class="eyebrow">{{ today | date: 'EEEE, MMMM d, y' }}</p>
