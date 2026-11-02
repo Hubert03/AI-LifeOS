@@ -53,6 +53,24 @@ export const adminGuard: CanActivateFn = () => {
   );
 };
 
+export const teamWorkspaceGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  return authService.getCurrentUser().pipe(
+    map((user) =>
+      !user
+        ? router.createUrlTree(['/login'])
+        : user.mustChangePassword
+          ? router.createUrlTree(['/change-password'])
+          : user.teamId
+            ? true
+            : router.createUrlTree(['/']),
+    ),
+    catchError(() => of(router.createUrlTree(['/login']))),
+  );
+};
+
 // import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 // import { Injectable, inject, signal } from '@angular/core';
 // import { Observable, catchError, map, of, switchMap, tap, throwError } from 'rxjs';

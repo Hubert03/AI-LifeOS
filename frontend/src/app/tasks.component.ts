@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AiPlannerComponent } from './ai-planner.component';
@@ -19,6 +19,7 @@ const VIEW_KEY = 'ai-lifeos-tasks-view';
 
 type PriorityFilter = 'All' | number;
 import { StyleStudioComponent } from './style-studio.component';
+import { PopupStateService } from './popup-state.service';
 @Component({
   selector: 'app-tasks',
   imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink, ThemePickerComponent,StyleStudioComponent,CdkDrag, CdkDropList, CdkDropListGroup],
@@ -31,6 +32,8 @@ export class TasksComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   protected readonly themeService = inject(ThemeService);
+  protected readonly popupState = inject(PopupStateService);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly currentUser = this.authService.currentUser;
   protected readonly tasks = signal<LifeTask[]>([]);
@@ -40,11 +43,12 @@ export class TasksComponent {
   protected readonly logoutError = signal<string | null>(null);
   protected readonly searchTerm = signal('');
   protected readonly statusFilter = signal<TaskFilter>('All');
+  protected readonly createdOnFilter = signal<string | null>(null);
   protected readonly priorityFilter = signal<PriorityFilter>('All');
   protected readonly sortOrder = signal<'due' | 'priority' | 'newest'>('due');
   protected readonly isDarkTheme = this.themeService.isDarkTheme;
-  protected readonly notificationsOpen = signal(false);
-  protected readonly profileMenuOpen = signal(false);
+  protected readonly notificationsOpen = computed(() => this.popupState.isOpen('notifications'));
+  protected readonly profileMenuOpen = computed(() => this.popupState.isOpen('profile-menu'));
   protected readonly mobileNavOpen = signal(false);
   protected readonly dialogOpen = signal(false);
   protected readonly saving = signal(false);
@@ -96,15 +100,21 @@ export class TasksComponent {
     }));
   });
   constructor() {
+    this.destroyRef.onDestroy(() => this.popupState.closeAll());
         this.route.queryParamMap.subscribe((params) => {
       const status = this.statusFilters.find((filter) => filter === params.get('status'));
-      if (status) {
-        this.statusFilter.set(status);
-        if (status !== 'All') {
-          this.view.set('list');
-        }
-      }
-    });
+          const createdOn = params.get('createdOn');
+          if (status) {
+            this.statusFilter.set(status);
+            if (status !== 'All') {
+              this.view.set('list');
+            }
+          }
+          this.createdOnFilter.set(this.isDateKey(createdOn) ? createdOn : null);
+          if (this.createdOnFilter()) {
+            this.view.set('list');
+          }
+        });
     this.loadTasks();
   }
 
@@ -128,6 +138,15 @@ export class TasksComponent {
 
   protected setStatusFilter(filter: TaskFilter): void {
     this.statusFilter.set(filter);
+  }
+
+  protected clearCreatedOnFilter(): void {
+    this.createdOnFilter.set(null);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { createdOn: null },
+      queryParamsHandling: 'merge',
+    });
   }
 
   protected setPriorityFilter(event: Event): void {
@@ -209,6 +228,15 @@ export class TasksComponent {
     }
   }
 
+  private isDateKey(value: string | null): value is string {
+    if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return false;
+    }
+
+    const date = new Date(`${value}T00:00:00Z`);
+    return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value;
+  }
+
   private filterAndSort(useStatusFilter: boolean): LifeTask[] {
     const query = this.searchTerm().trim().toLocaleLowerCase();
     const filtered = this.tasks().filter((task) => {
@@ -221,7 +249,9 @@ export class TasksComponent {
         task.status === this.statusFilter();
       const matchesPriority =
         this.priorityFilter() === 'All' || task.priority === this.priorityFilter();
-      return matchesQuery && matchesStatus && matchesPriority;
+      const matchesCreatedOn =
+        !this.createdOnFilter() || task.createdAtUtc.slice(0, 10) === this.createdOnFilter();
+      return matchesQuery && matchesStatus && matchesPriority && matchesCreatedOn;
     });
 
     return filtered.sort((left, right) => {

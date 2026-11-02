@@ -1,5 +1,6 @@
-import { Component, ElementRef, HostListener, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, HostListener, inject } from '@angular/core';
 import { ThemeMode, ThemeService } from './theme.service';
+import { PopupStateService } from './popup-state.service';
 
 @Component({
   selector: 'app-theme-picker',
@@ -10,7 +11,7 @@ import { ThemeMode, ThemeService } from './theme.service';
         type="button"
         aria-label="Choose workspace appearance"
         [attr.aria-expanded]="open()"
-        (click)="open.set(!open())"
+        (click)="popups.toggle('theme-picker')"
       >
         <span class="theme-swatch" [class]="currentPreview" aria-hidden="true"></span>
         <span class="theme-picker-label">Style</span>
@@ -40,32 +41,37 @@ import { ThemeMode, ThemeService } from './theme.service';
 })
 export class ThemePickerComponent {
   protected readonly themes = inject(ThemeService);
+  protected readonly popups = inject(PopupStateService);
   private readonly elementRef = inject(ElementRef<HTMLElement>);
-  protected readonly open = signal(false);
+  protected readonly open = computed(() => this.popups.isOpen('theme-picker'));
   protected readonly options = [
     { value: 'dark', name: 'Midnight', description: 'Deep and focused', preview: 'dark-preview' },
     { value: 'light', name: 'Light', description: 'Clear and airy', preview: 'light-preview' },
     { value: 'ocean', name: 'Ocean', description: 'Cool and calm', preview: 'ocean-preview' },
     { value: 'forest', name: 'Forest', description: 'Soft and grounded', preview: 'forest-preview' },
   ] as const;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.popups.close('theme-picker'));
+  }
   protected get currentPreview(): string {
     return `theme-swatch ${this.options.find((option) => option.value === this.themes.theme())?.preview ?? 'dark-preview'}`;
   }
 
   protected selectTheme(theme: ThemeMode): void {
     this.themes.setTheme(theme);
-    this.open.set(false);
+    this.popups.close('theme-picker');
   }
 
   @HostListener('document:click', ['$event'])
   protected closeWhenClickingOutside(event: MouseEvent): void {
     if (!this.elementRef.nativeElement.contains(event.target as Node)) {
-      this.open.set(false);
+      this.popups.close('theme-picker');
     }
   }
 
   @HostListener('document:keydown.escape')
   protected closeOnEscape(): void {
-    this.open.set(false);
+    this.popups.close('theme-picker');
   }
 }

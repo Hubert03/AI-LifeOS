@@ -191,6 +191,18 @@ input:not([type="checkbox"]) {
   font-size: 12px;
 }
 
+.settings-card select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-subtle);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+}
+
 input:focus-visible,
 button:focus-visible {
   outline: 3px solid #63ad88;
@@ -212,6 +224,29 @@ input:disabled { opacity: .6; }
 }
 
 .checkbox-row input { accent-color: var(--accent); }
+
+.preference-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  color: var(--ink);
+  cursor: pointer;
+}
+.preference-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+.preference-toggle span { display: grid; gap: 4px; }
+.preference-toggle strong { font-size: 12px; }
+.preference-toggle small { color: var(--muted); font-size: 10px; font-weight: 400; }
+.settings-action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
 
 .primary-button {
   min-height: 38px;

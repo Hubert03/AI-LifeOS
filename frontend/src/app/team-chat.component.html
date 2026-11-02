@@ -9,9 +9,10 @@
       <a class="nav-item" routerLink="/goals" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9" /><circle cx="12" cy="12" r="9" /></svg><span>Goals</span></a>
       <a class="nav-item" routerLink="/notes" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" /><path d="M14 3v6h5M9 13h6M9 17h6" /></svg><span>Notes</span></a>
       <a class="nav-item active" routerLink="/team-chat" aria-current="page" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">◉</span><span>Team chat</span></a>
+      @if (currentUser()?.teamId) { <a class="nav-item" routerLink="/team-workspace" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">▦</span><span>Team workspace</span></a> }
       @if (currentUser()?.isAdmin) { <a class="nav-item" routerLink="/admin" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">⚙</span><span>Team admin</span></a> }
       <button class="nav-item planned" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg><span>Projects</span><span class="coming-soon">Soon</span></button>
-      <button class="nav-item planned" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg><span>Reminders</span><span class="coming-soon">Soon</span></button>
+      <a class="nav-item" routerLink="/reminders" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg><span>Reminders</span></a>
     </nav>
     <div class="sidebar-bottom">
       <a class="nav-item" routerLink="/settings" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.5.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.5-.9l-1.7.6-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.8l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.5-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.5.9l1.7-.6 1.4 2.4-1.4 1.1a7 7 0 0 1 0 1.7Z" /></svg><span>Settings</span></a>
@@ -51,13 +52,54 @@
               @for (message of messages(); track message.messageId) {
                 <article class="chat-message" [class.own-message]="message.userId === currentUser()?.userId">
                   <span class="message-avatar">{{ message.displayName.charAt(0).toUpperCase() }}</span>
-                  <div class="message-body"><div class="message-meta"><strong>{{ message.userId === currentUser()?.userId ? 'You' : message.displayName }}</strong><time>{{ message.createdAtUtc | date:'shortTime' }}</time></div><p>{{ message.content }}</p></div>
+                  <div class="message-body">
+                    <div class="message-meta">
+                      <strong>{{ message.userId === currentUser()?.userId ? 'You' : message.displayName }}</strong>
+                      @if (message.isDeleted) { <span class="deleted-label">deleted</span> }
+                      <time>{{ message.createdAtUtc | date:'shortTime' }}</time>
+                    </div>
+                    @if (message.replyToMessageId) {
+                      <blockquote class="reply-preview">
+                        <strong>{{ message.replyToDisplayName || 'Reply' }}</strong>
+                        <span>{{ message.replyToContent || 'Original message unavailable.' }}</span>
+                      </blockquote>
+                    }
+                    <p [class.deleted-content]="message.isDeleted">{{ message.content }}</p>
+                    @if (!message.isDeleted && message.mentions.length) {
+                      <div class="message-mentions" aria-label="Mentioned members">
+                        @for (mention of message.mentions; track mention.userId) { <span>@{{ mention.displayName }}</span> }
+                      </div>
+                    }
+                    @if (!message.isDeleted) {
+                      <div class="message-actions">
+                        <button type="button" (click)="replyTo(message)">Reply</button>
+                        @if (canDeleteMessage(message)) { <button type="button" (click)="deleteMessage(message)">Delete</button> }
+                      </div>
+                    }
+                  </div>
                 </article>
               }
             </div>
             <form class="message-composer" #messageForm="ngForm" (ngSubmit)="sendMessage()">
-              <textarea name="message" [(ngModel)]="messageDraft" rows="2" maxlength="2000" required placeholder="Write a message…" aria-label="Message"></textarea>
-              <button type="submit" [disabled]="!messageForm.valid || !messageDraft.trim() || sending()">{{ sending() ? 'Sending…' : 'Send message' }}</button>
+              @if (replyToMessage(); as reply) {
+                <div class="reply-composer-banner">
+                  <span><strong>Replying to {{ reply.displayName }}</strong><small>{{ reply.isDeleted ? 'This message was deleted.' : reply.content }}</small></span>
+                  <button type="button" aria-label="Cancel reply" (click)="replyToMessage.set(null)">×</button>
+                </div>
+              }
+              @if (mentionPickerOpen()) {
+                <div class="mention-picker" aria-label="Choose a member to mention">
+                  @for (member of groupMembers(); track member.userId) {
+                    <button type="button" (click)="addMention(member)">@{{ member.displayName }}</button>
+                  }
+                  @if (!groupMembers().length) { <span>No active group members.</span> }
+                </div>
+              }
+              <div class="composer-controls">
+                <button class="mention-trigger" type="button" [disabled]="sending()" (click)="mentionPickerOpen.set(!mentionPickerOpen())" aria-label="Mention a group member">@</button>
+                <textarea name="message" [(ngModel)]="messageDraft" (input)="pruneMentions()" rows="2" maxlength="2000" required placeholder="Write a message…" aria-label="Message"></textarea>
+                <button type="submit" [disabled]="!messageForm.valid || !messageDraft.trim() || sending()">{{ sending() ? 'Sending…' : 'Send message' }}</button>
+              </div>
             </form>
           } @else {
             <div class="chat-empty centered"><span class="empty-orb">✦</span><h2>Your team space</h2><p>When an administrator adds you to a group, conversations will appear here.</p></div>

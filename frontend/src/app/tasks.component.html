@@ -42,15 +42,16 @@
         <span>Notes</span>
       </a>
       <a class="nav-item" routerLink="/team-chat"><span aria-hidden="true">◉</span><span>Team chat</span></a>
+      @if (currentUser()?.teamId) { <a class="nav-item" routerLink="/team-workspace"><span aria-hidden="true">▦</span><span>Team workspace</span></a> }
       @if (currentUser()?.isAdmin) { <a class="nav-item" routerLink="/admin"><span aria-hidden="true">⚙</span><span>Team admin</span></a> }
       <button class="nav-item planned" type="button" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg>
         <span>Projects</span><span class="coming-soon">Soon</span>
       </button>
-      <button class="nav-item planned" type="button" disabled>
+      <a class="nav-item" routerLink="/reminders">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
-        <span>Reminders</span><span class="coming-soon">Soon</span>
-      </button>
+        <span>Reminders</span>
+      </a>
     </nav>
     <div class="sidebar-bottom">
       <a class="nav-item" routerLink="/settings">
@@ -95,7 +96,7 @@
             type="button"
             aria-label="Notifications"
             [attr.aria-expanded]="notificationsOpen()"
-            (click)="notificationsOpen.set(!notificationsOpen()); profileMenuOpen.set(false)"
+            (click)="popupState.toggle('notifications')"
           >
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
           </button>
@@ -125,7 +126,7 @@
           class="profile-button"
           type="button"
           [attr.aria-expanded]="profileMenuOpen()"
-          (click)="profileMenuOpen.set(!profileMenuOpen())">
+          (click)="popupState.toggle('profile-menu')">
 
           <span class="avatar" aria-hidden="true">
             {{ currentUser()?.displayName?.charAt(0)?.toUpperCase() || 'U' }}
@@ -229,6 +230,12 @@
           </label>
         </div>
       </section>
+      @if (createdOnFilter()) {
+        <p class="task-feedback success-feedback" role="status">
+          Showing tasks created on {{ createdOnFilter() }}.
+          <button type="button" class="text-button" (click)="clearCreatedOnFilter()">Clear date filter</button>
+        </p>
+      }
       <!-- <section class="tasks-toolbar" aria-label="Task filters">
         <div class="task-tabs" role="tablist" aria-label="Filter tasks by status">
           @for (filter of statusFilters; track filter) {

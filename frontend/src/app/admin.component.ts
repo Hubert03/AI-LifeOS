@@ -6,14 +6,15 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
 import { ThemePickerComponent } from './theme-picker.component';
 import { ThemeService } from './theme.service';
-import { AdminChatGroup, AdminUser, CreatedUser, TeamService } from './team.service';
+import { AdminChatGroup, AdminUser, CreatedUser, Team, TeamService } from './team.service';
 
 import { StyleCreatorService } from './style-creator.service';
 import { StyleStudioComponent } from './style-studio.component';
+import { AdminLoginHistoryComponent } from './admin-login-history.component';
 
 @Component({
   selector: 'app-admin',
-  imports: [DatePipe, FormsModule, RouterLink, ThemePickerComponent,StyleStudioComponent],
+  imports: [DatePipe, FormsModule, RouterLink, ThemePickerComponent, StyleStudioComponent, AdminLoginHistoryComponent],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.css',
 })
@@ -25,6 +26,7 @@ export class AdminComponent {
   protected readonly themeService = inject(ThemeService);
   protected readonly users = signal<AdminUser[]>([]);
   protected readonly groups = signal<AdminChatGroup[]>([]);
+  protected readonly teams = signal<Team[]>([]);
   protected readonly currentUser = this.authService.currentUser;
   protected readonly mobileNavOpen = signal(false);
   protected readonly activeAdminCount = computed(
@@ -37,9 +39,13 @@ export class AdminComponent {
   protected readonly createdUser = signal<CreatedUser | null>(null);
   protected displayName = '';
   protected email = '';
+  protected createRole: AdminUser['accessRole'] = 'User';
   protected invitationName = '';
   protected invitationEmail = '';
+  protected invitationRole: AdminUser['accessRole'] = 'User';
   protected groupName = '';
+  protected teamName = '';
+  protected teamManagerId = '';
   protected selectedMemberIds: string[] = [];
   protected readonly additionalMemberByGroup = signal<Record<string, string>>({});
   protected readonly isDarkTheme = this.themeService.isDarkTheme;
@@ -58,7 +64,13 @@ export class AdminComponent {
         this.teamService.getAdminGroups().subscribe({
           next: (groups) => {
             this.groups.set(groups);
-            this.loading.set(false);
+            this.teamService.getTeams().subscribe({
+              next: (teams) => {
+                this.teams.set(teams);
+                this.loading.set(false);
+              },
+              error: (error: unknown) => this.fail(error),
+            });
           },
           error: (error: unknown) => this.fail(error),
         });
@@ -86,11 +98,12 @@ export class AdminComponent {
     this.errorMessage.set(null);
     this.successMessage.set(null);
     this.createdUser.set(null);
-    this.teamService.createUser(this.displayName, this.email).subscribe({
+    this.teamService.createUser(this.displayName, this.email, this.createRole).subscribe({
       next: (user) => {
         this.createdUser.set(user);
         this.displayName = '';
         this.email = '';
+        this.createRole = 'User';
         this.busy.set(false);
         this.reload();
       },
@@ -102,25 +115,41 @@ export class AdminComponent {
     this.busy.set(true);
     this.errorMessage.set(null);
     this.successMessage.set(null);
-    this.teamService.sendInvitation(this.invitationName, this.invitationEmail).subscribe({
+    this.teamService.sendInvitation(
+      this.invitationName,
+      this.invitationEmail,
+      this.invitationRole,
+    ).subscribe({
       next: (result) => {
         this.successMessage.set(`Invitation sent to ${result.email}.`);
         this.invitationName = '';
         this.invitationEmail = '';
+        this.invitationRole = 'User';
         this.busy.set(false);
       },
       error: (error: unknown) => this.fail(error),
     });
   }
 
-  protected toggleAccess(user: AdminUser, changes: Partial<Pick<AdminUser, 'isAdmin' | 'isActive'>>): void {
+  protected toggleAccess(
+    user: AdminUser,
+    changes: Partial<Pick<AdminUser, 'accessRole' | 'isAdmin' | 'isActive'>>,
+  ): void {
     this.busy.set(true);
     this.errorMessage.set(null);
     this.successMessage.set(null);
+    const accessRole =
+      changes.accessRole ??
+      (changes.isAdmin === undefined
+        ? user.accessRole
+        : changes.isAdmin
+          ? 'Admin'
+          : 'User');
     this.teamService.setUserAccess(
       user.userId,
-      changes.isAdmin ?? user.isAdmin,
+      accessRole,
       changes.isActive ?? user.isActive,
+      user.teamId,
     ).subscribe({
       next: () => {
         this.busy.set(false);
@@ -129,6 +158,61 @@ export class AdminComponent {
       },
       error: (error: unknown) => this.fail(error),
     });
+  }
+
+  protected setUserRole(user: AdminUser, event: Event): void {
+    const accessRole = (event.target as HTMLSelectElement)
+      .value as AdminUser['accessRole'];
+    this.toggleAccess(user, { accessRole });
+  }
+
+  protected createTeam(): void {
+    this.busy.set(true);
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+    this.teamService.createTeam(this.teamName, this.teamManagerId).subscribe({
+      next: () => {
+        this.teamName = '';
+        this.teamManagerId = '';
+        this.busy.set(false);
+        this.successMessage.set('Team created and Manager assigned.');
+        this.reload();
+      },
+      error: (error: unknown) => this.fail(error),
+    });
+  }
+
+  protected setUserTeam(user: AdminUser, event: Event): void {
+    const teamId = (event.target as HTMLSelectElement).value || null;
+    if (user.accessRole === 'Manager' || teamId === user.teamId) {
+      return;
+    }
+
+    this.busy.set(true);
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+    const request = user.teamId
+      ? this.teamService.removeTeamMember(user.teamId, user.userId)
+      : teamId
+        ? this.teamService.addTeamMember(teamId, user.userId, user.accessRole)
+        : null;
+    request?.subscribe({
+      next: () => {
+        this.busy.set(false);
+        this.reload();
+      },
+      error: (error: unknown) => this.fail(error),
+    });
+  }
+
+  protected eligibleManagers(): AdminUser[] {
+    return this.users().filter(
+      (user) => user.isActive && user.accessRole === 'Manager' && user.teamId === null,
+    );
+  }
+
+  protected teamNameFor(teamId: string | null): string {
+    return this.teams().find((team) => team.teamId === teamId)?.name ?? 'Assigned';
   }
 
   protected toggleMember(userId: string, checked: boolean): void {

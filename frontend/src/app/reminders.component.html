@@ -1,0 +1,120 @@
+<div class="app-shell reminders-shell" [style]="styleCreator.cssVars()" [class.theme-light]="!isDarkTheme()" [attr.data-theme]="themeService.theme()" [attr.data-card]="styleCreator.style().card" [attr.data-bg]="styleCreator.style().background">
+  @if (mobileNavOpen()) {
+    <button class="mobile-backdrop" type="button" aria-label="Close navigation" (click)="mobileNavOpen.set(false)"></button>
+  }
+  <aside class="sidebar" [class.sidebar-open]="mobileNavOpen()">
+    <a class="brand" routerLink="/" (click)="mobileNavOpen.set(false)"><span class="brand-mark">L</span><span>AI <strong>LifeOS</strong></span></a>
+    <p class="nav-label">WORKSPACE</p>
+    <nav aria-label="Main navigation">
+      <a class="nav-item" routerLink="/" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">▦</span><span>Overview</span></a>
+      <a class="nav-item" routerLink="/tasks" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">☷</span><span>Tasks</span></a>
+      <a class="nav-item" routerLink="/goals" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">◎</span><span>Goals</span></a>
+      <a class="nav-item" routerLink="/notes" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">▤</span><span>Notes</span></a>
+      <a class="nav-item" routerLink="/team-chat" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">◉</span><span>Team chat</span></a>
+      @if (currentUser()?.teamId) { <a class="nav-item" routerLink="/team-workspace" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">▦</span><span>Team workspace</span></a> }
+      @if (currentUser()?.isAdmin) { <a class="nav-item" routerLink="/admin" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">⚙</span><span>Team admin</span></a> }
+      <a class="nav-item active" routerLink="/reminders" aria-current="page"><span aria-hidden="true">♧</span><span>Reminders</span></a>
+    </nav>
+    <div class="sidebar-bottom">
+      <a class="nav-item" routerLink="/settings"><span aria-hidden="true">⚙</span><span>Settings</span></a>
+      <div class="connection-status"><span class="status-dot" aria-hidden="true"></span><span>Private reminders</span></div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div class="page-heading">
+        <button class="icon-button menu-button" type="button" aria-label="Open navigation" [attr.aria-expanded]="mobileNavOpen()" (click)="mobileNavOpen.set(!mobileNavOpen())"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg></button>
+        <div><p class="reminders-kicker">MAKE TIME FOR WHAT MATTERS</p><h1>Reminders</h1><p>Set a one-time nudge for a task or anything else.</p></div>
+      </div>
+      <div class="topbar-actions"><app-theme-picker /><app-style-studio /><button class="secondary-button" type="button" (click)="load()">Refresh</button></div>
+    </header>
+
+    <div class="reminders-content">
+      @if (errorMessage()) { <p class="reminder-alert error" role="alert">{{ errorMessage() }}</p> }
+      @if (successMessage()) { <p class="reminder-alert success" role="status">{{ successMessage() }}</p> }
+
+      <section class="reminder-push-card">
+        <div class="push-icon" aria-hidden="true">♧</div>
+        <div class="push-copy"><strong>Get reminders when LifeOS is closed</strong><p>Allow browser notifications on this device. You can change this anytime.</p></div>
+        @if (notificationsGranted()) {
+          <button class="quiet-push-button" type="button" [disabled]="pushBusy()" (click)="disableNotifications()">{{ pushBusy() ? 'Updating…' : 'Disable on this device' }}</button>
+        } @else if (pushConfiguration()?.enabled) {
+          <button type="button" [disabled]="pushBusy()" (click)="enableNotifications()">{{ pushBusy() ? 'Setting up…' : 'Enable notifications' }}</button>
+        } @else {
+          <span class="push-unavailable">Push setup required</span>
+        }
+        @if (pushMessage()) { <p class="push-message" role="status">{{ pushMessage() }}</p> }
+      </section>
+
+      <section class="reminder-layout">
+        <article class="reminder-card reminder-editor">
+          <div class="reminder-section-heading"><div><p class="reminders-kicker">PLAN AHEAD</p><h2>{{ editingReminderId() ? 'Edit reminder' : 'Set a reminder' }}</h2></div><span class="reminder-card-icon" aria-hidden="true">◷</span></div>
+          <form (ngSubmit)="saveReminder()">
+            <label for="reminder-title">What should we remind you about?</label>
+            <input id="reminder-title" name="title" type="text" maxlength="200" required [(ngModel)]="title" placeholder="e.g. Take a screen break" />
+            <label for="reminder-task">Link to a task <span>Optional</span></label>
+            <select id="reminder-task" name="task" [(ngModel)]="taskId">
+              <option value="">Standalone reminder</option>
+              @for (task of activeTasks(); track task.taskId) { <option [value]="task.taskId">{{ task.title }}</option> }
+            </select>
+            <label for="reminder-time">Date and time</label>
+            <input id="reminder-time" name="dueAt" type="datetime-local" required [(ngModel)]="dueAtLocal" />
+            <div class="reminder-form-actions">
+              @if (editingReminderId()) { <button class="quiet-button" type="button" (click)="cancelEdit()">Cancel</button> }
+              <button type="submit" [disabled]="saving() || !title.trim()">{{ saving() ? 'Saving…' : editingReminderId() ? 'Save changes' : 'Set reminder' }}</button>
+            </div>
+          </form>
+          <p class="reminder-helper">Times use this device’s local time. If you connect a task, its title stays linked here.</p>
+        </article>
+
+        <div class="reminder-lists">
+          @if (triggeredReminders().length) {
+            <section class="reminder-card triggered-card" aria-labelledby="triggered-heading">
+              <div class="reminder-section-heading"><div><p class="reminders-kicker">NEEDS YOUR ATTENTION</p><h2 id="triggered-heading">Ready now</h2></div><span class="triggered-count">{{ triggeredReminders().length }}</span></div>
+              @for (reminder of triggeredReminders(); track reminder.reminderId) {
+                <article class="reminder-row triggered-row">
+                  <span class="reminder-status-dot" aria-hidden="true"></span>
+                  <div class="reminder-row-copy"><strong>{{ reminder.title }}</strong><small>{{ reminderDate(reminder.triggeredAtUtc!) | date:'medium' }}</small>@if (taskTitle(reminder.taskId); as task) { <small>Task · {{ task }}</small> }</div>
+                  <div class="reminder-row-actions"><button type="button" (click)="openSnooze(reminder)">Snooze</button><button class="quiet-button" type="button" (click)="dismiss(reminder)">Stop</button></div>
+                </article>
+              }
+            </section>
+          }
+
+          <section class="reminder-card" aria-labelledby="upcoming-heading">
+            <div class="reminder-section-heading"><div><p class="reminders-kicker">YOUR PLAN</p><h2 id="upcoming-heading">Upcoming</h2></div><span class="reminder-count">{{ scheduledReminders().length }}</span></div>
+            @if (loading()) { <p class="reminder-empty">Loading reminders…</p> }
+            @else if (!scheduledReminders().length) { <p class="reminder-empty">Nothing scheduled. Add a reminder and we’ll keep it here.</p> }
+            @else {
+              <div class="reminder-list">
+                @for (reminder of scheduledReminders(); track reminder.reminderId) {
+                  <article class="reminder-row">
+                    <span class="reminder-calendar" aria-hidden="true"><strong>{{ reminderDate(reminder.dueAtUtc) | date:'d' }}</strong><small>{{ reminderDate(reminder.dueAtUtc) | date:'MMM' }}</small></span>
+                    <div class="reminder-row-copy"><strong>{{ reminder.title }}</strong><small>{{ reminderDate(reminder.dueAtUtc) | date:'EEE, MMM d · h:mm a' }}</small>@if (taskTitle(reminder.taskId); as task) { <small>Task · {{ task }}</small> }</div>
+                    <div class="reminder-row-actions"><button class="quiet-button" type="button" (click)="editReminder(reminder)">Edit</button><button class="quiet-button danger-button" type="button" (click)="deleteReminder(reminder)">Delete</button></div>
+                  </article>
+                }
+              </div>
+            }
+          </section>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  @if (snoozeReminderId(); as reminderId) {
+    <div class="snooze-backdrop" role="presentation">
+      <section class="snooze-dialog" role="dialog" aria-modal="true" aria-labelledby="snooze-heading">
+        <p class="reminders-kicker">TAKE A MOMENT</p><h2 id="snooze-heading">Snooze this reminder?</h2>
+        <p>Choose how long to wait before it comes back.</p>
+        <div class="snooze-options">
+          @for (minutes of [5, 10, 15, 30]; track minutes) { <button type="button" [class.selected]="snoozeMinutes() === minutes" (click)="snoozeMinutes.set(minutes)">{{ minutes }} min</button> }
+        </div>
+        <label for="custom-snooze">Or set a timer in minutes (1–120)</label>
+        <input id="custom-snooze" type="number" min="1" max="120" [(ngModel)]="snoozeMinutes" />
+        <footer><button class="quiet-button" type="button" (click)="snoozeReminderId.set(null)">Cancel</button><button type="button" (click)="snooze(snoozeMinutes())">Start snooze timer</button></footer>
+      </section>
+    </div>
+  }
+</div>

@@ -1,0 +1,17 @@
+.message-composer { align-items: stretch; flex-direction: column; }
+.composer-controls { display: flex; align-items: flex-end; gap: 9px; }
+.composer-controls textarea { min-width: 0; }
+.message-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+.message-actions button, .reply-composer-banner button { border: 0; background: transparent; color: var(--muted, #9d9aaa); cursor: pointer; font: inherit; font-size: 11px; }
+.message-actions button:hover, .reply-composer-banner button:hover { color: var(--accent, #a68aff); }
+.reply-preview { display: grid; gap: 3px; margin: 8px 0; border-left: 2px solid var(--accent, #a68aff); padding-left: 8px; color: var(--muted, #9d9aaa); font-size: 11px; }
+.reply-preview span { overflow: hidden; max-width: 360px; text-overflow: ellipsis; white-space: nowrap; }
+.deleted-label, .deleted-content { color: var(--muted, #9d9aaa) !important; font-style: italic; }
+.message-mentions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.message-mentions span { border-radius: 999px; background: color-mix(in srgb, var(--accent, #a68aff) 15%, transparent); color: var(--accent, #a68aff); padding: 3px 7px; font-size: 10px; }
+.reply-composer-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-left: 2px solid var(--accent, #a68aff); padding: 5px 9px; }
+.reply-composer-banner span { display: grid; min-width: 0; gap: 3px; font-size: 11px; }
+.reply-composer-banner small { overflow: hidden; color: var(--muted, #9d9aaa); text-overflow: ellipsis; white-space: nowrap; }
+.mention-picker { display: flex; flex-wrap: wrap; gap: 6px; }
+.mention-picker button { border: 1px solid var(--line, #34323f); border-radius: 999px; background: var(--surface, #191a21); color: var(--ink, #f5f4f8); padding: 6px 9px; cursor: pointer; font: inherit; font-size: 11px; }
+.mention-picker span { color: var(--muted, #9d9aaa); font-size: 11px; }

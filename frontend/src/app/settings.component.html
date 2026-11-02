@@ -11,9 +11,10 @@
       <a class="nav-item" routerLink="/goals"><span aria-hidden="true">◎</span><span>Goals</span></a>
       <a class="nav-item" routerLink="/notes"><span aria-hidden="true">▤</span><span>Notes</span></a>
       <a class="nav-item" routerLink="/team-chat"><span aria-hidden="true">◉</span><span>Team chat</span></a>
+      @if (currentUser()?.teamId) { <a class="nav-item" routerLink="/team-workspace"><span aria-hidden="true">▦</span><span>Team workspace</span></a> }
       @if (currentUser()?.isAdmin) { <a class="nav-item" routerLink="/admin"><span aria-hidden="true">⚙</span><span>Team admin</span></a> }
       <button class="nav-item planned" type="button" disabled><span aria-hidden="true">▣</span><span>Projects</span><span class="coming-soon">Soon</span></button>
-      <button class="nav-item planned" type="button" disabled><span aria-hidden="true">♧</span><span>Reminders</span><span class="coming-soon">Soon</span></button>
+      <a class="nav-item" routerLink="/reminders"><span aria-hidden="true">♧</span><span>Reminders</span></a>
     </nav>
     <div class="sidebar-bottom">
       <a class="nav-item active" routerLink="/settings" aria-current="page"><span aria-hidden="true">⚙</span><span>Settings</span></a>
@@ -123,6 +124,51 @@
             </button>
           }
         </div>
+      </section>
+
+      <section class="settings-card" aria-labelledby="focus-preferences-heading">
+        <div class="card-heading">
+          <div><p class="eyebrow">FOCUS & RHYTHM</p><h2 id="focus-preferences-heading">Your focus sessions</h2></div>
+          <span class="card-icon" aria-hidden="true">◷</span>
+        </div>
+        <p class="section-copy">Set a comfortable work-and-break rhythm. These durations are used by the focus timer on your Overview.</p>
+        <div class="form-grid">
+          <label for="focus-duration">Focus session
+            <select id="focus-duration" [value]="uiPreferences.focusMinutes()" (change)="setFocusMinutes($event)">
+              @for (minutes of focusDurationOptions; track minutes) {
+                <option [value]="minutes">{{ minutes }} minutes</option>
+              }
+            </select>
+          </label>
+          <label for="break-duration">Break
+            <select id="break-duration" [value]="uiPreferences.breakMinutes()" (change)="setBreakMinutes($event)">
+              @for (minutes of breakDurationOptions; track minutes) {
+                <option [value]="minutes">{{ minutes }} minutes</option>
+              }
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="settings-card" aria-labelledby="insights-heading">
+        <div class="card-heading">
+          <div><p class="eyebrow">PERSONAL INSIGHTS</p><h2 id="insights-heading">Weekly review</h2></div>
+          <span class="card-icon" aria-hidden="true">✦</span>
+        </div>
+        <p class="section-copy">Show the AI-powered weekly reflection on Overview, with wins, slipped tasks, and a focus for next week.</p>
+        <label class="preference-toggle">
+          <input type="checkbox" [checked]="uiPreferences.weeklyInsightsEnabled()" (change)="setWeeklyInsights($event)" />
+          <span><strong>Show weekly insights</strong><small>Your preference is saved on this browser.</small></span>
+        </label>
+      </section>
+
+      <section class="settings-card" aria-labelledby="notifications-heading">
+        <div class="card-heading">
+          <div><p class="eyebrow">STAY ON TRACK</p><h2 id="notifications-heading">Reminders & notifications</h2></div>
+          <span class="card-icon" aria-hidden="true">♧</span>
+        </div>
+        <p class="section-copy">Create reminders and manage browser notifications for this device from your Reminders workspace.</p>
+        <a class="primary-button settings-action-link" routerLink="/reminders">Manage reminders <span aria-hidden="true">→</span></a>
       </section>
 
       <section class="settings-card" aria-labelledby="password-heading">

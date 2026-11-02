@@ -36,6 +36,11 @@ ng build
 
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
+The `public/web.config` file is copied into the production output. Keep it when
+deploying to IIS/MonsterASP.NET: it rewrites client-side Angular routes (such as
+`/goals`) to `index.html` while leaving real files and directories untouched.
+Without this server fallback, refreshing a nested route returns an IIS 404.
+
 ## Running unit tests
 
 To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
@@ -92,6 +97,71 @@ chat tables, and the corresponding write procedures:
   -i '.\AI-LifeOS\database\007_AddTeamAccountsAndChat.sql'
 ```
 
+Apply the admin access-log and role/team updates after script 007 and before
+deploying the updated API:
+
+```powershell
+& 'C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\SQLCMD.EXE' `
+  -S '(localdb)\MSSQLLocalDB' -E -b `
+  -i '.\AI-LifeOS\database\008_AdminAccessLogSchema.sql'
+
+& 'C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\SQLCMD.EXE' `
+  -S '(localdb)\MSSQLLocalDB' -E -b `
+  -i '.\AI-LifeOS\database\009_AddTeamsAndAccessRoles.sql'
+
+& 'C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\SQLCMD.EXE' `
+  -S '(localdb)\MSSQLLocalDB' -E -b `
+  -i '.\AI-LifeOS\database\010_AddTeamWorkspace.sql'
+
+& 'C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\SQLCMD.EXE' `
+  -S '(localdb)\MSSQLLocalDB' -E -b `
+  -i '.\AI-LifeOS\database\011_AddLoginHistory.sql'
+
+& 'C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\SQLCMD.EXE' `
+  -S '(localdb)\MSSQLLocalDB' -E -b `
+  -i '.\AI-LifeOS\database\012_AddChatRepliesMentionsAndDeletion.sql'
+```
+
+Script 009 adds the Super Admin, Admin, Manager, Team Lead, and User roles,
+creates separate organization teams, and upgrades existing administrator
+accounts to Super Admin. Script 010 creates shared team tasks, goals and notes;
+personal workspace records remain private. Users can edit only team records they
+created, while Managers and Team Leads can manage all records in their team.
+Script 011 records successful and failed login attempts for known accounts and
+adds the administrator login-history view. Back up the production database
+before applying scripts 009 through 012 in order.
+
+Script 012 adds message replies, group-member mentions, and soft deletion with
+deleted-message placeholders. Authors can delete their own messages; organization
+administrators can moderate messages in groups they belong to, and Managers can
+moderate messages by members of their own team in groups they belong to.
+
+## Reminders and browser push notifications
+
+Before deploying the reminder-enabled API, back up the database and apply script
+013 after scripts 001 through 012:
+
+```powershell
+& 'C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\SQLCMD.EXE' `
+  -S '(localdb)\MSSQLLocalDB' -E -b `
+  -i '.\AI-LifeOS\database\013_AddRemindersAndPushSubscriptions.sql'
+```
+
+Reminders work in the signed-in app without push. To deliver notifications while
+the app is closed, configure Web Push VAPID credentials on the API using the
+environment variables `Vapid__PublicKey`, `Vapid__PrivateKey`, and optionally
+`Vapid__Subject` (an absolute `mailto:` or HTTPS contact URI). Keep the private
+key in the host's secret/configuration store; do not commit it. The public key
+is returned to the browser by the API. Users must allow notifications in their
+browser, and the site must use HTTPS. iOS generally requires the web app to be
+installed to the home screen.
+
+The API's reminder worker checks due reminders every 30 seconds. Closed-app
+delivery therefore depends on the production host keeping the API process
+running and allowing outbound HTTPS requests to browser push services. Verify
+those capabilities with the host; a web app cannot reliably create native
+Windows or mobile Clock alarms.
+
 Do not expose the API until the database update has been applied. Public
 self-registration is disabled. Bootstrap the first administrator from the
 workspace folder, using the interactive password prompt (do not put a password
@@ -107,9 +177,8 @@ already exists. Administrators can then create accounts with one-time temporary
 passwords or send single-use invitations from Team administration.
 Open Team administration from the signed-in sidebar (or directly at `/admin`).
 That screen contains account creation/invitations, account role and access
-controls, chat-group creation, and group membership management. New accounts
-are regular members by default; an administrator can promote an account in the
-Accounts list. At least one active administrator is always required.
+controls, team creation/member assignment, chat-group creation, and group
+membership management. At least one active administrator is always required.
 
 Workspace records are owned by the authenticated account. Task, goal, note,
 activity, and trash API queries scope reads and writes to the signed-in user;

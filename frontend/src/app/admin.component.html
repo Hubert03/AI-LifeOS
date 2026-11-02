@@ -9,9 +9,10 @@
       <a class="nav-item" routerLink="/goals" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9" /><circle cx="12" cy="12" r="9" /></svg><span>Goals</span></a>
       <a class="nav-item" routerLink="/notes" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" /><path d="M14 3v6h5M9 13h6M9 17h6" /></svg><span>Notes</span></a>
       <a class="nav-item" routerLink="/team-chat" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">◉</span><span>Team chat</span></a>
+      @if (currentUser()?.teamId) { <a class="nav-item" routerLink="/team-workspace" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">▦</span><span>Team workspace</span></a> }
       <a class="nav-item active" routerLink="/admin" aria-current="page" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">⚙</span><span>Team admin</span></a>
       <button class="nav-item planned" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg><span>Projects</span><span class="coming-soon">Soon</span></button>
-      <button class="nav-item planned" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg><span>Reminders</span><span class="coming-soon">Soon</span></button>
+      <a class="nav-item" routerLink="/reminders" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg><span>Reminders</span></a>
     </nav>
     <div class="sidebar-bottom">
       <a class="nav-item" routerLink="/settings" (click)="mobileNavOpen.set(false)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.5.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.5-.9l-1.7.6-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.8l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.5-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.5.9l1.7-.6 1.4 2.4-1.4 1.1a7 7 0 0 1 0 1.7Z" /></svg><span>Settings</span></a>
@@ -41,6 +42,7 @@
         <button type="button" (click)="scrollToSection('create-user')">Add a teammate</button>
         <button type="button" (click)="scrollToSection('create-group')">Create a chat group</button>
         <button type="button" (click)="scrollToSection('manage-groups')">Manage groups <span>{{ groups().length }}</span></button>
+        <button type="button" (click)="scrollToSection('login-history')">Login history</button>
       </nav>
 
       <section class="team-card" id="create-user">
@@ -52,6 +54,11 @@
             <input id="create-name" name="createName" [(ngModel)]="displayName" required minlength="2" maxlength="100" />
             <label for="create-email">Email</label>
             <input id="create-email" name="createEmail" type="email" [(ngModel)]="email" required maxlength="256" />
+            <label for="create-role">Role</label>
+            <select id="create-role" name="createRole" [(ngModel)]="createRole">
+              @if (currentUser()?.accessRole === 'SuperAdmin') { <option value="SuperAdmin">Super Admin</option><option value="Admin">Administrator</option> }
+              <option value="Manager">Manager</option><option value="TeamLead">Team Lead</option><option value="User">User</option>
+            </select>
             <button type="submit" [disabled]="!createForm.valid || busy()">{{ busy() ? 'Working…' : 'Create with temporary password' }}</button>
           </form>
           <form #inviteForm="ngForm" (ngSubmit)="inviteUser()">
@@ -60,6 +67,11 @@
             <input id="invite-name" name="inviteName" [(ngModel)]="invitationName" required minlength="2" maxlength="100" />
             <label for="invite-email">Email</label>
             <input id="invite-email" name="inviteEmail" type="email" [(ngModel)]="invitationEmail" required maxlength="256" />
+            <label for="invite-role">Role</label>
+            <select id="invite-role" name="inviteRole" [(ngModel)]="invitationRole">
+              @if (currentUser()?.accessRole === 'SuperAdmin') { <option value="SuperAdmin">Super Admin</option><option value="Admin">Administrator</option> }
+              <option value="Manager">Manager</option><option value="TeamLead">Team Lead</option><option value="User">User</option>
+            </select>
             <button type="submit" [disabled]="!inviteForm.valid || busy()">{{ busy() ? 'Working…' : 'Send 48-hour invitation' }}</button>
           </form>
         </div>
@@ -71,20 +83,68 @@
         @if (loading()) { <p class="team-muted">Loading accounts…</p> }
         @else if (users().length === 0) { <p class="team-muted">No accounts found.</p> }
         @else {
-          <div class="table-scroll"><table><thead><tr><th>Person</th><th>Role</th><th>Access</th><th>Created</th><th>Manage</th></tr></thead><tbody>
+          <div class="table-scroll"><table><thead><tr><th>Person</th><th>Role</th><th>Team</th><th>Access</th><th>Created</th><th>Manage</th></tr></thead><tbody>
             @for (user of users(); track user.userId) {
               <tr>
                 <td><strong>{{ user.displayName }}</strong><small>{{ user.email }}</small></td>
-                <td><span class="role-badge" [class.admin-role]="user.isAdmin">{{ user.isAdmin ? 'Administrator' : 'Member' }}</span></td>
-                <td><span class="account-state" [class.disabled]="!user.isActive">{{ user.isActive ? 'Active' : 'Disabled' }}</span>@if (user.mustChangePassword) { <small>Must change password</small> }</td>
+                <td>
+                  <select [attr.aria-label]="'Role for ' + user.displayName" [value]="user.accessRole" [disabled]="busy() || user.userId === currentUser()?.userId || (currentUser()?.accessRole === 'Admin' && (user.accessRole === 'Admin' || user.accessRole === 'SuperAdmin'))" (change)="setUserRole(user, $event)">
+                    @if (user.accessRole === 'SuperAdmin' || currentUser()?.accessRole === 'SuperAdmin') { <option value="SuperAdmin">Super Admin</option> }
+                    @if (user.accessRole === 'Admin' || currentUser()?.accessRole === 'SuperAdmin') { <option value="Admin">Administrator</option> }
+                    <option value="Manager">Manager</option><option value="TeamLead">Team Lead</option><option value="User">User</option>
+                  </select>
+                </td>
+                <td>
+                  @if (user.accessRole === 'Manager') {
+                    <span>{{ user.teamId ? teamNameFor(user.teamId) : 'Unassigned' }}</span>
+                  } @else if (user.accessRole === 'Admin' || user.accessRole === 'SuperAdmin') {
+                    <span>Organization</span>
+                  } @else {
+                    <select [attr.aria-label]="'Team for ' + user.displayName" [value]="user.teamId ?? ''" [disabled]="busy()" (change)="setUserTeam(user, $event)">
+                      <option value="">No team</option>
+                      @for (team of teams(); track team.teamId) {
+                        <option [value]="team.teamId" [disabled]="user.teamId !== null && user.teamId !== team.teamId">{{ team.name }}</option>
+                      }
+                    </select>
+                  }
+                </td>
+                <td><span class="account-state" [class.disabled]="!user.isActive">{{ user.isActive ? 'Active' : 'Deactivated' }}</span>@if (user.mustChangePassword) { <small>Must change password</small> }</td>
                 <td>{{ user.createdAtUtc | date:'mediumDate' }}</td>
                 <td><div class="account-manage-actions">
-                  <button class="secondary-button" type="button" [disabled]="busy() || user.userId === currentUser()?.userId || (user.isAdmin && user.isActive && activeAdminCount() < 2)" (click)="toggleAccess(user, { isAdmin: !user.isAdmin })">{{ user.isAdmin ? 'Remove admin' : 'Make admin' }}</button>
-                  <button class="secondary-button" type="button" [disabled]="busy() || user.userId === currentUser()?.userId || (user.isAdmin && user.isActive && activeAdminCount() < 2)" (click)="toggleAccess(user, { isActive: !user.isActive })">{{ user.isActive ? 'Disable' : 'Enable' }}</button>
+                  <button class="secondary-button" type="button" [disabled]="busy() || user.userId === currentUser()?.userId || (user.accessRole === 'SuperAdmin' && currentUser()?.accessRole !== 'SuperAdmin')" (click)="toggleAccess(user, { isActive: !user.isActive })">{{ user.isActive ? 'Deactivate' : 'Reactivate' }}</button>
                 </div></td>
               </tr>
             }
           </tbody></table></div>
+        }
+      </section>
+
+      <section class="team-card" id="teams">
+        <div class="section-heading"><div><p class="section-kicker">TEAM STRUCTURE</p><h2>Teams</h2><p>Assign one Manager to each team, then add User and Team Lead accounts.</p></div></div>
+        <form class="group-create-form" #teamForm="ngForm" (ngSubmit)="createTeam()">
+          <label for="team-name">Team name</label>
+          <input id="team-name" name="teamName" [(ngModel)]="teamName" required minlength="2" maxlength="100" />
+          <label for="team-manager">Manager</label>
+          <select id="team-manager" name="teamManager" [(ngModel)]="teamManagerId" required>
+            <option value="" disabled>Select an unassigned Manager</option>
+            @for (manager of eligibleManagers(); track manager.userId) {
+              <option [value]="manager.userId">{{ manager.displayName }} · {{ manager.email }}</option>
+            }
+          </select>
+          <button type="submit" [disabled]="!teamForm.valid || busy() || eligibleManagers().length === 0">Create team</button>
+        </form>
+        @if (teams().length === 0) {
+          <p class="team-muted">No teams have been created.</p>
+        } @else {
+          <div class="team-list">
+            @for (team of teams(); track team.teamId) {
+              <article class="team-list-item">
+                <strong>{{ team.name }}</strong>
+                <span>Manager: {{ team.managerName || 'Not assigned' }}</span>
+                <small>{{ team.members.length }} team members</small>
+              </article>
+            }
+          </div>
         }
       </section>
 
@@ -108,6 +168,8 @@
           </article>
         }</div>
       </section>
+
+      <div id="login-history"><app-admin-login-history /></div>
     </div>
   </main>
 </div>

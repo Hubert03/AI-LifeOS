@@ -1,14 +1,15 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, HostListener, inject, signal } from '@angular/core';
 import { StyleCreatorService } from './style-creator.service';
+import { PopupStateService } from './popup-state.service';
 
 @Component({
   selector: 'app-style-studio',
   template: `
-    <button class="icon-button" type="button" aria-label="Customize style" (click)="open.set(!open())">🎨</button>
+    <button class="style-studio-trigger" type="button" aria-label="Customize style" [attr.aria-expanded]="open()" (click)="popups.toggle('style-studio')">🎨</button>
 
     @if (open()) {
       <aside class="style-studio" aria-label="Style studio">
-        <header><strong>Style studio</strong><button class="text-button" type="button" (click)="open.set(false)">Close</button></header>
+        <header><strong>Style studio</strong><button class="studio-text-button" type="button" (click)="popups.close('style-studio')">Close</button></header>
 
         <label>Accent color</label>
         <div class="swatch-row">
@@ -17,7 +18,7 @@ import { StyleCreatorService } from './style-creator.service';
                     (click)="sc.update({ accent: c })" [attr.aria-label]="'Accent ' + c"></button>
           }
           <input type="color" [value]="sc.style().accent ?? '#a68aff'" (input)="onAccent($event)" aria-label="Custom accent" />
-          <button type="button" class="text-button" (click)="sc.update({ accent: null })">Theme default</button>
+          <button type="button" class="studio-text-button" (click)="sc.update({ accent: null })">Theme default</button>
         </div>
 
         <label>Corner roundness <span>{{ sc.style().radius }}px</span></label>
@@ -48,41 +49,44 @@ import { StyleCreatorService } from './style-creator.service';
         </div>
 
         <div class="studio-actions">
-          <button class="admin-load-more" type="button" (click)="surprise()">🎲 Surprise me</button>
-          <button class="admin-load-more" type="button" (click)="sc.reset()">Reset</button>
+          <button class="studio-action-button studio-action-primary" type="button" (click)="surprise()">🎲 Surprise me</button>
+          <button class="studio-action-button" type="button" (click)="sc.reset()">Reset</button>
         </div>
 
         <label>My presets <span>{{ sc.presets().length }} / 12</span></label>
         <div class="preset-save">
           <input type="text" maxlength="30" placeholder="Name this look" aria-label="Preset name"
                  [value]="presetName()" (input)="onPresetName($event)" />
-          <button type="button" class="text-button" [disabled]="!presetName().trim()" (click)="savePreset()">Save</button>
+          <button type="button" class="studio-text-button" [disabled]="!presetName().trim()" (click)="savePreset()">Save</button>
         </div>
         @for (p of sc.presets(); track p.name) {
           <div class="preset-row">
             <button type="button" class="preset-apply" (click)="sc.applyPreset(p)">
               <span class="preset-dot" [style.background]="p.style.accent ?? 'var(--accent)'"></span>{{ p.name }}
             </button>
-            <button type="button" class="text-button" [attr.aria-label]="'Delete ' + p.name" (click)="sc.deletePreset(p.name)">✕</button>
+            <button type="button" class="studio-text-button" [attr.aria-label]="'Delete ' + p.name" (click)="sc.deletePreset(p.name)">✕</button>
           </div>
         }
 
         <label>Share</label>
-        <button type="button" class="admin-load-more" (click)="copyCode()">Copy my style code</button>
+        <button type="button" class="studio-action-button" (click)="copyCode()">Copy my style code</button>
         <div class="preset-save">
           <input type="text" placeholder="Paste a style code" aria-label="Style code"
                  [value]="importText()" (input)="onImport($event)" />
-          <button type="button" class="text-button" [disabled]="!importText().trim()" (click)="applyCode()">Apply</button>
+          <button type="button" class="studio-text-button" [disabled]="!importText().trim()" (click)="applyCode()">Apply</button>
         </div>
 
         @if (message()) { <small class="studio-msg" role="status">{{ message() }}</small> }
       </aside>
     }
   `,
+  styleUrl: './style-studio.component.css',
 })
 export class StyleStudioComponent {
   protected readonly sc = inject(StyleCreatorService);
-  protected readonly open = signal(false);
+  protected readonly popups = inject(PopupStateService);
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
+  protected readonly open = computed(() => this.popups.isOpen('style-studio'));
   protected readonly presetName = signal('');
   protected readonly importText = signal('');
   protected readonly message = signal('');
@@ -91,6 +95,10 @@ export class StyleStudioComponent {
   protected readonly cards = ['theme', 'flat', 'glass', 'outlined'] as const;
   protected readonly backgrounds = ['theme', 'solid', 'gradient', 'mesh'] as const;
   protected readonly fonts = ['system', 'rounded', 'serif', 'mono'] as const;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.popups.close('style-studio'));
+  }
 
   protected onAccent(e: Event): void {
     this.sc.update({ accent: (e.target as HTMLInputElement).value });
@@ -143,6 +151,18 @@ export class StyleStudioComponent {
   private flash(text: string): void {
     this.message.set(text);
     setTimeout(() => this.message.set(''), 2500);
+  }
+
+  @HostListener('document:click', ['$event'])
+  protected closeWhenClickingOutside(event: MouseEvent): void {
+    if (!this.elementRef.nativeElement.contains(event.target as Node)) {
+      this.popups.close('style-studio');
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  protected closeOnEscape(): void {
+    this.popups.close('style-studio');
   }
 }
 

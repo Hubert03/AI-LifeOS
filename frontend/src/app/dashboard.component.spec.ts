@@ -36,6 +36,8 @@ describe('DashboardComponent', () => {
       displayName: 'Dilan Learner',
       isAdmin: false,
       mustChangePassword: false,
+      accessRole: 'User',
+      teamId: null,
     });
     const fixture = TestBed.createComponent(DashboardComponent);
     fixture.detectChanges();
@@ -146,6 +148,7 @@ describe('DashboardComponent', () => {
 
     (page.querySelector('.theme-picker-trigger') as HTMLButtonElement).click();
     fixture.detectChanges();
+    expect(page.querySelector('.notification-popover')).toBeNull();
     const oceanTheme = Array.from(
       page.querySelectorAll<HTMLButtonElement>('.theme-choice'),
     ).find((button) => button.textContent?.includes('Ocean'));
@@ -154,6 +157,23 @@ describe('DashboardComponent', () => {
     fixture.detectChanges();
     expect(page.querySelector('.app-shell')?.getAttribute('data-theme')).toBe('ocean');
     expect(localStorage.getItem('ai-lifeos-theme')).toBe('ocean');
+
+    (page.querySelector('.style-studio-trigger') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(page.querySelector('.theme-picker-panel')).toBeNull();
+    expect(page.querySelector('.style-studio')).toBeTruthy();
+    expect(page.textContent).toContain('🎲 Surprise me');
+    expect(page.textContent).toContain('Copy my style code');
+
+    (page.querySelector('.profile-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(page.querySelector('.style-studio')).toBeNull();
+    expect(page.querySelector('.profile-popover')).toBeTruthy();
+
+    (page.querySelector('.theme-picker-trigger') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(page.querySelector('.profile-popover')).toBeNull();
+    expect(page.querySelector('.theme-picker-panel')).toBeTruthy();
   });
 
   it('explains when task loading fails because the session expired', () => {
@@ -180,6 +200,8 @@ describe('DashboardComponent', () => {
       displayName: 'Workspace Admin',
       isAdmin: true,
       mustChangePassword: false,
+      accessRole: 'Admin',
+      teamId: null,
     });
     const fixture = TestBed.createComponent(DashboardComponent);
     fixture.detectChanges();
@@ -276,7 +298,7 @@ describe('DashboardComponent', () => {
   it('filters the account table when an admin summary card is clicked', () => {
   TestBed.inject(AuthService).currentUser.set({
     userId: 'admin-1', email: 'admin@example.com', displayName: 'Workspace Admin',
-    isAdmin: true, mustChangePassword: false,
+    isAdmin: true, mustChangePassword: false, accessRole: 'Admin', teamId: null,
   });
   const fixture = TestBed.createComponent(DashboardComponent);
   fixture.detectChanges();
@@ -313,5 +335,3 @@ describe('DashboardComponent', () => {
   expect(page.querySelectorAll('.admin-user-row')).toHaveLength(2);
 });
 });
-
-

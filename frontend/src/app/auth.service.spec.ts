@@ -13,6 +13,8 @@ describe('AuthService', () => {
     displayName: 'LifeOS Learner',
     isAdmin: false,
     mustChangePassword: false,
+    accessRole: 'User',
+    teamId: null,
   };
 
   beforeEach(() => {

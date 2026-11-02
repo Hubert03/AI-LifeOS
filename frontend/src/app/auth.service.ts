@@ -8,6 +8,8 @@ export interface CurrentUser {
   displayName: string;
   isAdmin: boolean;
   mustChangePassword: boolean;
+  accessRole: 'SuperAdmin' | 'Admin' | 'Manager' | 'TeamLead' | 'User';
+  teamId: string | null;
 }
 
 // ✅ FIX 1: Change 'token' to 'token'

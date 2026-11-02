@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AiPlannerComponent } from './ai-planner.component';
@@ -12,6 +12,7 @@ import { ThemeService } from './theme.service';
 
 import { StyleCreatorService } from './style-creator.service';
 import { StyleStudioComponent } from './style-studio.component';
+import { PopupStateService } from './popup-state.service';
 
 @Component({
   selector: 'app-notes',
@@ -25,6 +26,8 @@ export class NotesComponent {
   private readonly confirmation = inject(ConfirmationService);
   private readonly router = inject(Router);
   protected readonly themeService = inject(ThemeService);
+  protected readonly popupState = inject(PopupStateService);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly currentUser = this.authService.currentUser;
   protected readonly notes = signal<LifeNote[]>([]);
@@ -35,8 +38,7 @@ export class NotesComponent {
   protected readonly success = signal<string | null>(null);
   protected readonly dialogOpen = signal(false);
   protected readonly isDarkTheme = this.themeService.isDarkTheme;
-  protected readonly profileMenuOpen = signal(false);
-    protected readonly notificationsOpen = signal(false);
+  protected readonly profileMenuOpen = computed(() => this.popupState.isOpen('profile-menu'));
   protected readonly mobileNavOpen = signal(false);
   protected readonly editingNote = signal<LifeNote | null>(null);
   protected readonly form = signal<SaveNote>(this.emptyForm());
@@ -56,6 +58,7 @@ protected readonly displayName = computed(
   });
 
   constructor() {
+    this.destroyRef.onDestroy(() => this.popupState.closeAll());
     this.loadNotes();
   }
 

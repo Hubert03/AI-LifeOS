@@ -3,6 +3,7 @@
 @import './app/dashboard.component.css';
 @import './app/tasks.component.css';
 @import './app/goals.component.css';
+@import './app/reminders.component.css';
 
 * {
   box-sizing: border-box;
@@ -769,6 +770,38 @@ html:root[data-theme='forest'] .auth-layout[data-theme='forest'] {
   margin-inline: auto;
 }
 
+.team-shell .team-content select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 36px 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  appearance: none;
+  background:
+    var(--surface)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%239d9aaa' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'/%3E%3C/svg%3E")
+    no-repeat right 12px center;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+}
+
+.team-shell .team-content select:focus-visible {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: 1px;
+}
+
+.team-shell .team-content select:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+}
+
+.team-shell .team-content select option {
+  background: var(--surface);
+  color: var(--ink);
+}
+
 .team-shell .team-content > section[id] {
   scroll-margin-top: 92px;
 }
@@ -886,31 +919,6 @@ html:root[data-theme='forest'] .auth-layout[data-theme='forest'] {
   }
 }
 
-
-
-
-.style-studio { max-height: calc(100vh - 110px); overflow-y: auto; }
-
-.style-studio .studio-actions { display: flex; gap: 8px; }
-.style-studio .studio-actions button { flex: 1; }
-
-.style-studio .preset-save { display: flex; gap: 6px; align-items: center; }
-.style-studio .preset-save input[type='text'] {
-  flex: 1; min-width: 0; min-height: 30px; padding: 0 8px;
-  border: 1px solid var(--line); border-radius: 8px;
-  background: var(--surface-subtle); color: var(--ink); font-size: 11px;
-}
-
-.style-studio .preset-row { display: flex; align-items: center; gap: 4px; }
-.style-studio .preset-apply {
-  display: flex; flex: 1; align-items: center; gap: 8px; min-width: 0;
-  padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px;
-  background: var(--surface-subtle); color: var(--ink); cursor: pointer;
-  font-size: 11px; text-align: left;
-}
-.style-studio .preset-apply:hover { border-color: var(--accent); }
-.style-studio .preset-dot { width: 10px; height: 10px; flex: 0 0 auto; border-radius: 50%; }
-.style-studio .studio-msg { color: var(--accent); font-size: 11px; }
 
 
 

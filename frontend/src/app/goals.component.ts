@@ -1,8 +1,8 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AiPlannerComponent } from './ai-planner.component';
 import { AuthService } from './auth.service';
 import { ConfirmationService } from './confirmation.service';
@@ -18,6 +18,7 @@ import { ThemeService } from './theme.service';
 
 import { StyleCreatorService } from './style-creator.service';
 import { StyleStudioComponent } from './style-studio.component';
+import { PopupStateService } from './popup-state.service';
 
 type GoalFilter = 'All' | GoalStatus;
 
@@ -30,8 +31,11 @@ export class GoalsComponent {
   private readonly goalsService = inject(GoalsService);
   private readonly authService = inject(AuthService);
   private readonly confirmation = inject(ConfirmationService);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   protected readonly themeService = inject(ThemeService);
+  protected readonly popupState = inject(PopupStateService);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly currentUser = this.authService.currentUser;
   protected readonly goals = signal<LifeGoal[]>([]);
@@ -41,9 +45,10 @@ export class GoalsComponent {
   protected readonly logoutError = signal<string | null>(null);
   protected readonly searchTerm = signal('');
   protected readonly statusFilter = signal<GoalFilter>('All');
+  readonly periodFilter = signal<'all' | 'this-month'>('all');
   protected readonly isDarkTheme = this.themeService.isDarkTheme;
-  protected readonly notificationsOpen = signal(false);
-  protected readonly profileMenuOpen = signal(false);
+  protected readonly notificationsOpen = computed(() => this.popupState.isOpen('notifications'));
+  protected readonly profileMenuOpen = computed(() => this.popupState.isOpen('profile-menu'));
   protected readonly mobileNavOpen = signal(false);
   protected readonly dialogOpen = signal(false);
   protected readonly saving = signal(false);
@@ -67,7 +72,13 @@ export class GoalsComponent {
           `${goal.title} ${goal.description ?? ''} ${goal.milestones.map((item) => item.title).join(' ')}`
             .toLocaleLowerCase()
             .includes(query);
-        return matchesSearch && (this.statusFilter() === 'All' || goal.status === this.statusFilter());
+        const matchesPeriod =
+          this.periodFilter() === 'all' || this.isDueThisMonth(goal);
+        return (
+          matchesSearch &&
+          matchesPeriod &&
+          (this.statusFilter() === 'All' || goal.status === this.statusFilter())
+        );
       })
       .sort((left, right) => {
         if (left.status === 'Completed' && right.status !== 'Completed') {
@@ -113,15 +124,16 @@ export class GoalsComponent {
     );
   });
   protected readonly dueThisMonthCount = computed(() => {
-    const year = this.today.getFullYear();
-    const month = this.today.getMonth();
-    return this.goals().filter((goal) => {
-      if (!goal.targetDate || goal.status === 'Completed') {
-        return false;
-      }
-      const target = new Date(`${goal.targetDate}T00:00:00`);
-      return target.getFullYear() === year && target.getMonth() === month;
-    }).length;
+    return this.dueThisMonthGoals().length;
+  });
+  protected readonly dueThisMonthGoals = computed(() =>
+    this.goals().filter((goal) => this.isDueThisMonth(goal)),
+  );
+  readonly thisMonthProgress = computed(() => {
+    const goals = this.dueThisMonthGoals();
+    return goals.length
+      ? Math.round(goals.reduce((total, goal) => total + goal.progress, 0) / goals.length)
+      : 0;
   });
   protected readonly milestoneRate = computed(() =>
     this.milestoneCount() === 0
@@ -130,7 +142,23 @@ export class GoalsComponent {
   );
 
   constructor() {
+    this.destroyRef.onDestroy(() => this.popupState.closeAll());
+    this.route.queryParamMap.subscribe((params) => {
+      this.periodFilter.set(params.get('period') === 'this-month' ? 'this-month' : 'all');
+    });
     this.loadGoals();
+  }
+
+  private isDueThisMonth(goal: LifeGoal): boolean {
+    if (!goal.targetDate || goal.status === 'Completed') {
+      return false;
+    }
+
+    const target = new Date(`${goal.targetDate}T00:00:00`);
+    return (
+      target.getFullYear() === this.today.getFullYear() &&
+      target.getMonth() === this.today.getMonth()
+    );
   }
 
   protected loadGoals(): void {

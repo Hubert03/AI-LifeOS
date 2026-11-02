@@ -127,6 +127,10 @@
   background: conic-gradient(var(--accent) var(--progress), var(--line) 0);
 }
 
+.goals-shell .progress-ring-empty {
+  background: var(--line);
+}
+
 .goals-shell .goal-average-ring {
   width: 43px;
   height: 43px;
@@ -157,6 +161,19 @@
   grid-template-columns: 9px minmax(0, 1fr) 39px;
   align-items: center;
   gap: 8px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.goals-shell .goal-progress-item:focus-visible,
+.goals-shell .monthly-ring:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
 }
 
 .goals-shell .goal-list-marker {
@@ -228,6 +245,8 @@
   width: 72px;
   height: 72px;
   padding: 6px;
+  color: inherit;
+  text-decoration: none;
 }
 
 .goals-shell .monthly-ring span {

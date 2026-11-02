@@ -1,0 +1,235 @@
+:host {
+  position: relative;
+  z-index: 50;
+  display: inline-flex;
+}
+
+.style-studio-trigger {
+  display: inline-grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  transition: 160ms ease;
+}
+
+.style-studio-trigger:hover,
+.style-studio-trigger[aria-expanded='true'] {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.style-studio-trigger:focus-visible,
+.style-studio button:focus-visible,
+.style-studio input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.style-studio {
+  position: absolute;
+  top: calc(100% + 9px);
+  right: 0;
+  z-index: 80;
+  display: grid;
+  width: min(340px, calc(100vw - 28px));
+  max-height: calc(100vh - 100px);
+  gap: 10px;
+  overflow-y: auto;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--accent) 6%, transparent), transparent 55%),
+    color-mix(in srgb, var(--surface) 96%, transparent);
+  box-shadow: 0 20px 56px rgb(0 0 0 / 34%);
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.style-studio header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.style-studio label {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.style-studio input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.style-studio .swatch-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.style-studio .swatch {
+  width: 24px;
+  height: 24px;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.style-studio .swatch.on {
+  border-color: var(--ink);
+}
+
+.style-studio input[type='color'] {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+
+.style-studio .seg {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--surface-subtle);
+}
+
+.style-studio .seg button {
+  flex: 1;
+  padding: 6px 4px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 11px;
+  text-transform: capitalize;
+}
+
+.style-studio .seg button:hover,
+.style-studio .seg button.on {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.style-studio .studio-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.style-studio .studio-actions button {
+  flex: 1;
+}
+
+.studio-action-button {
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-subtle);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.studio-action-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+
+.studio-action-primary {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.studio-action-button:disabled,
+.studio-text-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.studio-text-button {
+  padding: 5px 7px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.studio-text-button:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+  background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+}
+
+.style-studio .preset-save {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.style-studio .preset-save input[type='text'] {
+  flex: 1;
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-subtle);
+  color: var(--ink);
+  font: inherit;
+  font-size: 11px;
+}
+
+.style-studio .preset-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.style-studio .preset-apply {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-subtle);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 11px;
+  text-align: left;
+}
+
+.style-studio .preset-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}

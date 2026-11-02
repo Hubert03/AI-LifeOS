@@ -2581,31 +2581,6 @@ input:focus-visible {
 .dashboard-shell .metric-card,
 .dashboard-shell .admin-summary-card { border-radius: var(--radius, 12px); }
 
-/* panel */
-.style-studio {
-  position: fixed; z-index: 20; top: 90px; right: 20px; width: 280px;
-  display: grid; gap: 10px; padding: 16px;
-  border: 1px solid var(--line); border-radius: 16px;
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  backdrop-filter: blur(16px); box-shadow: var(--shadow);
-  color: var(--ink); font-size: 12px;
-}
-.style-studio header { display: flex; justify-content: space-between; align-items: center; }
-.style-studio label { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; font-weight: 650; }
-.style-studio input[type='range'] { width: 100%; accent-color: var(--accent); }
-.style-studio .swatch-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.style-studio .swatch { width: 24px; height: 24px; border: 2px solid transparent; border-radius: 50%; cursor: pointer; }
-.style-studio .swatch.on { border-color: var(--ink); }
-.style-studio input[type='color'] { width: 28px; height: 28px; padding: 0; border: 0; background: none; cursor: pointer; }
-.style-studio .seg { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: var(--surface-subtle); }
-.style-studio .seg button {
-  flex: 1; padding: 6px 4px; border: 0; border-radius: 8px;
-  background: transparent; color: var(--ink-soft); cursor: pointer; font-size: 11px; text-transform: capitalize;
-}
-.style-studio .seg button.on { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
-
-
-
 .app-shell { font-family: var(--app-font, inherit); }
 
 .app-shell[data-card='glass'] .overview-panel,
@@ -2717,7 +2692,9 @@ input:focus-visible {
 .dashboard-shell .donut { position: relative; width: 170px; height: 170px; flex: 0 0 auto; }
 .dashboard-shell .donut svg { width: 100%; height: 100%; }
 .dashboard-shell .donut-track { fill: none; stroke: var(--surface-subtle); stroke-width: 4; }
-.dashboard-shell .donut-seg { fill: none; stroke-width: 4; transition: stroke-dasharray 400ms ease, stroke-dashoffset 400ms ease; }
+.dashboard-shell .donut-seg { fill: none; stroke-width: 4; cursor: pointer; transition: stroke-dasharray 400ms ease, stroke-dashoffset 400ms ease; }
+.dashboard-shell .donut-seg:focus-visible { outline: none; filter: drop-shadow(0 0 2px var(--ink)); }
+.dashboard-shell .donut-seg.selected { stroke-width: 5; }
 .dashboard-shell .donut-center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
 .dashboard-shell .donut-center strong { color: var(--ink); font-size: 30px; font-weight: 650; line-height: 1.1; }
 .dashboard-shell .donut-center span { color: var(--muted); font-size: 11px; }
@@ -2747,9 +2724,11 @@ input:focus-visible {
 .dashboard-shell .line-dot {
   position: absolute; width: 10px; height: 10px; transform: translate(-50%, -50%);
   border: 2px solid var(--accent); border-radius: 50%; background: var(--surface);
-  transition: background-color 120ms ease;
+  padding: 0; cursor: pointer; transition: background-color 120ms ease; text-decoration: none;
 }
-.dashboard-shell .line-dot:hover { background: var(--accent); }
+.dashboard-shell .line-dot:hover,
+.dashboard-shell .line-dot.selected { background: var(--accent); }
+.dashboard-shell .line-dot:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 .dashboard-shell .line-dot b {
   position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
   color: var(--ink-soft); font-size: 11px; font-weight: 600;
@@ -2761,11 +2740,14 @@ input:focus-visible {
 .dashboard-shell .donut-legend li { display: block; }
 .dashboard-shell .donut-row {
   display: grid; grid-template-columns: 10px 1fr auto 40px; align-items: center; gap: 10px;
-  padding: 6px 8px; border-radius: 8px; color: var(--ink-soft); font-size: 12px; text-decoration: none;
+  width: 100%; padding: 6px 8px; border: 0; border-radius: 8px; background: transparent;
+  color: var(--ink-soft); cursor: pointer; font: inherit; font-size: 12px; text-align: left; text-decoration: none;
 }
 .dashboard-shell .donut-link { transition: background-color 120ms ease; }
 .dashboard-shell .donut-link:hover { background: var(--surface-subtle); }
 .dashboard-shell .donut-link:hover span { color: var(--ink); }
+.dashboard-shell .donut-link[aria-pressed='true'] { background: var(--surface-subtle); color: var(--ink); }
+.dashboard-shell .chart-selection { display: flex; align-items: center; gap: 8px; margin: 8px 0 0; color: var(--muted); font-size: 11px; }
 
 
 /* ---------- Sparklines ---------- */

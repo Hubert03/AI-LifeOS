@@ -8,6 +8,8 @@ export interface AdminUser {
   email: string;
   displayName: string;
   isAdmin: boolean;
+  accessRole: 'SuperAdmin' | 'Admin' | 'Manager' | 'TeamLead' | 'User';
+  teamId: string | null;
   isActive: boolean;
   mustChangePassword: boolean;
   createdAtUtc: string;
@@ -117,6 +119,23 @@ export interface AdminChatGroup {
   memberIds: string[];
 }
 
+export interface TeamMember {
+  userId: string;
+  displayName: string;
+  email: string;
+  accessRole: AdminUser['accessRole'];
+  isActive: boolean;
+  teamId: string | null;
+}
+
+export interface Team {
+  teamId: string;
+  name: string;
+  managerUserId: string | null;
+  managerName: string | null;
+  members: TeamMember[];
+}
+
 export interface ChatGroup {
   groupId: string;
   name: string;
@@ -129,6 +148,22 @@ export interface ChatMessage {
   displayName: string;
   content: string;
   createdAtUtc: string;
+  isDeleted: boolean;
+  replyToMessageId: string | null;
+  replyToDisplayName: string | null;
+  replyToContent: string | null;
+  authorTeamId: string | null;
+  mentions: ChatMessageMention[];
+}
+
+export interface ChatMessageMention {
+  userId: string;
+  displayName: string;
+}
+
+export interface ChatGroupMember {
+  userId: string;
+  displayName: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -142,6 +177,26 @@ export class TeamService {
 
   getDashboard(): Observable<AdminDashboard> {
     return this.http.get<AdminDashboard>('/api/admin/dashboard');
+  }
+
+  getTeams(): Observable<Team[]> {
+    return this.http.get<Team[]>('/api/teams');
+  }
+
+  createTeam(name: string, managerUserId: string): Observable<Team> {
+    return this.postWithCsrf('/api/teams', { name, managerUserId });
+  }
+
+  addTeamMember(
+    teamId: string,
+    userId: string,
+    accessRole: AdminUser['accessRole'],
+  ): Observable<void> {
+    return this.postWithCsrf(`/api/teams/${teamId}/members`, { userId, accessRole });
+  }
+
+  removeTeamMember(teamId: string, userId: string): Observable<void> {
+    return this.deleteWithCsrf(`/api/teams/${teamId}/members/${userId}`);
   }
 
   getUserTasks(userId: string, skip: number, take: number): Observable<AdminPage<AdminTask>> {
@@ -165,16 +220,30 @@ export class TeamService {
     );
   }
 
-  createUser(displayName: string, email: string): Observable<CreatedUser> {
-    return this.postWithCsrf('/api/admin/users', { displayName, email });
+  createUser(displayName: string, email: string, accessRole = 'User'): Observable<CreatedUser> {
+    return this.postWithCsrf('/api/admin/users', { displayName, email, accessRole });
   }
 
-  sendInvitation(displayName: string, email: string): Observable<{ email: string; expiresAtUtc: string }> {
-    return this.postWithCsrf('/api/admin/invitations', { displayName, email });
+  sendInvitation(
+    displayName: string,
+    email: string,
+    accessRole = 'User',
+  ): Observable<{ email: string; expiresAtUtc: string }> {
+    return this.postWithCsrf('/api/admin/invitations', { displayName, email, accessRole });
   }
 
-  setUserAccess(userId: string, isAdmin: boolean, isActive: boolean): Observable<void> {
-    return this.patchWithCsrf(`/api/admin/users/${userId}/access`, { isAdmin, isActive });
+  setUserAccess(
+    userId: string,
+    accessRole: AdminUser['accessRole'],
+    isActive: boolean,
+    teamId: string | null,
+  ): Observable<void> {
+    return this.patchWithCsrf(`/api/admin/users/${userId}/access`, {
+      isAdmin: accessRole === 'SuperAdmin' || accessRole === 'Admin',
+      isActive,
+      accessRole,
+      teamId,
+    });
   }
 
   getAdminGroups(): Observable<AdminChatGroup[]> {
@@ -205,8 +274,25 @@ export class TeamService {
     return this.http.get<ChatMessage[]>(`/api/chat/groups/${groupId}/messages`);
   }
 
-  sendMessage(groupId: string, content: string): Observable<ChatMessage> {
-    return this.postWithCsrf(`/api/chat/groups/${groupId}/messages`, { content });
+  getGroupMembers(groupId: string): Observable<ChatGroupMember[]> {
+    return this.http.get<ChatGroupMember[]>(`/api/chat/groups/${groupId}/members`);
+  }
+
+  sendMessage(
+    groupId: string,
+    content: string,
+    replyToMessageId: string | null,
+    mentionedUserIds: string[],
+  ): Observable<ChatMessage> {
+    return this.postWithCsrf(`/api/chat/groups/${groupId}/messages`, {
+      content,
+      replyToMessageId,
+      mentionedUserIds,
+    });
+  }
+
+  deleteMessage(groupId: string, messageId: string): Observable<void> {
+    return this.deleteWithCsrf(`/api/chat/groups/${groupId}/messages/${messageId}`);
   }
 
   private postWithCsrf<T>(url: string, body: unknown): Observable<T> {

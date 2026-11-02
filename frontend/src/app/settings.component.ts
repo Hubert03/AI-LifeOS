@@ -8,6 +8,7 @@ import { ThemePickerComponent } from './theme-picker.component';
 import { ThemeMode, ThemeService } from './theme.service';
 import { AlertStyle, LoaderStyle, UiPreferencesService } from './ui-preferences.service';
 import { StyleCreatorService } from './style-creator.service';
+import type { BreakMinutes, FocusMinutes } from './ui-preferences.service';
 
 @Component({
   selector: 'app-settings',
@@ -39,6 +40,8 @@ export class SettingsComponent {
     { value: 'minimal', name: 'Minimal', description: 'Compact and to the point' },
     { value: 'glass', name: 'Glass', description: 'Soft, layered glass surface' },
   ] as const;
+  protected readonly focusDurationOptions: FocusMinutes[] = [25, 45, 60];
+  protected readonly breakDurationOptions: BreakMinutes[] = [5, 10, 15];
   protected readonly displayName = signal(this.currentUser()?.displayName ?? '');
   protected readonly email = signal(this.currentUser()?.email ?? '');
   protected readonly currentPassword = signal('');
@@ -74,6 +77,24 @@ export class SettingsComponent {
 
   protected setAlertStyle(style: AlertStyle): void {
     this.uiPreferences.setAlertStyle(style);
+  }
+
+  protected setFocusMinutes(event: Event): void {
+    const minutes = Number((event.target as HTMLSelectElement).value);
+    if (this.focusDurationOptions.includes(minutes as FocusMinutes)) {
+      this.uiPreferences.setFocusMinutes(minutes as FocusMinutes);
+    }
+  }
+
+  protected setBreakMinutes(event: Event): void {
+    const minutes = Number((event.target as HTMLSelectElement).value);
+    if (this.breakDurationOptions.includes(minutes as BreakMinutes)) {
+      this.uiPreferences.setBreakMinutes(minutes as BreakMinutes);
+    }
+  }
+
+  protected setWeeklyInsights(event: Event): void {
+    this.uiPreferences.setWeeklyInsightsEnabled((event.target as HTMLInputElement).checked);
   }
 
   protected saveProfile(): void {

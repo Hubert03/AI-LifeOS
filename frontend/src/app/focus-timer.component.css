@@ -1,0 +1,99 @@
+:host {
+  display: block;
+}
+
+.focus-timer-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 20px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse at 92% 10%, color-mix(in srgb, var(--accent) 15%, transparent), transparent 18rem),
+    var(--surface);
+  color: var(--ink);
+}
+
+.focus-timer-eyebrow {
+  margin: 0 0 5px;
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+}
+
+.focus-timer-copy h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.focus-timer-copy > p:last-child {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.focus-timer-clock {
+  display: grid;
+  min-width: 90px;
+  justify-items: center;
+  gap: 2px;
+}
+
+.focus-timer-clock span {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.focus-timer-clock small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.focus-timer-actions {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 8px;
+}
+
+.focus-timer-actions button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-subtle);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.focus-timer-actions .focus-primary {
+  border-color: transparent;
+  background: var(--accent);
+  color: #fff;
+}
+
+.focus-timer-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.focus-timer-status {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--accent);
+  font-size: 11px;
+}
+
+@media (max-width: 560px) {
+  .focus-timer-card {
+    padding: 15px;
+  }
+}

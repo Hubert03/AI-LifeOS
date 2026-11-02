@@ -25,6 +25,8 @@ describe('AdminComponent', () => {
     fixture.detectChanges();
     http.expectOne('/api/admin/users').flush([]);
     http.expectOne('/api/admin/chat-groups').flush([]);
+    http.expectOne('/api/teams').flush([]);
+    http.expectOne('/api/admin/login-history?take=50').flush([]);
     fixture.detectChanges();
 
     const page = fixture.nativeElement as HTMLElement;

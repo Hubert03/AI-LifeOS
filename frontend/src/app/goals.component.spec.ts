@@ -84,6 +84,34 @@ describe('GoalsComponent', () => {
     expect(page.textContent).toContain('Read more');
   });
 
+  it('shows monthly goal progress with a neutral zero ring and opens goal details from the chart', () => {
+    const now = new Date();
+    const targetDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-15`;
+    const goal = {
+      ...sampleGoals[0],
+      title: 'Monthly goal',
+      targetDate,
+      progress: 0,
+      milestones: [],
+    };
+    const fixture = TestBed.createComponent(GoalsComponent);
+    fixture.detectChanges();
+    httpTesting.expectOne('/api/goals').flush([goal]);
+    fixture.detectChanges();
+
+    const page = fixture.nativeElement as HTMLElement;
+    const monthlyRing = page.querySelector<HTMLAnchorElement>('.monthly-ring');
+    expect(monthlyRing?.textContent?.trim()).toBe('0%');
+    expect(monthlyRing?.classList.contains('progress-ring-empty')).toBe(true);
+    expect(monthlyRing?.getAttribute('href')).toContain('period=this-month');
+
+    page.querySelector<HTMLButtonElement>('.goal-progress-item')?.click();
+    fixture.detectChanges();
+    expect(
+      page.querySelector('[role="dialog"] .goal-dialog-actions button[type="submit"]')?.textContent,
+    ).toContain('Save changes');
+  });
+
   it('opens a validated create form and persists milestone progress with CSRF', () => {
     const fixture = TestBed.createComponent(GoalsComponent);
     fixture.detectChanges();

@@ -1,0 +1,237 @@
+<main class="team-workspace-page">
+  <header class="workspace-header">
+    <div>
+      <a class="back-link" routerLink="/">← My workspace</a>
+      <p class="eyebrow">SHARED TEAM SPACE</p>
+      <h1>{{ workspace()?.teamName || 'Team workspace' }}</h1>
+      <p class="workspace-subtitle">
+        Shared records are separate from personal tasks, goals and notes.
+        {{ workspace()?.canManageAll ? 'You can manage all team records.' : 'You can edit or remove records you created.' }}
+      </p>
+    </div>
+    <span class="role-badge">{{ workspace()?.accessRole }}</span>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="notice notice-error" role="alert">{{ errorMessage() }}</p>
+  }
+  @if (successMessage()) {
+    <p class="notice notice-success" role="status">{{ successMessage() }}</p>
+  }
+
+  <section class="workspace-panel" aria-label="Team workspace records">
+    <div class="workspace-tabs" role="tablist" aria-label="Team record type">
+      <button type="button" role="tab" [attr.aria-selected]="activeTab() === 'tasks'" (click)="activeTab.set('tasks')">
+        Tasks <span>{{ tasks().length }}</span>
+      </button>
+      <button type="button" role="tab" [attr.aria-selected]="activeTab() === 'goals'" (click)="activeTab.set('goals')">
+        Goals <span>{{ goals().length }}</span>
+      </button>
+      <button type="button" role="tab" [attr.aria-selected]="activeTab() === 'notes'" (click)="activeTab.set('notes')">
+        Notes <span>{{ notes().length }}</span>
+      </button>
+    </div>
+
+    @if (loading()) {
+      <p class="empty-state" role="status">Loading team workspace…</p>
+    } @else {
+      @if (activeTab() === 'tasks') {
+        <section role="tabpanel" aria-label="Team tasks">
+          <div class="section-heading">
+            <div><h2>Team tasks</h2><p>Coordinate work with everyone in {{ workspace()?.teamName }}.</p></div>
+            <button type="button" class="primary-button" (click)="openNewTask()">Create task</button>
+          </div>
+          @if (tasks().length) {
+            <div class="record-grid">
+              @for (task of tasks(); track task.taskId) {
+                <article class="record-card">
+                  <div class="record-title-row">
+                    <h3>{{ task.title }}</h3>
+                    <span class="status-chip" [attr.data-status]="task.status">{{ task.status }}</span>
+                  </div>
+                  @if (task.description) { <p class="record-description">{{ task.description }}</p> }
+                  <dl class="record-meta">
+                    <div><dt>Created by</dt><dd>{{ task.createdByDisplayName }}</dd></div>
+                    <div><dt>Assigned to</dt><dd>{{ task.assignedToDisplayName || 'Unassigned' }}</dd></div>
+                    <div><dt>Priority</dt><dd>{{ task.priority }}</dd></div>
+                    <div><dt>Due</dt><dd>{{ task.dueAtUtc ? (task.dueAtUtc | date: 'mediumDate') : 'No due date' }}</dd></div>
+                  </dl>
+                  @if (canEdit(task.createdByUserId)) {
+                    <div class="record-actions">
+                      <button type="button" class="secondary-button" (click)="editTask(task)">Edit</button>
+                      <button type="button" class="danger-button" [disabled]="saving()" (click)="deleteTask(task)">Delete</button>
+                    </div>
+                  }
+                </article>
+              }
+            </div>
+          } @else {
+            <p class="empty-state">No shared team tasks yet. Create one to get started.</p>
+          }
+        </section>
+      }
+
+      @if (activeTab() === 'goals') {
+        <section role="tabpanel" aria-label="Team goals">
+          <div class="section-heading">
+            <div><h2>Team goals</h2><p>Keep shared priorities and milestones visible.</p></div>
+            <button type="button" class="primary-button" (click)="openNewGoal()">Create goal</button>
+          </div>
+          @if (goals().length) {
+            <div class="record-grid">
+              @for (goal of goals(); track goal.goalId) {
+                <article class="record-card">
+                  <div class="record-title-row">
+                    <h3>{{ goal.title }}</h3>
+                    <span class="status-chip" [attr.data-status]="goal.status">{{ goal.status }}</span>
+                  </div>
+                  @if (goal.description) { <p class="record-description">{{ goal.description }}</p> }
+                  <div class="progress-label"><span>Progress</span><strong>{{ goal.progress }}%</strong></div>
+                  <div class="progress-track" role="progressbar" [attr.aria-valuenow]="goal.progress" aria-valuemin="0" aria-valuemax="100">
+                    <span [style.width.%]="goal.progress"></span>
+                  </div>
+                  @if (goal.milestones.length) {
+                    <ul class="milestone-list">
+                      @for (milestone of goal.milestones; track $index) {
+                        <li [class.milestone-complete]="milestone.isCompleted">
+                          <span aria-hidden="true">{{ milestone.isCompleted ? '✓' : '○' }}</span> {{ milestone.title }}
+                        </li>
+                      }
+                    </ul>
+                  }
+                  <dl class="record-meta">
+                    <div><dt>Created by</dt><dd>{{ goal.createdByDisplayName }}</dd></div>
+                    <div><dt>Target</dt><dd>{{ goal.targetDate ? (goal.targetDate | date: 'mediumDate') : 'No target date' }}</dd></div>
+                  </dl>
+                  @if (canEdit(goal.createdByUserId)) {
+                    <div class="record-actions">
+                      <button type="button" class="secondary-button" (click)="editGoal(goal)">Edit</button>
+                      <button type="button" class="danger-button" [disabled]="saving()" (click)="deleteGoal(goal)">Delete</button>
+                    </div>
+                  }
+                </article>
+              }
+            </div>
+          } @else {
+            <p class="empty-state">No shared team goals yet. Create one to set a common direction.</p>
+          }
+        </section>
+      }
+
+      @if (activeTab() === 'notes') {
+        <section role="tabpanel" aria-label="Team notes">
+          <div class="section-heading">
+            <div><h2>Team notes</h2><p>Keep useful shared information in one place.</p></div>
+            <button type="button" class="primary-button" (click)="openNewNote()">Create note</button>
+          </div>
+          @if (notes().length) {
+            <div class="record-grid">
+              @for (note of notes(); track note.noteId) {
+                <article class="record-card team-note-card" [style.border-top-color]="note.color">
+                  <h3>{{ note.title }}</h3>
+                  <p class="note-content">{{ note.content }}</p>
+                  <p class="note-author">By {{ note.createdByDisplayName }} · {{ note.updatedAtUtc || note.createdAtUtc | date: 'mediumDate' }}</p>
+                  @if (canEdit(note.createdByUserId)) {
+                    <div class="record-actions">
+                      <button type="button" class="secondary-button" (click)="editNote(note)">Edit</button>
+                      <button type="button" class="danger-button" [disabled]="saving()" (click)="deleteNote(note)">Delete</button>
+                    </div>
+                  }
+                </article>
+              }
+            </div>
+          } @else {
+            <p class="empty-state">No shared team notes yet. Add information the team can use.</p>
+          }
+        </section>
+      }
+    }
+  </section>
+
+  @if (taskDialogOpen()) {
+    <div class="modal-backdrop" (click)="closeDialogs()">
+      <section class="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="team-task-title" (click)="$event.stopPropagation()">
+        <h2 id="team-task-title">{{ editingTaskId ? 'Edit team task' : 'Create team task' }}</h2>
+        <form (ngSubmit)="saveTask()">
+          <label>Title <input name="taskTitle" [(ngModel)]="taskForm.title" maxlength="200" required /></label>
+          <label>Description <textarea name="taskDescription" [(ngModel)]="taskForm.description" maxlength="2000" rows="3"></textarea></label>
+          <div class="form-row">
+            <label>Status
+              <select name="taskStatus" [(ngModel)]="taskForm.status">
+                @for (status of taskStatuses; track status) { <option [value]="status">{{ status }}</option> }
+              </select>
+            </label>
+            <label>Priority
+              <select name="taskPriority" [(ngModel)]="taskForm.priority">
+                <option [ngValue]="1">1 · Urgent</option><option [ngValue]="2">2 · High</option>
+                <option [ngValue]="3">3 · Normal</option><option [ngValue]="4">4 · Low</option>
+              </select>
+            </label>
+          </div>
+          <div class="form-row">
+            <label>Due date <input name="taskDueDate" type="date" [(ngModel)]="taskForm.dueAtUtc" /></label>
+            <label>Assigned to
+              <select name="taskAssignee" [(ngModel)]="taskForm.assignedToUserId">
+                <option [ngValue]="null">Unassigned</option>
+                @for (member of workspace()?.members ?? []; track member.userId) {
+                  @if (workspace()?.canManageAll || member.userId === workspace()?.currentUserId) {
+                    <option [value]="member.userId">{{ member.displayName }}</option>
+                  }
+                }
+              </select>
+            </label>
+          </div>
+          <div class="dialog-actions">
+            <button type="button" class="secondary-button" (click)="closeDialogs()">Cancel</button>
+            <button type="submit" class="primary-button" [disabled]="saving()">Save task</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  }
+
+  @if (goalDialogOpen()) {
+    <div class="modal-backdrop" (click)="closeDialogs()">
+      <section class="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="team-goal-title" (click)="$event.stopPropagation()">
+        <h2 id="team-goal-title">{{ editingGoalId ? 'Edit team goal' : 'Create team goal' }}</h2>
+        <form (ngSubmit)="saveGoal()">
+          <label>Title <input name="goalTitle" [(ngModel)]="goalForm.title" maxlength="200" required /></label>
+          <label>Description <textarea name="goalDescription" [(ngModel)]="goalForm.description" maxlength="2000" rows="3"></textarea></label>
+          <div class="form-row">
+            <label>Status
+              <select name="goalStatus" [(ngModel)]="goalForm.status">
+                @for (status of goalStatuses; track status) { <option [value]="status">{{ status }}</option> }
+              </select>
+            </label>
+            <label>Progress (%)
+              <input name="goalProgress" type="number" min="0" max="100" [(ngModel)]="goalForm.progress" required />
+            </label>
+          </div>
+          <label>Target date <input name="goalTargetDate" type="date" [(ngModel)]="goalForm.targetDate" /></label>
+          <label>Milestones <textarea name="goalMilestones" [(ngModel)]="milestoneText" rows="4" placeholder="One milestone per line"></textarea></label>
+          <div class="dialog-actions">
+            <button type="button" class="secondary-button" (click)="closeDialogs()">Cancel</button>
+            <button type="submit" class="primary-button" [disabled]="saving()">Save goal</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  }
+
+  @if (noteDialogOpen()) {
+    <div class="modal-backdrop" (click)="closeDialogs()">
+      <section class="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="team-note-title" (click)="$event.stopPropagation()">
+        <h2 id="team-note-title">{{ editingNoteId ? 'Edit team note' : 'Create team note' }}</h2>
+        <form (ngSubmit)="saveNote()">
+          <label>Title <input name="noteTitle" [(ngModel)]="noteForm.title" maxlength="200" required /></label>
+          <label>Note <textarea name="noteContent" [(ngModel)]="noteForm.content" maxlength="50000" rows="8" required></textarea></label>
+          <label>Card color <input name="noteColor" type="color" [(ngModel)]="noteForm.color" /></label>
+          <div class="dialog-actions">
+            <button type="button" class="secondary-button" (click)="closeDialogs()">Cancel</button>
+            <button type="submit" class="primary-button" [disabled]="saving()">Save note</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  }
+</main>

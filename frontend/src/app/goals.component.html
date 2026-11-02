@@ -29,15 +29,16 @@
         <span>Notes</span>
       </a>
       <a class="nav-item" routerLink="/team-chat" (click)="mobileNavOpen.set(false)"><span>◉</span><span>Team chat</span></a>
+      @if (currentUser()?.teamId) { <a class="nav-item" routerLink="/team-workspace" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">▦</span><span>Team workspace</span></a> }
       @if (currentUser()?.isAdmin) { <a class="nav-item" routerLink="/admin" (click)="mobileNavOpen.set(false)"><span>⚙</span><span>Team admin</span></a> }
       <button class="nav-item planned" type="button" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg>
         <span>Projects</span><span class="coming-soon">Soon</span>
       </button>
-      <button class="nav-item planned" type="button" disabled>
+      <a class="nav-item" routerLink="/reminders" (click)="mobileNavOpen.set(false)">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
-        <span>Reminders</span><span class="coming-soon">Soon</span>
-      </button>
+        <span>Reminders</span>
+      </a>
     </nav>
 
     <div class="sidebar-bottom">
@@ -66,7 +67,7 @@
           <input type="search" aria-label="Search goals" placeholder="Search goals" [value]="searchTerm()" (input)="setSearchTerm($event)" />
         </label>
         <div class="popover-anchor">
-          <button class="icon-button notification-button" type="button" aria-label="Notifications" [attr.aria-expanded]="notificationsOpen()" (click)="notificationsOpen.set(!notificationsOpen()); profileMenuOpen.set(false)">
+          <button class="icon-button notification-button" type="button" aria-label="Notifications" [attr.aria-expanded]="notificationsOpen()" (click)="popupState.toggle('notifications')">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
           </button>
           @if (notificationsOpen()) {
@@ -87,7 +88,7 @@
         <app-style-studio />
 
         <div class="popover-anchor profile-anchor">
-          <button class="profile-button" type="button" [attr.aria-expanded]="profileMenuOpen()" (click)="profileMenuOpen.set(!profileMenuOpen()); notificationsOpen.set(false)">
+          <button class="profile-button" type="button" [attr.aria-expanded]="profileMenuOpen()" (click)="popupState.toggle('profile-menu')">
             <span class="avatar" aria-hidden="true">{{ displayName().charAt(0).toUpperCase() }}</span>
             <span class="profile-name">{{ currentUser()?.displayName || 'My space' }}</span>
             <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>
@@ -160,7 +161,7 @@
               <h3 class="mt-1 text-base font-semibold text-[var(--ink)]">Goal progress</h3>
             </div>
             <div class="goal-average">
-              <span class="goal-average-ring" [style.--progress]="overallProgress() + '%'"><span>{{ goals().length ? overallProgress() + '%' : '—' }}</span></span>
+              <span class="goal-average-ring" [class.progress-ring-empty]="overallProgress() === 0" [style.--progress]="overallProgress() + '%'"><span>{{ goals().length ? overallProgress() + '%' : '—' }}</span></span>
               <span><small>AVERAGE</small><strong>Active goals</strong></span>
             </div>
           </header>
@@ -183,17 +184,23 @@
           } @else {
             <div class="goal-progress-list">
               @for (goal of visibleGoals().slice(0, 6); track goal.goalId) {
-                <div class="goal-progress-item">
+                <button class="goal-progress-item" type="button" [attr.aria-label]="'Edit goal ' + goal.title" (click)="openEditDialog(goal)">
                   <span class="goal-list-marker" [class.marker-completed]="goal.status === 'Completed'" aria-hidden="true"></span>
                   <span class="goal-list-title">{{ goal.title }}</span>
                   <span class="goal-list-value">{{ goal.progress }}%</span>
                   <span class="goal-list-track"><span [style.width.%]="goal.progress"></span></span>
-                </div>
+                </button>
               }
             </div>
             @if (visibleGoals().length > 6) {
               <p class="goal-chart-caption">Showing 6 of {{ visibleGoals().length }} filtered goals</p>
             }
+          }
+          @if (periodFilter() === 'this-month') {
+            <p class="goal-chart-caption">
+              Showing goals due this month.
+              <a class="goals-inline-link" routerLink="/goals" [queryParams]="{ period: null }" fragment="all-goals">Show all goals</a>
+            </p>
           }
           <div class="goal-chart-footer"><span>{{ completedMilestoneCount() }} of {{ milestoneCount() }} milestones complete</span><span>{{ pausedCount() }} paused</span></div>
         </article>
@@ -209,7 +216,9 @@
               </p>
               <span class="month-focus-note">{{ today | date: 'MMMM y' }}</span>
             </div>
-            <div class="monthly-ring" [style.--progress]="milestoneRate() + '%'"><span>{{ milestoneCount() ? milestoneRate() + '%' : '—' }}</span></div>
+            <a class="monthly-ring" [class.progress-ring-empty]="thisMonthProgress() === 0" [style.--progress]="thisMonthProgress() + '%'" [routerLink]="['/goals']" [queryParams]="{ period: 'this-month' }" fragment="all-goals" [attr.aria-label]="'View goals due this month, average progress ' + thisMonthProgress() + ' percent'">
+              <span>{{ dueThisMonthCount() ? thisMonthProgress() + '%' : '—' }}</span>
+            </a>
           </article>
 
           <article class="milestone-panel rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
@@ -227,7 +236,7 @@
         </aside>
       </section>
 
-      <section class="mt-7">
+      <section id="all-goals" class="mt-7">
         <header class="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div><p class="goals-eyebrow">YOUR DIRECTION</p><h3 class="mt-1 text-lg font-semibold text-[var(--ink)]">All goals <span class="goal-heading-count">{{ goals().length }}</span></h3></div>
           <div class="goal-filters" role="tablist" aria-label="Filter goals by status">

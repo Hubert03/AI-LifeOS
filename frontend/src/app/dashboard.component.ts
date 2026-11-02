@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ActivityEntry, ActivityService, TrashEntry } from './activity.service';
 import { AiPlannerComponent } from './ai-planner.component';
@@ -23,10 +23,13 @@ import { ThemeService } from './theme.service';
 import { forkJoin } from 'rxjs';
 import { StyleCreatorService } from './style-creator.service';
 import { StyleStudioComponent } from './style-studio.component';
+import { PopupStateService } from './popup-state.service';
 import { DailyBriefingComponent } from './daily-briefing.component';
 import { SmartCaptureComponent } from './smart-capture.component';
 import { WeeklyReviewComponent } from './weekly-review.component';
 import { AdminAccessLogComponent } from './admin-access-log.component';
+import { FocusTimerComponent } from './focus-timer.component';
+import { UiPreferencesService } from './ui-preferences.service';
 
 
 interface AdminWorkspace {
@@ -58,6 +61,7 @@ interface LinePoint {
   y: number;
   value: number;
   label: string;
+  dateKey: string;
   leftPct: number;
   topPct: number;
 }
@@ -94,7 +98,7 @@ function buildDonut(items: { label: string; count: number; color: string; status
   return { total, slices };
 }
 
-function buildLine(days: { label: string; value: number }[]): {
+function buildLine(days: { label: string; value: number; dateKey?: string }[]): {
   line: string;
   area: string;
   points: LinePoint[];
@@ -113,6 +117,7 @@ function buildLine(days: { label: string; value: number }[]): {
       y,
       value: day.value,
       label: day.label,
+      dateKey: day.dateKey ?? '',
       leftPct: (x / CHART_W) * 100,
       topPct: (y / CHART_H) * 100,
     };
@@ -150,7 +155,7 @@ function buildSpark(values: number[]): { line: string; area: string } {
 }
 @Component({
   selector: 'app-dashboard',
-  imports: [AiPlannerComponent, DatePipe, RouterLink, ThemePickerComponent,StyleStudioComponent,DailyBriefingComponent,SmartCaptureComponent,WeeklyReviewComponent,AdminAccessLogComponent],
+  imports: [AiPlannerComponent, DatePipe, RouterLink, ThemePickerComponent,StyleStudioComponent,DailyBriefingComponent,SmartCaptureComponent,WeeklyReviewComponent,AdminAccessLogComponent,FocusTimerComponent],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent {
@@ -163,6 +168,9 @@ export class DashboardComponent {
   private readonly teamService = inject(TeamService);
   private readonly router = inject(Router);
   protected readonly themeService = inject(ThemeService);
+  protected readonly popupState = inject(PopupStateService);
+  protected readonly uiPreferences = inject(UiPreferencesService);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly currentUser = this.authService.currentUser;
   protected readonly forecasts = signal<WeatherForecast[]>([]);
@@ -182,8 +190,8 @@ export class DashboardComponent {
   protected readonly restoreMessage = signal<string | null>(null);
   protected readonly restoringId = signal<string | null>(null);
   protected readonly searchTerm = signal('');
-  protected readonly notificationsOpen = signal(false);
-  protected readonly profileMenuOpen = signal(false);
+  protected readonly notificationsOpen = computed(() => this.popupState.isOpen('notifications'));
+  protected readonly profileMenuOpen = computed(() => this.popupState.isOpen('profile-menu'));
   protected readonly mobileNavOpen = signal(false);
   protected readonly adminDashboard = signal<AdminDashboard | null>(null);
   protected readonly adminDashboardLoading = signal(false);
@@ -200,21 +208,6 @@ export class DashboardComponent {
 
 
 protected readonly styleCreator = inject(StyleCreatorService);
-protected readonly styleOpen = signal(false);
-protected readonly accentSwatches = ['#a68aff', '#54c6bb', '#6ea8ff', '#f08fb0', '#edce77', '#ff8a5b'];
-protected readonly cardOptions = ['flat', 'glass', 'outlined'] as const;
-protected readonly bgOptions = ['solid', 'gradient', 'mesh'] as const;
-protected readonly fontOptions = ['system', 'rounded', 'serif', 'mono'] as const;
-
-protected onAccent(e: Event): void {
-  this.styleCreator.update({ accent: (e.target as HTMLInputElement).value });
-}
-protected onRadius(e: Event): void {
-  this.styleCreator.update({ radius: +(e.target as HTMLInputElement).value });
-}
-protected onScale(e: Event): void {
-  this.styleCreator.update({ fontScale: +(e.target as HTMLInputElement).value });
-}
 
 
   protected readonly displayName = computed(
@@ -274,6 +267,7 @@ protected onScale(e: Event): void {
     const peak = Math.max(1, ...days.map((day) => day.total));
     return days.map((day) => ({
       ...day,
+      dateKey: day.dateUtc.slice(0, 10),
       label: new Intl.DateTimeFormat(undefined, { timeZone: 'UTC', weekday: 'short' }).format(
         new Date(day.dateUtc),
       ),
@@ -371,6 +365,7 @@ protected onScale(e: Event): void {
       .slice(0, 4);
   });
   constructor() {
+    this.destroyRef.onDestroy(() => this.popupState.closeAll());
     if (this.currentUser()?.isAdmin) {
       this.loadAdminDashboard();
     } else {
@@ -395,12 +390,17 @@ protected readonly adminDonut = computed(() =>
       label: s.label,
       count: s.total,
       color: STATUS_COLORS[s.status] ?? '#888780',
+      status: s.status,
     })),
   ),
 );
 
 protected readonly weeklyLine = computed(() =>
-  buildLine(this.weeklyTaskActivity().map((d) => ({ label: d.label, value: d.count }))),
+  buildLine(this.weeklyTaskActivity().map((d) => ({
+    label: d.label,
+    value: d.count,
+    dateKey: d.dateKey,
+  }))),
 );
 
 protected readonly createdSpark = computed(() =>
@@ -416,7 +416,7 @@ protected readonly completedSpark = computed(() => {
   );
 });
 protected readonly adminLine = computed(() =>
-  buildLine(this.adminActivityDays().map((d) => ({ label: d.label, value: d.total }))),
+  buildLine(this.adminActivityDays().map((d) => ({ label: d.label, value: d.total, dateKey: d.dateKey }))),
 );
   protected loadAdminDashboard(): void {
     this.adminDashboardLoading.set(true);
@@ -538,6 +538,11 @@ private scrollToAdminSection(id: string): void {
     }
   }
 protected readonly adminFilter = signal<AdminFilter>('all');
+protected readonly selectedAdminTaskStatus = signal<string | null>(null);
+protected readonly selectedAdminActivityDate = signal<string | null>(null);
+protected readonly selectedAdminActivity = computed(() =>
+  this.adminActivityDays().find((day) => day.dateKey === this.selectedAdminActivityDate()) ?? null,
+);
 
 protected readonly adminFilterLabels: Record<AdminFilter, string> = {
   all: 'All accounts',
@@ -551,6 +556,25 @@ protected readonly adminFilterLabels: Record<AdminFilter, string> = {
   withNotes: 'Accounts with notes',
   passwordSetup: 'Accounts needing password setup',
 };
+
+protected selectAdminTaskStatus(status: string): void {
+  this.selectedAdminTaskStatus.update((selected) => selected === status ? null : status);
+}
+
+protected selectAdminActivityDay(dateKey: string): void {
+  this.selectedAdminActivityDate.update((selected) => selected === dateKey ? null : dateKey);
+}
+
+protected onAdminDonutKeydown(event: KeyboardEvent, status: string): void {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    this.selectAdminTaskStatus(status);
+  }
+}
+
+protected adminTaskStatusLabel(status: string): string {
+  return this.adminTaskStatuses().find((item) => item.status === status)?.label ?? status;
+}
   protected loadForecast(): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
