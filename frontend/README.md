@@ -40,6 +40,12 @@ The `public/web.config` file is copied into the production output. Keep it when
 deploying to IIS/MonsterASP.NET: it rewrites client-side Angular routes (such as
 `/goals`) to `index.html` while leaving real files and directories untouched.
 Without this server fallback, refreshing a nested route returns an IIS 404.
+For Angular's application builder, deploy the **contents** of
+`dist/frontend/browser` to the site's document root, including `index.html` and
+`web.config`; do not deploy the parent `dist/frontend` directory as the site
+root. The IIS URL Rewrite module must be enabled on the host. Session storage
+does not fix this: the server must return `index.html` for a direct request to a
+client-side route before Angular can restore the page.
 
 ## Running unit tests
 
@@ -61,7 +67,13 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 
 ## AI planning, Notes, and workspace history
 
+For safe production database upgrades, use the forward-only procedure in
+[`database/DEPLOYMENT.md`](../database/DEPLOYMENT.md). Do not restore a local
+database backup over a live database that contains unique user data.
+
 The AI planner sends the user's prompt to OpenRouter through the ASP.NET API. Its URL, model, and DPAPI-encrypted API key are stored in the local `AiLifeOS` database. Signed-in users can view and update this shared provider configuration in Settings; the API key is never returned to the browser or written to Angular files or source control. The API key is encrypted with Windows DPAPI for the current Windows user.
+
+The authenticated `/copilot` screen builds a daily plan from the signed-in user's bounded set of open tasks, active goals, scheduled reminders, and recent or pinned notes. The API validates every cited source against that user's records. Suggested tasks are proposals only: they are created through the existing task API only after the user selects and approves them. No database migration is required. The selected context and optional focus are sent to the configured AI provider; avoid including sensitive information you do not want processed by that provider.
 
 From the workspace folder (`C:\Users\80130\Angular`), apply the additive SQL Server LocalDB update:
 
@@ -138,8 +150,8 @@ moderate messages by members of their own team in groups they belong to.
 
 ## Reminders and browser push notifications
 
-Before deploying the reminder-enabled API, back up the database and apply script
-013 after scripts 001 through 012:
+Before deploying the reminder-enabled API, back up the database and apply scripts
+013 and 014 after scripts 001 through 012, in order:
 
 ```powershell
 & 'C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\SQLCMD.EXE' `
@@ -147,20 +159,19 @@ Before deploying the reminder-enabled API, back up the database and apply script
   -i '.\AI-LifeOS\database\013_AddRemindersAndPushSubscriptions.sql'
 ```
 
-Reminders work in the signed-in app without push. To deliver notifications while
-the app is closed, configure Web Push VAPID credentials on the API using the
-environment variables `Vapid__PublicKey`, `Vapid__PrivateKey`, and optionally
-`Vapid__Subject` (an absolute `mailto:` or HTTPS contact URI). Keep the private
-key in the host's secret/configuration store; do not commit it. The public key
-is returned to the browser by the API. Users must allow notifications in their
-browser, and the site must use HTTPS. iOS generally requires the web app to be
-installed to the home screen.
+```powershell
+& 'C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\SQLCMD.EXE' `
+  -S '(localdb)\MSSQLLocalDB' -E -b `
+  -i '.\AI-LifeOS\database\014_AddReminderPushDeliveries.sql'
+```
 
-The API's reminder worker checks due reminders every 30 seconds. Closed-app
-delivery therefore depends on the production host keeping the API process
-running and allowing outbound HTTPS requests to browser push services. Verify
-those capabilities with the host; a web app cannot reliably create native
-Windows or mobile Clock alarms.
+The API dispatches due reminders to each subscribed browser using Web Push. Set
+`Vapid:Subject`, `Vapid:PublicKey`, and `Vapid:PrivateKey` in the API's secret
+configuration (never commit the private key). The subject must be an absolute
+`mailto:` or HTTPS URI. `/api/reminders/push-config` reports enabled only when
+all three settings are valid. Subscribed browsers can receive notifications
+while the site is closed, subject to browser, operating-system, and push-service
+delivery policies. Transient delivery failures are retried with backoff.
 
 Do not expose the API until the database update has been applied. Public
 self-registration is disabled. Bootstrap the first administrator from the
@@ -205,7 +216,9 @@ dotnet run --project '.\backend\AiLifeOS.Api\AiLifeOS.Api.csproj' -- --configure
 
 Enter the URL and model or press Enter to accept the defaults, then enter the API key at the hidden prompt. The key is encrypted with Windows DPAPI for the current Windows user before it is saved to SQL Server LocalDB. Run the normal `dotnet run` command afterward. The API must run under the same Windows user that configured the key; moving the database to another Windows account requires configuring the key again. For production, use a managed secret store rather than this local setup flow.
 
-The AI planner only returns a suggested draft; it does not write records until the user reviews and confirms them. Plans created from Tasks, Goals, and Notes are saved to their matching sections; Overview can save selected tasks and a goal. Prompts are sent to OpenRouter and its selected model provider, so users should not include sensitive information. Without an API key, Notes and workspace history continue to work, but the planner reports that AI is not configured.
+The AI planner only returns a suggested draft; it does not write records until the user reviews and confirms them. It accepts prompts up to 4,000 characters, and limits drafts to 12 tasks and 8 goal milestones so complex requests remain manageable. Plans created from Tasks, Goals, and Notes are saved to their matching sections; Overview can save selected tasks and a goal.
+
+The Notes page includes a personal knowledge assistant. It searches only the signed-in user's existing notes, sends a bounded set of relevant excerpts to the configured OpenRouter model, and returns source buttons that open the cited notes. It does not persist questions or answers and cannot edit notes. Retrieval currently uses keyword matching rather than embeddings; a future semantic-search upgrade can add vector indexing once hosting and provider costs are selected. Prompts and selected note excerpts are sent to OpenRouter, so users should not include sensitive information. Without an API key, notes continue to work, while AI features report that the provider is not configured.
 
 ## Additional Resources
 

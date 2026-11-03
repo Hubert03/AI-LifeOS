@@ -14,12 +14,13 @@
           id="ai-planning-prompt"
           name="prompt"
           rows="3"
-          maxlength="2000"
+          maxlength="4000"
           [value]="prompt()"
           (input)="setPrompt($event)"
           [placeholder]="activeContext === 'notes' ? 'For example: Capture the key ideas from my project meeting.' : activeContext === 'goals' ? 'For example: Build a consistent exercise habit this year.' : activeContext === 'tasks' ? 'For example: Break down preparing for my biology exam into tasks.' : 'For example: Help me prepare for my biology exam next Friday.'"
           required
         ></textarea>
+        <small class="ai-prompt-count">{{ prompt().length }} / 4,000 characters</small>
         <button type="submit" [disabled]="generating() || !prompt().trim()">
           {{ generating() ? 'Creating your plan…' : 'Create a plan' }}
         </button>

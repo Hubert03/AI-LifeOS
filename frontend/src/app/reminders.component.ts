@@ -260,7 +260,6 @@ export class RemindersComponent {
       this.dismiss(reminder);
     } else {
       if (this.pendingNotificationAction === 'snooze') this.openSnooze(reminder);
-      else if (reminder.status === 'Triggered') this.snoozeReminderId.set(reminder.reminderId);
       this.pendingNotificationAction = null;
       this.clearNotificationQuery();
     }

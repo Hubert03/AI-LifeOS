@@ -20,6 +20,11 @@ export const routes: Routes = [
   { path: 'team-chat', component: TeamChatComponent, canActivate: [authGuard] },
   { path: 'reminders', component: RemindersComponent, canActivate: [authGuard] },
   {
+    path: 'copilot',
+    loadComponent: () => import('./daily-copilot.component').then((module) => module.DailyCopilotComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'team-workspace',
     loadComponent: () => import('./team-workspace.component').then((module) => module.TeamWorkspaceComponent),
     canActivate: [teamWorkspaceGuard],

@@ -111,7 +111,7 @@
                 <td><span class="account-state" [class.disabled]="!user.isActive">{{ user.isActive ? 'Active' : 'Deactivated' }}</span>@if (user.mustChangePassword) { <small>Must change password</small> }</td>
                 <td>{{ user.createdAtUtc | date:'mediumDate' }}</td>
                 <td><div class="account-manage-actions">
-                  <button class="secondary-button" type="button" [disabled]="busy() || user.userId === currentUser()?.userId || (user.accessRole === 'SuperAdmin' && currentUser()?.accessRole !== 'SuperAdmin')" (click)="toggleAccess(user, { isActive: !user.isActive })">{{ user.isActive ? 'Deactivate' : 'Reactivate' }}</button>
+                  <button class="secondary-button" type="button" [disabled]="busy() || user.userId === currentUser()?.userId || ((user.accessRole === 'Admin' || user.accessRole === 'SuperAdmin') && currentUser()?.accessRole !== 'SuperAdmin')" (click)="toggleAccess(user, { isActive: !user.isActive })">{{ user.isActive ? 'Deactivate' : 'Reactivate' }}</button>
                 </div></td>
               </tr>
             }

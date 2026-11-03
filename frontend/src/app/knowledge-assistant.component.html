@@ -1,0 +1,55 @@
+<section class="knowledge-assistant" aria-labelledby="knowledge-assistant-title">
+  <div class="knowledge-assistant-heading">
+    <div>
+      <p class="knowledge-eyebrow">YOUR NOTES, WITH CONTEXT</p>
+      <h2 id="knowledge-assistant-title">Ask your knowledge assistant</h2>
+      <p>Get answers grounded in your own notes, with sources you can open.</p>
+    </div>
+    <span class="knowledge-mark" aria-hidden="true">✦</span>
+  </div>
+
+  <form (submit)="$event.preventDefault(); ask()">
+    <label for="knowledge-question">What would you like to find?</label>
+    <textarea
+      id="knowledge-question"
+      rows="3"
+      maxlength="1500"
+      [value]="question()"
+      (input)="setQuestion($event)"
+      placeholder="For example: What did I decide about the project timeline?"
+      required
+    ></textarea>
+    <div class="knowledge-form-footer">
+      <small>{{ question().length }} / 1,500 characters</small>
+      <button type="submit" [disabled]="loading() || question().trim().length < 3">
+        {{ loading() ? 'Searching your notes…' : 'Ask about my notes' }}
+      </button>
+    </div>
+  </form>
+
+  <p class="knowledge-disclosure">
+    Only your notes are searched. Your question and selected excerpts are sent to the configured AI provider.
+    The assistant cannot change or save your data.
+  </p>
+
+  @if (loading()) {
+    <p class="knowledge-state" role="status">Finding relevant notes and drafting a cited answer…</p>
+  }
+  @if (error()) {
+    <p class="knowledge-error" role="alert">{{ error() }}</p>
+  }
+  @if (answer(); as result) {
+    <section class="knowledge-answer" aria-label="Answer">
+      <h3>Answer</h3>
+      <p>{{ result.answer }}</p>
+      @if (result.sources.length) {
+        <div class="knowledge-sources">
+          <strong>Sources</strong>
+          @for (source of result.sources; track source.noteId) {
+            <button type="button" (click)="openSource.emit(source)">{{ source.title }}</button>
+          }
+        </div>
+      }
+    </section>
+  }
+</section>

@@ -1,0 +1,173 @@
+<div class="app-shell dashboard-shell copilot-app-shell"
+  [style]="styleCreator.cssVars()"
+  [class.theme-light]="!themeService.isDarkTheme()"
+  [attr.data-theme]="themeService.theme()"
+  [attr.data-card]="styleCreator.style().card"
+  [attr.data-bg]="styleCreator.style().background">
+  @if (mobileNavOpen()) {
+    <button class="mobile-backdrop" type="button" aria-label="Close navigation" (click)="mobileNavOpen.set(false)"></button>
+  }
+
+  <aside class="sidebar" [class.sidebar-open]="mobileNavOpen()">
+    <a class="brand" routerLink="/" aria-label="AI LifeOS home" (click)="mobileNavOpen.set(false)">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M5 16.5 10.2 6l3.6 7.1 2-4.1L20 16.5" /><path d="M4 19h16" /></svg>
+      </span>
+      <span>AI <strong>LifeOS</strong></span>
+    </a>
+    <p class="nav-label">WORKSPACE</p>
+    <nav aria-label="Main navigation">
+      <a class="nav-item" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="mobileNavOpen.set(false)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1.5" /><rect x="14" y="4" width="6" height="6" rx="1.5" /><rect x="4" y="14" width="6" height="6" rx="1.5" /><rect x="14" y="14" width="6" height="6" rx="1.5" /></svg><span>Overview</span>
+      </a>
+      <a class="nav-item" routerLink="/tasks" routerLinkActive="active" (click)="mobileNavOpen.set(false)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h12M8 12h12M8 19h12" /><path d="m3 5 1 1 2-2M3 12l1 1 2-2M3 19l1 1 2-2" /></svg><span>Tasks</span>
+      </a>
+      <a class="nav-item" routerLink="/goals" routerLinkActive="active" (click)="mobileNavOpen.set(false)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9" /><circle cx="12" cy="12" r="9" /></svg><span>Goals</span>
+      </a>
+      <a class="nav-item" routerLink="/notes" routerLinkActive="active" (click)="mobileNavOpen.set(false)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" /><path d="M14 3v6h5M9 13h6M9 17h6" /></svg><span>Notes</span>
+      </a>
+      <a class="nav-item" routerLink="/team-chat" routerLinkActive="active" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">◉</span><span>Team chat</span></a>
+      @if (currentUser()?.teamId) {
+        <a class="nav-item" routerLink="/team-workspace" routerLinkActive="active" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">▦</span><span>Team workspace</span></a>
+      }
+      @if (currentUser()?.isAdmin) {
+        <a class="nav-item" routerLink="/admin" routerLinkActive="active" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">⚙</span><span>Team admin</span></a>
+      }
+      <button class="nav-item planned" type="button" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg>
+        <span>Projects</span><span class="coming-soon">Soon</span>
+      </button>
+      <a class="nav-item" routerLink="/reminders" routerLinkActive="active" (click)="mobileNavOpen.set(false)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg><span>Reminders</span>
+      </a>
+      <a class="nav-item active" routerLink="/copilot" aria-current="page" (click)="mobileNavOpen.set(false)"><span aria-hidden="true">✦</span><span>Daily Copilot</span></a>
+    </nav>
+    <div class="sidebar-bottom">
+      <a class="nav-item" routerLink="/settings" routerLinkActive="active" (click)="mobileNavOpen.set(false)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.5.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.5-.9l-1.7.6-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.8l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.5-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.5.9l1.7-.6 1.4 2.4-1.4 1.1a7 7 0 0 1 0 1.7Z" /></svg><span>Settings</span>
+      </a>
+      <div class="connection-status"><span class="status-dot" aria-hidden="true"></span><span>Personal workspace</span></div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar copilot-topbar">
+      <div class="page-heading">
+        <button class="icon-button menu-button" type="button" aria-label="Open navigation"
+          [attr.aria-expanded]="mobileNavOpen()" (click)="mobileNavOpen.set(!mobileNavOpen())">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+        <div><p class="breadcrumb">Workspace <span>/</span> AI planning</p><h1>Daily Copilot</h1></div>
+      </div>
+      <div class="topbar-actions">
+        <app-theme-picker />
+        <app-style-studio />
+        <div class="popover-anchor profile-anchor">
+          <button class="profile-button" type="button" [attr.aria-expanded]="profileMenuOpen()"
+            (click)="popupState.toggle('profile-menu')">
+            <span class="avatar" aria-hidden="true">{{ displayName().charAt(0).toUpperCase() }}</span>
+            <span class="profile-name">{{ currentUser()?.displayName || 'My space' }}</span>
+            <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>
+          </button>
+          @if (profileMenuOpen()) {
+            <section class="popover profile-popover" aria-label="Profile menu">
+              <div class="profile-details"><strong>{{ currentUser()?.displayName || 'My space' }}</strong><span>{{ currentUser()?.email }}</span></div>
+              <button class="signout-button" type="button" (click)="logout()">Sign out</button>
+            </section>
+          }
+        </div>
+      </div>
+    </header>
+
+    @if (logoutError()) { <p class="logout-error" role="alert">{{ logoutError() }}</p> }
+
+    <div class="copilot-shell">
+      <header class="copilot-header">
+        <span class="copilot-mark" aria-hidden="true">✦</span>
+        <p class="eyebrow">YOUR PERSONAL PLANNING SPACE</p>
+        <h2>Plan a day that works for you</h2>
+        <p class="intro">Turn your tasks, goals, reminders, and notes into a realistic plan for today.</p>
+      </header>
+
+      <section class="focus-card" aria-labelledby="focus-heading">
+        <label id="focus-heading" for="copilot-focus">What matters most to you today?</label>
+        <textarea id="copilot-focus" rows="3" maxlength="1000"
+          placeholder="Optional: add a priority, constraint, or intention for today."
+          [value]="focus()" (input)="setFocus($event)"></textarea>
+        <div class="form-footer">
+          <small>{{ focus().length }}/1000 · Uses your personal workspace data only</small>
+          <button class="primary-button" type="button" (click)="generate()"
+            [disabled]="loading() || focus().length > 1000">
+            {{ loading() ? 'Building your plan…' : plan() ? 'Refresh my plan' : 'Build my plan' }}
+          </button>
+        </div>
+        <p class="privacy-note">Your selected context is sent to the AI provider configured by your workspace. Suggestions are not saved unless you approve them.</p>
+      </section>
+
+      @if (error()) { <p class="message error" role="alert">{{ error() }}</p> }
+      @if (notice()) { <p class="message success" role="status">{{ notice() }}</p> }
+      @if (loading() && !plan()) { <div class="loading-card" role="status">Reviewing your day…</div> }
+
+      @if (plan(); as result) {
+        <section class="summary-card" aria-labelledby="summary-heading">
+          <div class="section-heading">
+            <div><p class="eyebrow">TODAY, WITH CLARITY</p><h2 id="summary-heading">Your daily outlook</h2></div>
+            <time [attr.datetime]="result.generatedAtUtc">{{ result.generatedAtUtc | date: 'shortTime' }}</time>
+          </div>
+          <p class="summary-text">{{ result.summary }}</p>
+        </section>
+
+        @if (result.focusItems.length) {
+          <section class="plan-section" aria-labelledby="focus-list-heading">
+            <div class="section-heading"><div><p class="eyebrow">START HERE</p><h2 id="focus-list-heading">Recommended focus</h2></div></div>
+            <div class="focus-list">
+              @for (item of result.focusItems; track item.sourceId) {
+                <article class="focus-item">
+                  <span class="focus-number" aria-hidden="true">{{ $index + 1 }}</span>
+                  <div class="focus-copy">
+                    <a class="source-title" [routerLink]="sourceRoute(item.sourceType)">{{ item.title }}</a>
+                    <p>{{ item.reason }}</p>
+                    <span class="source-type">{{ item.sourceType }}</span>
+                  </div>
+                </article>
+              }
+            </div>
+          </section>
+        }
+
+        @if (result.actions.length) {
+          <section class="plan-section actions-section" aria-labelledby="actions-heading">
+            <div class="section-heading">
+              <div><p class="eyebrow">OPTIONAL · NOTHING IS SAVED YET</p><h2 id="actions-heading">Suggested tasks</h2></div>
+            </div>
+            <div class="action-list">
+              @for (action of result.actions; track $index) {
+                <label class="action-card">
+                  <input type="checkbox" [checked]="selected().has($index)"
+                    [disabled]="approving()" (change)="toggleAction($index, $event)" />
+                  <span class="action-copy">
+                    <strong>{{ action.title }}</strong>
+                    @if (action.description) { <span>{{ action.description }}</span> }
+                    <span class="related-sources">Based on:
+                      @for (source of action.sources; track source.sourceId; let last = $last) {
+                        <a [routerLink]="sourceRoute(source.sourceType)" (click)="$event.stopPropagation()">{{ source.title }}</a>@if (!last) {<span>, </span>}
+                      }
+                    </span>
+                  </span>
+                  <span class="priority-label">Priority {{ action.priority }}</span>
+                </label>
+              }
+            </div>
+            <button class="primary-button approve-button" type="button" (click)="approveSelected()"
+              [disabled]="approving() || !selected().size">
+              {{ approving() ? 'Adding approved tasks…' : 'Add selected tasks' }}
+            </button>
+          </section>
+        }
+      }
+    </div>
+  </main>
+</div>

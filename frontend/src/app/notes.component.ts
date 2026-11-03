@@ -13,10 +13,12 @@ import { ThemeService } from './theme.service';
 import { StyleCreatorService } from './style-creator.service';
 import { StyleStudioComponent } from './style-studio.component';
 import { PopupStateService } from './popup-state.service';
+import { KnowledgeAssistantComponent } from './knowledge-assistant.component';
+import { KnowledgeSourceReference } from './knowledge-assistant.service';
 
 @Component({
   selector: 'app-notes',
-  imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink, ThemePickerComponent,StyleStudioComponent],
+  imports: [AiPlannerComponent, DatePipe, FormsModule, RouterLink, ThemePickerComponent, StyleStudioComponent, KnowledgeAssistantComponent],
   templateUrl: './notes.component.html',
   styleUrl: './notes.component.css',
 })
@@ -92,6 +94,11 @@ protected readonly displayName = computed(
     });
     this.error.set(null);
     this.dialogOpen.set(true);
+  }
+
+  protected openSourceNote(source: KnowledgeSourceReference): void {
+    const note = this.notes().find(item => item.noteId === source.noteId);
+    if (note) this.openEdit(note);
   }
 
   protected updateForm<K extends keyof SaveNote>(field: K, value: SaveNote[K]): void {

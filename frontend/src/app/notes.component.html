@@ -54,6 +54,7 @@
         <button class="notes-create" type="button" (click)="openCreate()">+ New note</button>
       </section>
       <app-ai-planner context="notes" (notesSaved)="loadNotes()"></app-ai-planner>
+      <app-knowledge-assistant (openSource)="openSourceNote($event)"></app-knowledge-assistant>
       @if (success()) { <p class="notes-success" role="status">{{ success() }}</p> }
       @if (error() && !dialogOpen()) { <p class="notes-error" role="alert">{{ error() }} <button type="button" (click)="loadNotes()">Retry</button></p> }
 

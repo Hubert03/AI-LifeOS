@@ -90,6 +90,7 @@ export class CommandPaletteComponent {
       go('tasks', 'Tasks', '/tasks'),
       go('goals', 'Goals', '/goals'),
       go('notes', 'Notes', '/notes'),
+      go('copilot', 'Daily Copilot', '/copilot'),
       go('chat', 'Team chat', '/team-chat'),
       go('settings', 'Settings', '/settings'),
     ];

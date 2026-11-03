@@ -267,14 +267,20 @@ export class AiPlannerComponent {
   }
 
   private getResponseMessage(response: unknown): string | null {
-    if (
-      typeof response === 'object' &&
-      response !== null &&
-      'message' in response &&
-      typeof response.message === 'string' &&
-      response.message.trim()
-    ) {
+    if (typeof response !== 'object' || response === null) return null;
+    if ('message' in response && typeof response.message === 'string' && response.message.trim())
       return response.message.trim();
+    if ('detail' in response && typeof response.detail === 'string' && response.detail.trim())
+      return response.detail.trim();
+    if ('errors' in response && typeof response.errors === 'object' && response.errors !== null) {
+      for (const messages of Object.values(response.errors)) {
+        if (Array.isArray(messages)) {
+          const firstMessage = messages.find(
+            (message): message is string => typeof message === 'string' && !!message.trim(),
+          );
+          if (firstMessage) return firstMessage;
+        }
+      }
     }
     return null;
   }

@@ -1,0 +1,296 @@
+.copilot-app-shell {
+  min-height: 100vh;
+  background-color: var(--canvas);
+}
+
+.copilot-app-shell .main-content {
+  background-color: var(--canvas);
+}
+
+.copilot-shell {
+  width: min(1000px, 100%);
+  margin: 0 auto;
+  padding: 1.5rem clamp(1rem, 4vw, 3rem) 3rem;
+}
+
+.copilot-header {
+  padding: 1rem 0 2rem;
+  text-align: center;
+}
+
+.copilot-header h2 {
+  margin: 0 0 .5rem;
+  color: var(--ink);
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  letter-spacing: -.035em;
+}
+
+.source-title:hover,
+.related-sources a:hover {
+  color: var(--accent, #a78bfa);
+}
+
+.copilot-mark {
+  display: grid;
+  width: 3.3rem;
+  height: 3.3rem;
+  margin: 1rem auto;
+  place-items: center;
+  border: 1px solid var(--line, #293244);
+  border-radius: 1rem;
+  background: var(--surface, #141a25);
+  color: var(--accent, #a78bfa);
+  font-size: 1.6rem;
+}
+
+.eyebrow {
+  margin: 0 0 .45rem;
+  color: var(--accent, #a78bfa);
+  font-size: .72rem;
+  font-weight: 750;
+  letter-spacing: .12em;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: .5rem;
+  font-size: clamp(2rem, 5vw, 3rem);
+  letter-spacing: -.04em;
+}
+
+.intro,
+.privacy-note,
+.form-footer small,
+.section-heading time,
+.focus-copy p,
+.related-sources,
+.priority-label {
+  color: var(--muted, #969fb1);
+}
+
+.intro {
+  margin-bottom: 0;
+}
+
+.focus-card,
+.summary-card,
+.focus-item,
+.action-card,
+.loading-card {
+  border: 1px solid var(--line, #293244);
+  border-radius: 1rem;
+  background: var(--surface, #141a25);
+}
+
+.focus-card,
+.summary-card {
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.focus-card label {
+  display: block;
+  margin-bottom: .6rem;
+  font-weight: 700;
+}
+
+textarea {
+  box-sizing: border-box;
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line, #293244);
+  border-radius: .75rem;
+  padding: .8rem .9rem;
+  background: var(--surface-subtle, #1c2432);
+  color: var(--ink, #f4f5fa);
+  font: inherit;
+}
+
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent, #a78bfa);
+  outline-offset: 2px;
+}
+
+.form-footer,
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.form-footer {
+  margin-top: .75rem;
+}
+
+.privacy-note {
+  margin: .9rem 0 0;
+  font-size: .78rem;
+  line-height: 1.5;
+}
+
+.primary-button {
+  border: 1px solid var(--accent, #a78bfa);
+  border-radius: .7rem;
+  padding: .7rem 1rem;
+  background: var(--accent-soft, #28213f);
+  color: var(--ink, #f4f5fa);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.plan-section {
+  margin-top: 2rem;
+}
+
+.section-heading {
+  margin-bottom: .85rem;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.section-heading time {
+  font-size: .82rem;
+}
+
+.summary-text {
+  margin: 0;
+  line-height: 1.75;
+  white-space: pre-line;
+}
+
+.focus-list,
+.action-list {
+  display: grid;
+  gap: .75rem;
+}
+
+.focus-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.focus-number {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-soft, #28213f);
+  color: var(--accent, #a78bfa);
+  font-weight: 750;
+}
+
+.focus-copy,
+.action-copy {
+  display: grid;
+  gap: .4rem;
+}
+
+.source-title {
+  color: var(--ink, #f4f5fa);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.focus-copy p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.source-type {
+  width: fit-content;
+  border-radius: 99px;
+  padding: .2rem .55rem;
+  background: var(--surface-subtle, #1c2432);
+  color: var(--muted, #969fb1);
+  font-size: .72rem;
+  text-transform: capitalize;
+}
+
+.action-card {
+  display: flex;
+  align-items: flex-start;
+  gap: .85rem;
+  padding: 1rem;
+  cursor: pointer;
+}
+
+.action-card input {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: .15rem;
+  accent-color: var(--accent, #a78bfa);
+}
+
+.action-copy {
+  flex: 1;
+  line-height: 1.5;
+}
+
+.related-sources {
+  font-size: .82rem;
+}
+
+.related-sources a {
+  color: var(--accent, #a78bfa);
+  text-decoration: none;
+}
+
+.approve-button {
+  margin-top: .85rem;
+}
+
+.message,
+.loading-card {
+  margin: 1rem 0;
+  padding: .9rem 1rem;
+  border-radius: .8rem;
+}
+
+.error {
+  border: 1px solid #a34a55;
+  background: color-mix(in srgb, #a34a55 15%, transparent);
+  color: #ffb6bd;
+}
+
+.success {
+  border: 1px solid color-mix(in srgb, var(--accent, #a78bfa) 40%, transparent);
+  color: var(--ink, #f4f5fa);
+}
+
+.loading-card {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  border: 1px solid var(--line, #293244);
+  background: var(--surface, #141a25);
+  color: var(--muted, #969fb1);
+}
+
+@media (max-width: 600px) {
+  .copilot-shell {
+    padding: 1rem 1rem 2rem;
+  }
+
+  .form-footer { align-items: flex-start; flex-direction: column; }
+}

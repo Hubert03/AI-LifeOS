@@ -231,6 +231,12 @@
   font-size: 13px;
 }
 
+.ai-prompt-count {
+  justify-self: end;
+  color: var(--muted);
+  font-size: 11px;
+}
+
 .ai-prompt-form button,
 .ai-save-plan {
   min-height: 38px;

@@ -225,4 +225,24 @@ describe('AiPlannerComponent', () => {
 
     expect(page.textContent).toContain('The AI planning provider could not be reached.');
   });
+
+  it('submits planning requests longer than the old limit', () => {
+    const fixture = TestBed.createComponent(AiPlannerComponent);
+    fixture.detectChanges();
+    const page = fixture.nativeElement as HTMLElement;
+    (page.querySelector('.ai-planner-trigger') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const prompt = page.querySelector('textarea') as HTMLTextAreaElement;
+    expect(prompt.maxLength).toBe(4000);
+    prompt.value = 'biology '.repeat(200);
+    prompt.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    (page.querySelector('form button[type="submit"]') as HTMLButtonElement).click();
+
+    http.expectOne('/api/auth/csrf').flush({ token: 'long-plan-token' });
+    const request = http.expectOne('/api/ai/plan');
+    expect(request.request.body.objective.length).toBeGreaterThan(1000);
+    request.flush({ summary: 'A practical plan', note: null, goal: null, tasks: [] });
+  });
 });
