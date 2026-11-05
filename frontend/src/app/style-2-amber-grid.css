@@ -1,0 +1,74 @@
+/* STYLE 2 — Amber Grid: near-black with a faint dot grid and an amber accent (dark by default) */
+:host { display: block; min-height: 100vh; }
+
+.auth-layout {
+  --canvas: #0c0d10; --surface: #14161b; --surface-subtle: #0f1115;
+  --ink: #f4f1ea; --ink-soft: #cfcabd; --muted: #8e8a7e; --line: #2a2c33;
+  --accent: #f5b942; --accent-ink: #231703; --danger: #ff8f7a;
+  display: grid; min-height: 100vh; place-items: center; padding: 28px 18px;
+  background:
+    radial-gradient(circle at 1px 1px, rgb(255 255 255 / 7%) 1px, transparent 0) 0 0 / 22px 22px,
+    var(--canvas);
+  color: var(--ink);
+}
+.auth-layout.theme-light {
+  --canvas: #f6f5f1; --surface: #fff; --surface-subtle: #faf9f6;
+  --ink: #1d1b16; --ink-soft: #4a463b; --muted: #7b776a; --line: #e4e1d8;
+  --accent: #e29b0e; --accent-ink: #1d1200; --danger: #b3261e;
+  background:
+    radial-gradient(circle at 1px 1px, rgb(0 0 0 / 8%) 1px, transparent 0) 0 0 / 22px 22px,
+    var(--canvas);
+}
+
+.auth-card {
+  width: min(100%, 420px); padding: 38px 34px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+  box-shadow: 8px 8px 0 color-mix(in srgb, var(--accent) 85%, transparent);
+}
+
+.brand { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 34px;
+  color: var(--ink); font-size: 16px; font-weight: 700; text-decoration: none; }
+.brand-mark { display: grid; width: 30px; height: 30px; place-items: center;
+  border-radius: 4px; background: var(--accent); color: var(--accent-ink); font-size: 15px; font-weight: 800; }
+
+.eyebrow { margin: 0 0 8px; color: var(--accent); font-size: 12px; font-weight: 600; }
+h1 { margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.03em; }
+.intro { margin: 8px 0 26px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+
+form { display: grid; }
+label { margin: 0 0 6px; color: var(--ink-soft); font-size: 13px; font-weight: 600; }
+input {
+  width: 100%; min-height: 44px; margin-bottom: 16px; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: 4px; outline: none;
+  background: var(--surface-subtle); color: var(--ink); font: inherit; font-size: 14px;
+}
+input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+
+.error-message { margin-bottom: 16px; padding: 10px 12px; border-radius: 4px; font-size: 13px;
+  color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--line));
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface)); }
+.field-error { margin: -8px 0 12px; color: var(--danger); font-size: 12px; }
+
+.submit-button {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  min-height: 46px; margin-top: 4px; border: 0; border-radius: 4px;
+  background: var(--accent); color: var(--accent-ink);
+  font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: transform .1s, filter .15s;
+}
+.submit-button:hover:not(:disabled) { filter: brightness(1.07); }
+.submit-button:active:not(:disabled) { transform: translateY(1px); }
+.submit-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 2px; }
+.submit-button:disabled { cursor: not-allowed; opacity: .5; }
+
+.btn-spinner { position: absolute; width: 20px; height: 20px; border-radius: 50%; opacity: 0;
+  border: 3px solid color-mix(in srgb, var(--accent-ink) 25%, transparent);
+  border-top-color: var(--accent-ink); animation: spin .7s linear infinite; }
+.submit-button.is-loading:disabled { opacity: 1; cursor: progress; }
+.submit-button.is-loading .btn-label { visibility: hidden; }
+.submit-button.is-loading .btn-spinner { opacity: 1; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.switch-mode { margin: 22px 0 0; color: var(--muted); font-size: 12px; text-align: center; line-height: 1.5; }
+.switch-mode a { margin-left: 4px; color: var(--accent); font-weight: 650; text-decoration: none; }
+
+@media (max-width: 480px) { .auth-card { padding: 28px 20px; box-shadow: 5px 5px 0 color-mix(in srgb, var(--accent) 85%, transparent); } }

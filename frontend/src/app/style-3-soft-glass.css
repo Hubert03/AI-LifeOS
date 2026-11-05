@@ -1,0 +1,79 @@
+/* STYLE 3 — Soft Glass: airy light mesh background, frosted card, blue accent (LIGHT is the hero; dark supported) */
+:host { display: block; min-height: 100vh; }
+
+.auth-layout {
+  --canvas: #0b1220; --surface: rgb(20 29 48 / 70%); --surface-subtle: rgb(255 255 255 / 5%);
+  --ink: #eef3ff; --ink-soft: #c5d0ea; --muted: #8fa0c4; --line: rgb(255 255 255 / 12%);
+  --accent: #6c9bff; --accent-ink: #071330; --danger: #ff8f9a;
+  display: grid; min-height: 100vh; place-items: center; padding: 28px 18px;
+  background:
+    radial-gradient(60% 50% at 12% 12%, rgb(76 120 255 / 30%), transparent 70%),
+    radial-gradient(50% 45% at 88% 85%, rgb(255 120 150 / 20%), transparent 70%),
+    var(--canvas);
+  color: var(--ink);
+}
+.auth-layout.theme-light {
+  --canvas: #eef3fb; --surface: rgb(255 255 255 / 72%); --surface-subtle: rgb(255 255 255 / 80%);
+  --ink: #16223b; --ink-soft: #3d4a66; --muted: #6a7794; --line: rgb(22 34 59 / 12%);
+  --accent: #2f61e6; --accent-ink: #fff; --danger: #b3261e;
+  background:
+    radial-gradient(60% 50% at 10% 10%, rgb(120 160 255 / 45%), transparent 70%),
+    radial-gradient(50% 45% at 90% 90%, rgb(255 170 190 / 40%), transparent 70%),
+    var(--canvas);
+}
+
+.auth-card {
+  width: min(100%, 430px); padding: 40px 36px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 24px;
+  -webkit-backdrop-filter: blur(18px) saturate(1.2); backdrop-filter: blur(18px) saturate(1.2);
+  box-shadow: 0 24px 60px -20px rgb(20 40 100 / 30%);
+}
+
+.brand { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 34px;
+  color: var(--ink); font-size: 16px; font-weight: 650; text-decoration: none; }
+.brand-mark { display: grid; width: 32px; height: 32px; place-items: center;
+  border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: 14px; font-weight: 700; }
+
+.eyebrow { margin: 0 0 8px; color: var(--muted); font-size: 13px; font-weight: 500; }
+h1 { margin: 0; font-size: 28px; font-weight: 650; letter-spacing: -0.03em; }
+.intro { margin: 8px 0 26px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+
+form { display: grid; }
+label { margin: 0 0 6px; color: var(--ink-soft); font-size: 13px; font-weight: 550; }
+input {
+  width: 100%; min-height: 46px; margin-bottom: 16px; padding: 0 16px;
+  border: 1px solid var(--line); border-radius: 999px; outline: none;
+  background: var(--surface-subtle); color: var(--ink); font: inherit; font-size: 14px;
+  transition: border-color .15s, box-shadow .15s;
+}
+input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent); }
+
+.error-message { margin-bottom: 16px; padding: 10px 16px; border-radius: 14px; font-size: 13px;
+  color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 40%, var(--line));
+  background: color-mix(in srgb, var(--danger) 8%, transparent); }
+.field-error { margin: -8px 0 12px 16px; color: var(--danger); font-size: 12px; }
+
+.submit-button {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  min-height: 48px; margin-top: 6px; border: 0; border-radius: 999px;
+  background: var(--accent); color: var(--accent-ink);
+  font: inherit; font-size: 14px; font-weight: 650; cursor: pointer;
+  box-shadow: 0 10px 24px -10px color-mix(in srgb, var(--accent) 80%, transparent);
+  transition: transform .15s, box-shadow .15s;
+}
+.submit-button:hover:not(:disabled) { transform: translateY(-1px); }
+.submit-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 40%, transparent); outline-offset: 2px; }
+.submit-button:disabled { cursor: not-allowed; opacity: .5; }
+
+.btn-spinner { position: absolute; width: 20px; height: 20px; border-radius: 50%; opacity: 0;
+  border: 3px solid color-mix(in srgb, var(--accent-ink) 30%, transparent);
+  border-top-color: var(--accent-ink); animation: spin .7s linear infinite; }
+.submit-button.is-loading:disabled { opacity: 1; cursor: progress; }
+.submit-button.is-loading .btn-label { visibility: hidden; }
+.submit-button.is-loading .btn-spinner { opacity: 1; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.switch-mode { margin: 22px 0 0; color: var(--muted); font-size: 12px; text-align: center; line-height: 1.5; }
+.switch-mode a { margin-left: 4px; color: var(--accent); font-weight: 600; text-decoration: none; }
+
+@media (max-width: 480px) { .auth-card { padding: 28px 20px; border-radius: 20px; } }

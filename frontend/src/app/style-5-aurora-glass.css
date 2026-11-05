@@ -1,0 +1,106 @@
+/* STYLE 5 — Aurora Glass: drifting colour blobs, frosted card, slowly rotating glow edge.
+   Dark by default, light via .theme-light. */
+@property --edge-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+
+:host { display: block; min-height: 100vh; }
+
+.auth-layout {
+  --canvas: #060a14; --glass: rgb(16 22 38 / 55%); --glass-input: rgb(255 255 255 / 6%);
+  --ink: #f2f6ff; --ink-soft: #c9d3ea; --muted: #94a2c2; --line: rgb(255 255 255 / 14%);
+  --accent: #35e0c0; --accent-2: #4d8dff; --accent-ink: #04141a; --danger: #ff93a3;
+  --blob-1: #14d1b0; --blob-2: #3b6dff; --blob-3: #ff5c9e;
+  position: relative; isolation: isolate; overflow: hidden;
+  display: grid; min-height: 100vh; place-items: center; padding: 28px 18px;
+  background: var(--canvas); color: var(--ink);
+}
+.auth-layout.theme-light {
+  --canvas: #eef2fa; --glass: rgb(255 255 255 / 55%); --glass-input: rgb(255 255 255 / 70%);
+  --ink: #131b30; --ink-soft: #3a4560; --muted: #66728e; --line: rgb(19 27 48 / 12%);
+  --accent: #1f6bff; --accent-2: #12b8a0; --accent-ink: #fff; --danger: #b3261e;
+  --blob-1: #7fd8ff; --blob-2: #a9b8ff; --blob-3: #ffc2d6;
+}
+
+/* drifting blobs */
+.auth-layout::before {
+  content: ""; position: absolute; inset: -25%; z-index: -1;
+  background:
+    radial-gradient(34% 34% at 22% 28%, var(--blob-1), transparent 70%),
+    radial-gradient(38% 38% at 78% 24%, var(--blob-2), transparent 70%),
+    radial-gradient(36% 36% at 60% 82%, var(--blob-3), transparent 70%);
+  opacity: .55; filter: blur(30px);
+  animation: drift 22s ease-in-out infinite alternate;
+}
+.auth-layout.theme-light::before { opacity: .8; }
+@keyframes drift {
+  from { transform: translate3d(-3%, -2%, 0) rotate(0deg) scale(1); }
+  to   { transform: translate3d(3%, 3%, 0) rotate(14deg) scale(1.12); }
+}
+
+.auth-card {
+  position: relative; width: min(100%, 420px); padding: 40px 36px; border-radius: 26px;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--glass), var(--glass)) padding-box,
+    conic-gradient(from var(--edge-angle), transparent 0 60%, var(--accent) 80%, var(--accent-2) 90%, transparent 100%) border-box;
+  -webkit-backdrop-filter: blur(22px) saturate(1.4); backdrop-filter: blur(22px) saturate(1.4);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 12%) inset, 0 40px 80px -30px rgb(0 0 0 / 55%);
+  animation: edge 7s linear infinite;
+}
+@keyframes edge { to { --edge-angle: 360deg; } }
+
+.brand { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 34px;
+  color: var(--ink); font-size: 16px; font-weight: 650; text-decoration: none; }
+.brand-mark { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--accent-ink); font-size: 15px; font-weight: 700; }
+
+.eyebrow { margin: 0 0 8px; color: var(--muted); font-size: 13px; font-weight: 500; }
+h1 { margin: 0; font-size: 30px; font-weight: 650; letter-spacing: -0.035em; }
+.intro { margin: 8px 0 26px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+
+form { display: grid; }
+label { margin: 0 0 6px; color: var(--ink-soft); font-size: 13px; font-weight: 550; }
+input {
+  width: 100%; min-height: 46px; margin-bottom: 16px; padding: 0 14px;
+  border: 1px solid var(--line); border-radius: 12px; outline: none;
+  background: var(--glass-input); color: var(--ink); font: inherit; font-size: 14px;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+input:focus { border-color: var(--accent); background: color-mix(in srgb, var(--glass-input) 60%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent), 0 0 24px -4px color-mix(in srgb, var(--accent) 45%, transparent); }
+
+.error-message { margin-bottom: 16px; padding: 10px 14px; border-radius: 12px; font-size: 13px;
+  color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
+  background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.field-error { margin: -8px 0 12px; color: var(--danger); font-size: 12px; }
+
+.submit-button {
+  position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;
+  min-height: 48px; margin-top: 6px; border: 0; border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--accent-ink);
+  font: inherit; font-size: 14px; font-weight: 650; cursor: pointer;
+  box-shadow: 0 12px 28px -12px color-mix(in srgb, var(--accent) 90%, transparent);
+  transition: transform .15s, box-shadow .15s;
+}
+.submit-button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 16px 34px -12px color-mix(in srgb, var(--accent) 100%, transparent); }
+.submit-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 2px; }
+.submit-button:disabled { cursor: not-allowed; opacity: .5; }
+
+/* modern arc loader */
+.btn-spinner { position: absolute; width: 22px; height: 22px; border-radius: 50%; opacity: 0;
+  background: conic-gradient(from 0deg, transparent 0 10%, var(--accent-ink));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
+  animation: spin .8s linear infinite; }
+.submit-button.is-loading:disabled { opacity: 1; cursor: progress; }
+.submit-button.is-loading .btn-label { visibility: hidden; }
+.submit-button.is-loading .btn-spinner { opacity: 1; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.switch-mode { margin: 22px 0 0; color: var(--muted); font-size: 12px; text-align: center; line-height: 1.5; }
+.switch-mode a { margin-left: 4px; color: var(--accent); font-weight: 600; text-decoration: none; }
+
+@media (max-width: 480px) { .auth-card { padding: 28px 20px; border-radius: 22px; } }
+@media (prefers-reduced-motion: reduce) {
+  .auth-layout::before, .auth-card { animation: none; }
+  .btn-spinner { animation-duration: 1.8s; }
+}

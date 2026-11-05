@@ -8,7 +8,14 @@ import { ThemeService } from './theme.service';
   selector: 'app-auth-page',
   imports: [FormsModule, RouterLink],
   templateUrl: './auth-page.component.html',
-  styleUrl: './auth-page.component.css',
+  //styleUrl: './auth-page.component.css',
+  //styleUrl: './style-1-clean.css',
+  //styleUrl: './style-2-amber-grid.css',
+  //styleUrl: './style-3-soft-glass.css',
+  //styleUrl: './style-4-split.css',
+  //styleUrl: './style-5-aurora-glass.css',
+  //styleUrl: './style-6-liquid-glass.css',
+  styleUrl: './style-7-glass-split.css',
 })
 export class AuthPageComponent {
   private readonly authService = inject(AuthService);
