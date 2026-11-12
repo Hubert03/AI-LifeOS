@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, effect, inject, input, signal, untracked,computed} from '@angular/core';
 
 interface AccessLogEntry {
   adminName: string;
@@ -30,12 +30,18 @@ interface AccessLogEntry {
         <p class="overview-extra-empty">No admin has opened a member's workspace yet.</p>
       } @else {
         <ul class="access-log-list">
-          @for (e of entries(); track $index) {
+          @for (e of grouped(); track $index) {
+            <li>
+              <span><strong>{{ e.adminName }}</strong> viewed <strong>{{ e.targetName }}</strong>'s {{ e.resources.join(', ') }}</span>
+              <time>{{ e.createdAtUtc | date: 'MMM d, y · h:mm a' }}</time>
+            </li>
+          }
+          <!-- @for (e of entries(); track $index) {
             <li>
               <span><strong>{{ e.adminName }}</strong> viewed <strong>{{ e.targetName }}</strong>'s {{ e.resource }}</span>
               <time>{{ e.createdAtUtc | date: 'MMM d, y · h:mm a' }}</time>
             </li>
-          }
+          } -->
         </ul>
       }
     </section>
@@ -63,7 +69,23 @@ export class AdminAccessLogComponent {
       });
     });
   }
-
+  protected readonly grouped = computed(() => {
+    const groups: { adminName: string; targetName: string; resources: string[]; createdAtUtc: string }[] = [];
+    for (const row of this.entries()) {
+      const last = groups[groups.length - 1];
+      const sameView =
+        last &&
+        last.adminName === row.adminName &&
+        last.targetName === row.targetName &&
+        Math.abs(new Date(last.createdAtUtc).getTime() - new Date(row.createdAtUtc).getTime()) <= 120_000;
+      if (sameView) {
+        if (!last.resources.includes(row.resource)) last.resources.push(row.resource);
+      } else {
+        groups.push({ ...row, resources: [row.resource] });
+      }
+    }
+    return groups;
+  });
   private load(): void {
     this.loading.set(true);
     this.error.set(null);

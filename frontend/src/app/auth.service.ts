@@ -1,6 +1,7 @@
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, catchError, map, of, switchMap, tap, throwError } from 'rxjs';
+import { DeviceFingerprintService } from './device-fingerprint.service';
 
 export interface CurrentUser {
   userId: string;
@@ -26,6 +27,7 @@ interface AuthErrorResponse {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private csrfToken: string | null = null;
+  private readonly deviceFingerprint = inject(DeviceFingerprintService);
 
   readonly currentUser = signal<CurrentUser | null>(null);
 
@@ -56,11 +58,16 @@ acceptInvitation(token: string, password: string): Observable<CurrentUser> {
 
 
  login(email: string, password: string): Observable<CurrentUser> {
+    const fingerprint = this.deviceFingerprint.getFingerprint();
   return this.loadCsrfToken().pipe(
     switchMap(() =>
       this.http.post<CurrentUser>(
         '/api/auth/login',
-        { email, password },
+        { 
+          email, 
+          password,
+          deviceFingerprint: fingerprint
+        },
         {
           headers: this.csrfHeaders(),
           withCredentials: true
@@ -170,4 +177,5 @@ changePassword(currentPassword: string, newPassword: string): Observable<void> {
     }
     return new HttpHeaders({ 'X-CSRF-TOKEN': this.csrfToken });
   }
+  
 }

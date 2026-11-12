@@ -929,3 +929,4 @@ html:root[data-theme='ocean'] .app-shell[data-theme='ocean'] {
 html:root[data-theme='forest'] .app-shell[data-theme='forest'] {
   background-color: var(--canvas, #101b18);
 }
+

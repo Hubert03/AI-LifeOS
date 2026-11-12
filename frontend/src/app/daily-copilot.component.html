@@ -9,6 +9,11 @@
   }
 
   <aside class="sidebar" [class.sidebar-open]="mobileNavOpen()">
+    <!-- <button type="button" class="sidebar-toggle" data-sidebar-toggle aria-label="Collapse sidebar" aria-expanded="true" title="Collapse sidebar">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+      </svg>
+    </button> -->
     <a class="brand" routerLink="/" aria-label="AI LifeOS home" (click)="mobileNavOpen.set(false)">
       <span class="brand-mark" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none"><path d="M5 16.5 10.2 6l3.6 7.1 2-4.1L20 16.5" /><path d="M4 19h16" /></svg>
